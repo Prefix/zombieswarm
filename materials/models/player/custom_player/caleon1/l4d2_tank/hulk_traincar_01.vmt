@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+	$baseTexture "models/player/custom_player/caleon1/l4d2_tank/Hulk_Traincar_01"
+	$bumpmap "models/player/custom_player/caleon1/l4d2_tank/Hulk_01_normal"
+}
