@@ -34,256 +34,256 @@ Handle cvarItemDropRate, cvarItemDropMaxRate;
 
 public void OnPluginStart()
 {
-	CreateConVar("gum_shop", PLUGIN_VERSION, "Gun Unlocks Mod Shop", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
-	
-	cvarItemDropRate = CreateConVar("gum_item_drop_rate", "50", "Item drop rate killing player");
-	cvarItemDropMaxRate = CreateConVar("gum_item_drop_maxrate", "1000", "Item drop maximum rate");
-	
-	HookEvent("player_death", eventPlayerDeath);
-	HookEvent("round_end",  eventRoundEnd);
+    CreateConVar("gum_shop", PLUGIN_VERSION, "Gun Unlocks Mod Shop", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+    
+    cvarItemDropRate = CreateConVar("gum_item_drop_rate", "50", "Item drop rate killing player");
+    cvarItemDropMaxRate = CreateConVar("gum_item_drop_maxrate", "1000", "Item drop maximum rate");
+    
+    HookEvent("player_death", eventPlayerDeath);
+    HookEvent("round_end",  eventRoundEnd);
 
-	RegConsoleCmd("say", sayCommand);
+    RegConsoleCmd("say", sayCommand);
 }
 
 public void OnClientPutInServer(client)
 {
-	if ( IsValidClient(client) )
-	{
-		for(int i = 0; i < MAX_UNLOCKS; i++) 
-		{
-			playerItems[client][i] = false;
-			playerItemRebuyTimes[client][i] = 0;
-		}
-	}
+    if ( IsValidClient(client) )
+    {
+        for(int i = 0; i < MAX_UNLOCKS; i++) 
+        {
+            playerItems[client][i] = false;
+            playerItemRebuyTimes[client][i] = 0;
+        }
+    }
 }
 
 public Action sayCommand(int client, int args)
 {
-	if ( !IsValidClient(client) )
-		return Plugin_Continue;
-	
-	char text[192];
-	char sArg1[16];
-	GetCmdArgString(text, sizeof(text));
+    if ( !IsValidClient(client) )
+        return Plugin_Continue;
+    
+    char text[192];
+    char sArg1[16];
+    GetCmdArgString(text, sizeof(text));
 
-	StripQuotes(text);
+    StripQuotes(text);
 
-	BreakString(text, sArg1, sizeof(sArg1));
-	
-	if(StrEqual(sArg1, "!shop") || StrEqual(sArg1, "shop") || StrEqual(sArg1, "/shop") ||  StrEqual(sArg1, "!ul") || StrEqual(sArg1, "ul") || StrEqual(sArg1, "unlock") 
-	|| StrEqual(sArg1, "!unlocks") || StrEqual(sArg1, "!unlock") || StrEqual(sArg1, "unlocks") )
-	{
-		mainUnlocksMenu(client);
-	
-		return Plugin_Handled;
-	}
-	
-	return Plugin_Continue;
+    BreakString(text, sArg1, sizeof(sArg1));
+    
+    if(StrEqual(sArg1, "!shop") || StrEqual(sArg1, "shop") || StrEqual(sArg1, "/shop") ||  StrEqual(sArg1, "!ul") || StrEqual(sArg1, "ul") || StrEqual(sArg1, "unlock") 
+    || StrEqual(sArg1, "!unlocks") || StrEqual(sArg1, "!unlock") || StrEqual(sArg1, "unlocks") )
+    {
+        mainUnlocksMenu(client);
+    
+        return Plugin_Handled;
+    }
+    
+    return Plugin_Continue;
 }
 
 public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	
-	if (GetConVarInt(cvarItemDropRate) < 1)
-		return;
-	
-	if (victim == attacker)
-		return;
-	
-	if ( !IsValidAlive(attacker) )
-		return;
-		
-	if (GetRandomInt(0, GetConVarInt(cvarItemDropMaxRate)) > GetConVarInt(cvarItemDropRate))
-		return;
-		
-	int itemId = GetRandomInt(0, numItems-1);
-	
-	if (playerItems[attacker][itemId])
-		return;
-	
-	hookItemSet(attacker, itemId, true);
+    int victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    
+    if (GetConVarInt(cvarItemDropRate) < 1)
+        return;
+    
+    if (victim == attacker)
+        return;
+    
+    if ( !IsValidAlive(attacker) )
+        return;
+        
+    if (GetRandomInt(0, GetConVarInt(cvarItemDropMaxRate)) > GetConVarInt(cvarItemDropRate))
+        return;
+        
+    int itemId = GetRandomInt(0, numItems-1);
+    
+    if (playerItems[attacker][itemId])
+        return;
+    
+    hookItemSet(attacker, itemId, true);
 }
 
 public eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	for (int client = 1; client <= MaxClients; client++) 
-	{ 
-		if (IsValidClient(client) )
-		{
-			for (int itemId = 0; itemId < numItems; itemId++)
-			{
-				if (uItemRebuy[itemId] == 2) {
-					playerItems[client][itemId] = false;
-					
-					hookItemUnSetCallback(client, itemId);
-				}
-			}
-		}
-	} 
+    for (int client = 1; client <= MaxClients; client++) 
+    { 
+        if (IsValidClient(client) )
+        {
+            for (int itemId = 0; itemId < numItems; itemId++)
+            {
+                if (uItemRebuy[itemId] == 2) {
+                    playerItems[client][itemId] = false;
+                    
+                    hookItemUnSetCallback(client, itemId);
+                }
+            }
+        }
+    } 
 }
 
 public mainUnlocksMenu(int client)
 {
-	char sMsg[64];
-	char sItems[64];
-	int getUnlocks = getPlayerUnlocks( client );
-	
-	Format(sMsg, sizeof( sMsg ), "Shop [Unlocks - %d]", getUnlocks );
-	Menu menu = new Menu(unlocksMenuCallback);
+    char sMsg[64];
+    char sItems[64];
+    int getUnlocks = getPlayerUnlocks( client );
+    
+    Format(sMsg, sizeof( sMsg ), "Shop [Unlocks - %d]", getUnlocks );
+    Menu menu = new Menu(unlocksMenuCallback);
 
-	menu.SetTitle(sMsg);
-	
-	for (int itemId = 0; itemId < numItems; itemId++)
-	{
-		if( getUnlocks < uItemPrice[itemId] ) 
-		{
-			if(playerItems[client][itemId]) 
-			{
-				Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
+    menu.SetTitle(sMsg);
+    
+    for (int itemId = 0; itemId < numItems; itemId++)
+    {
+        if( getUnlocks < uItemPrice[itemId] ) 
+        {
+            if(playerItems[client][itemId]) 
+            {
+                Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
 
-				menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
-			}
-			else
-			{
-				Format(sItems, sizeof(sItems), "%s (%d UL)", uItemName[itemId], uItemPrice[itemId]);
+                menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+            }
+            else
+            {
+                Format(sItems, sizeof(sItems), "%s (%d UL)", uItemName[itemId], uItemPrice[itemId]);
 
-				menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
-			}
-		}
-		else if (playerItems[client][itemId])
-		{
-			Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
+                menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+            }
+        }
+        else if (playerItems[client][itemId])
+        {
+            Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
 
-			menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
-		}
-		else if (uItemRebuy[itemId] > 0 && uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] >= uItemRebuyTimes[itemId])
-		{
-			Format(sItems, sizeof(sItems), "%s (Reached limit)", uItemName[itemId], uItemRebuyTimes[itemId]);
+            menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+        }
+        else if (uItemRebuy[itemId] > 0 && uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] >= uItemRebuyTimes[itemId])
+        {
+            Format(sItems, sizeof(sItems), "%s (Reached limit)", uItemName[itemId], uItemRebuyTimes[itemId]);
 
-			menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
-		}
-		else
-		{
-			Format(sItems, sizeof(sItems), "%s (%d UL) - Buy", uItemName[itemId], uItemPrice[itemId]);
+            menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+        }
+        else
+        {
+            Format(sItems, sizeof(sItems), "%s (%d UL) - Buy", uItemName[itemId], uItemPrice[itemId]);
 
-			menu.AddItem("item", sItems);
-		}
+            menu.AddItem("item", sItems);
+        }
 
-	}
+    }
 
-	menu.ExitButton = true;
-	
-	menu.Display(client, MENU_DISPLAY_TIME );
+    menu.ExitButton = true;
+    
+    menu.Display(client, MENU_DISPLAY_TIME );
 }
 public int unlocksMenuCallback(Handle menu, MenuAction action, int client, int itemId)
 {
-	if( action == MenuAction_Select )
-	{	
-		int getUnlocks = getPlayerUnlocks( client );
-		
-		int iPrice = uItemPrice[itemId];
-		
-		if (getUnlocks >= iPrice && !playerItems[client][itemId] && ((uItemRebuy[itemId] < 1) || (uItemRebuy[itemId] > 0
-		&& ((uItemRebuyTimes[itemId] < 1) || (uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] < uItemRebuyTimes[itemId])))))
-		{
-			hookItemSet(client, itemId, false);
-			
-			setPlayerUnlocks( client, getUnlocks - iPrice );
-			
-			mainUnlocksMenu(client);
-		}
-	} 
-	else if (action == MenuAction_End)	
-	{
-		delete menu;
-	}
+    if( action == MenuAction_Select )
+    {    
+        int getUnlocks = getPlayerUnlocks( client );
+        
+        int iPrice = uItemPrice[itemId];
+        
+        if (getUnlocks >= iPrice && !playerItems[client][itemId] && ((uItemRebuy[itemId] < 1) || (uItemRebuy[itemId] > 0
+        && ((uItemRebuyTimes[itemId] < 1) || (uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] < uItemRebuyTimes[itemId])))))
+        {
+            hookItemSet(client, itemId, false);
+            
+            setPlayerUnlocks( client, getUnlocks - iPrice );
+            
+            mainUnlocksMenu(client);
+        }
+    } 
+    else if (action == MenuAction_End)    
+    {
+        delete menu;
+    }
 }
 
 public hookItemSet(int client, int itemId, bool itemDrop)
 {
-	hookItemSetCallback(client, itemId);
-	
-	if (uItemRebuy[itemId] < 1 || uItemRebuy[itemId] == 2) {
-		playerItems[client][itemId] = true;
-		
-		if (uItemRebuy[itemId] == 2) {
-			playerItemRebuyTimes[client][itemId]++;
-		}
-	} else {
-		hookItemUnSetCallback(client, itemId);
-		
-		playerItemRebuyTimes[client][itemId]++;
-		
-		playerItems[client][itemId] = false;
-	}
-	
-	if (itemDrop) {
-		CPrintToChat(client, "{yellow}ITEM DROPPED!", uItemName[itemId]);
-		CPrintToChat(client, "{default}Item: {yellow}%s{default}!", uItemName[itemId]);
-		CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
-	} else {
-		CPrintToChat(client, "{default}Item: {yellow}%s{default}.", uItemName[itemId]);
-		CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
-	}
+    hookItemSetCallback(client, itemId);
+    
+    if (uItemRebuy[itemId] < 1 || uItemRebuy[itemId] == 2) {
+        playerItems[client][itemId] = true;
+        
+        if (uItemRebuy[itemId] == 2) {
+            playerItemRebuyTimes[client][itemId]++;
+        }
+    } else {
+        hookItemUnSetCallback(client, itemId);
+        
+        playerItemRebuyTimes[client][itemId]++;
+        
+        playerItems[client][itemId] = false;
+    }
+    
+    if (itemDrop) {
+        CPrintToChat(client, "{yellow}ITEM DROPPED!", uItemName[itemId]);
+        CPrintToChat(client, "{default}Item: {yellow}%s{default}!", uItemName[itemId]);
+        CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
+    } else {
+        CPrintToChat(client, "{default}Item: {yellow}%s{default}.", uItemName[itemId]);
+        CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
+    }
 }
 
 public hookItemSetCallback(int client, int itemId)
 {
-	Handle pluginId = uItemId[itemId];
-	if (pluginId == INVALID_HANDLE) {
-		LogError("[Gum_shop] Handle was invalid for gumItemSetCallback in hookItemSetCallback");
-		return;
-	}
-	Function func = GetFunctionByName (pluginId, "gumItemSetCallback");
-	
-	if (func == INVALID_FUNCTION) {
-		LogError("[Gum_shop] not found for gumItemSetCallback in hookItemUnSetCallback");
-		return;
-	}
-	
-	Call_StartFunction(pluginId, func);
-	Call_PushCell( client );
-	Call_Finish();
+    Handle pluginId = uItemId[itemId];
+    if (pluginId == INVALID_HANDLE) {
+        LogError("[Gum_shop] Handle was invalid for gumItemSetCallback in hookItemSetCallback");
+        return;
+    }
+    Function func = GetFunctionByName (pluginId, "gumItemSetCallback");
+    
+    if (func == INVALID_FUNCTION) {
+        LogError("[Gum_shop] not found for gumItemSetCallback in hookItemUnSetCallback");
+        return;
+    }
+    
+    Call_StartFunction(pluginId, func);
+    Call_PushCell( client );
+    Call_Finish();
 }
 public hookItemUnSetCallback(int client, int itemId)
 {
-	Handle pluginId = uItemId[itemId];
-	if (pluginId == INVALID_HANDLE) {
-		LogError("[Gum_shop] Handle was invalid for gumItemUnSetCallback in hookItemUnSetCallback");
-		return;
-	}
-	Function func = GetFunctionByName (pluginId, "gumItemUnSetCallback");
-	
-	if (func == INVALID_FUNCTION) {
-		LogError("[Gum_shop] not found for gumItemUnSetCallback in hookItemUnSetCallback");
-		return;
-	}
-	
-	Call_StartFunction(pluginId, func);
-	Call_PushCell( client );
-	Call_Finish();
+    Handle pluginId = uItemId[itemId];
+    if (pluginId == INVALID_HANDLE) {
+        LogError("[Gum_shop] Handle was invalid for gumItemUnSetCallback in hookItemUnSetCallback");
+        return;
+    }
+    Function func = GetFunctionByName (pluginId, "gumItemUnSetCallback");
+    
+    if (func == INVALID_FUNCTION) {
+        LogError("[Gum_shop] not found for gumItemUnSetCallback in hookItemUnSetCallback");
+        return;
+    }
+    
+    Call_StartFunction(pluginId, func);
+    Call_PushCell( client );
+    Call_Finish();
 }
 
 public int registerItemGum(Handle iIndex, const char[] iName, const char[] iDesc, int iPrice, int iRebuy, int iRebuyTimes)
 {
-	if( numItems == MAX_UNLOCKS )
-	{
-		return -1;
-	}
-	if (iIndex == INVALID_HANDLE) {
-		LogError("[Gum_shop] Invalid plugin handle while registering plugin.");
-		return -1;
-	}
-	uItemId[numItems] = iIndex;
-	Format(uItemName[numItems], MAX_UNLOCKS_NAME_SIZE, iName);
-	Format(uItemDesc[numItems], MAX_UNLOCKS_DESC_SIZE, iDesc);
-	uItemPrice[numItems] = iPrice;
-	uItemRebuy[numItems] = iRebuy;
-	uItemRebuyTimes[numItems] = iRebuyTimes;
-	
-	numItems++;
-	
-	return numItems;
+    if( numItems == MAX_UNLOCKS )
+    {
+        return -1;
+    }
+    if (iIndex == INVALID_HANDLE) {
+        LogError("[Gum_shop] Invalid plugin handle while registering plugin.");
+        return -1;
+    }
+    uItemId[numItems] = iIndex;
+    Format(uItemName[numItems], MAX_UNLOCKS_NAME_SIZE, iName);
+    Format(uItemDesc[numItems], MAX_UNLOCKS_DESC_SIZE, iDesc);
+    uItemPrice[numItems] = iPrice;
+    uItemRebuy[numItems] = iRebuy;
+    uItemRebuyTimes[numItems] = iRebuyTimes;
+    
+    numItems++;
+    
+    return numItems;
 }
