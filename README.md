@@ -4,6 +4,12 @@
 
 Game is usually runs on DE, CS maps  (E.G.:  de_dust2). Unlike other mods, this modification doesn’t have infection mod. So once you get on team, you will be revived after some you die. Thats why kill or be killed. Play as team, on this gamemod teamwork is key. Zombies gets random classes with special abilities. Humans must to level up in order to get better weapons  It is possible to get various upgrades from shop items but sacrificing your own weapon xp (typing command ul). When human dies he respawns in 30-60, so humans must to survive during that time, zombie respawns in few seconds. Classes pretty much like Left4Dead, it has tank who spawns over some time and is superior to other zombies, this is also key for zombies to win. Humans must survive until 0:00
 
+## GunXp mod (recommended)
+Humans gain xp for killing zombies, winning a round. People starts with glocks or however server is configurated and climbs on levels which makes a bit addictable server. There are ideas to expand level system even more (like reset tiers and getting rewards for it like new zombie class)
+
+## Flags (optional)
+There is optional flag mod, where you capture the flag and trying to protect it from other team
+
 ## Zombies
 
 Zombie swarm has currently these classes:
