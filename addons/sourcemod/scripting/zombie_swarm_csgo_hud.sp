@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <gum>
+#include <sdktools>
 #include <zombiemod>
 
 #pragma semicolon 1
@@ -149,7 +150,7 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
 	// Dealing with a client who is in the game and playing.
 	if(IsPlayerAlive(client))
 	{
-		GetInformationAboutPlayer(client, szText, sizeof(szText), true);
+		GetInformationAboutPlayer(client, szText, sizeof(szText));
 	} else {
 
 		int iSpecModeUser = GetEntProp(client, Prop_Send, "m_iObserverMode");
@@ -167,7 +168,7 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
 	return Plugin_Continue;
 }
 
-void GetInformationAboutPlayer(int client, char[] str, int maxlength, bool aboutyourself = false) {
+void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
 	if(!IsValidClient(client)) return;
 	char temp_string[256];
 	ZMPlayer player = ZMPlayer(client);

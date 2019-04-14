@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <cstrike>
+#include <sdktools>
 #include <zombiemod>
 
 #pragma newdecls required

@@ -1,5 +1,5 @@
 #include <sourcemod>
-#include <cstrike>
+#include <sdktools>
 #include <zombiemod>
 
 public Plugin myinfo =
@@ -11,12 +11,10 @@ public Plugin myinfo =
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-ZombieClass class;
-
 public void OnPluginStart()
 {
 	// We are registering item
-	class = ZombieClass(
+	ZombieClass(
         "Zombie Classic", // Class name
 		"Default zombie class, has extra damage to humans.", // Class description
 		"models/player/kuristaja/zombies/classic/classic", // Class model
