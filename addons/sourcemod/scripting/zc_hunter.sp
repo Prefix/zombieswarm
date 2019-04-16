@@ -29,6 +29,7 @@ public void OnPluginStart()
         "Zombie Hunter", // Class name
         "Has leaping (CTRL + ATTACK2 button)", // Class description
         "models/player/custom/hunter/hunter", // Class model
+        "", // Arms models
         80, // Class base HP
         17.0, // Class damage
         1.0, // Class speed

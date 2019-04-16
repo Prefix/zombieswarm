@@ -30,6 +30,8 @@
 
 #define HIDEHUD_RADAR 1 << 12
 
+#define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
+
 public Plugin myinfo =
 {
     name = PLUGIN_NAME,
@@ -47,11 +49,11 @@ bool shouldCollide[MAXPLAYERS + 1];
 bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
 float lastPressedButtons[MAXPLAYERS + 1];
 
-ZombieClass classes[MAX_CLASS];
+//ZombieClass classes[MAX_CLASS];
 int zClassHp[MAX_CLASS];
 float zClassSpeed[MAX_CLASS], zClassGravity[MAX_CLASS], zClassDamage[MAX_CLASS];
 char zClassName[MAX_CLASS][MAX_CLASS_NAME_SIZE], zClassDesc[MAX_CLASS][MAX_CLASS_DESC_SIZE],
-zClassModel[MAX_CLASS][MAX_CLASS_DESC_SIZE];
+zClassModel[MAX_CLASS][MAX_CLASS_DESC_SIZE], zClassArms[MAX_CLASS][MAX_CLASS_DESC_SIZE];
 bool zClassExcluded[MAX_CLASS];
 
 // Hint 
@@ -197,6 +199,8 @@ public void OnMapStart()
 {
     roundEnded = false;
     
+    PrecacheModel(DEFAULT_ARMS);
+    
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
     char soundsPath[PLATFORM_MAX_PATH];
@@ -221,6 +225,11 @@ public void OnMapStart()
         
         Format(zBuffer, sizeof(zBuffer), "%s.vvd", zClassModel[zClass]);
         AddFileToDownloadsTable(zBuffer);
+        
+        if (strlen(zClassArms[zClass])) {
+        	Format(zBuffer,sizeof(zBuffer),"%s",zClassArms[zClass]);
+        	AddFileToDownloadsTable(zBuffer);
+        }
     }
 
     // Open file
@@ -1344,6 +1353,22 @@ public void setZombieClassParameters(int client)
     Format(zBuffer, sizeof(zBuffer), "%s.mdl", zClassModel[zombieClass[client]]);
     SetEntityModel(client, zBuffer);
     
+    // Set zombie arms
+    if (strlen(zClassArms[zombieClass[client]]) > 0) {
+		int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
+		if(ent != -1) {
+			AcceptEntityInput(ent, "KillHierarchy");
+		}
+		SetEntPropString(client, Prop_Send, "m_szArmsModel", zClassArms[zombieClass[client]]);
+    }
+    else {
+		int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
+		if(ent != -1) {
+			AcceptEntityInput(ent, "KillHierarchy");
+		}
+		SetEntPropString(client, Prop_Send, "m_szArmsModel", DEFAULT_ARMS);
+    }
+    
     // Set zombie health
     SetEntProp(client, Prop_Send, "m_iHealth", getZombieHealthRate(client), 4);
     
@@ -1612,14 +1637,15 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     GetNativeString(1, zClassName[numClasses], MAX_CLASS_NAME_SIZE);
     GetNativeString(2, zClassDesc[numClasses], MAX_CLASS_DESC_SIZE);
     GetNativeString(3, zClassModel[numClasses], MAX_CLASS_DESC_SIZE);
+    GetNativeString(4, zClassArms[numClasses], MAX_CLASS_DESC_SIZE);
 
-    zClassHp[numClasses] = view_as<int>(GetNativeCell(4));
+    zClassHp[numClasses] = view_as<int>(GetNativeCell(5));
 
-    zClassDamage[numClasses] = view_as<float>(GetNativeCell(5));
-    zClassSpeed[numClasses] = view_as<float>(GetNativeCell(6));
-    zClassGravity[numClasses]= view_as<float>(GetNativeCell(7));
+    zClassDamage[numClasses] = view_as<float>(GetNativeCell(6));
+    zClassSpeed[numClasses] = view_as<float>(GetNativeCell(7));
+    zClassGravity[numClasses]= view_as<float>(GetNativeCell(8));
     
-    zClassExcluded[numClasses]= view_as<bool>(GetNativeCell(8));
+    zClassExcluded[numClasses]= view_as<bool>(GetNativeCell(9));
     
     numClasses++;
     

@@ -29,6 +29,7 @@ public void OnPluginStart()
         "Boomer", // Class name
         "Explodes on death", // Class description
         "models/player/custom_player/borodatm.ru/l4d2/boomer", // Class model
+        "", // Zombie Arms "" - Default arms "path/to/arms" - Path to arms model
         105, // Class base hp
         20.0, // Class damage
         1.1, // Class speed

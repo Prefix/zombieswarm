@@ -55,7 +55,7 @@ methodmap ZMPlayer {
 
 methodmap ZombieClass {
       // Constructor
-      public native ZombieClass(char[] name, char[] desc, char[] model, int health, float damage, float speed, float gravity, bool excluded = false);
+      public native ZombieClass(char[] name, char[] desc, char[] model,char[] arms = "", int health, float damage, float speed, float gravity, bool excluded = false);
       // Methods
       property int ID {
             public native get();
