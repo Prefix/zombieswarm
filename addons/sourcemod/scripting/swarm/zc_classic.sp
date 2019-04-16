@@ -18,6 +18,7 @@ public void OnPluginStart()
         "Zombie Classic", // Class name
         "Default zombie class, has extra damage to humans.", // Class description
         "models/player/kuristaja/zombies/classic/classic", // Class model
+        "", // Arms models
         120, // Class base HP
         25.0, // Class Damage
         1.0, // Class Speed

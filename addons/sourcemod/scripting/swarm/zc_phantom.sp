@@ -39,6 +39,7 @@ public void OnPluginStart()
         "Zombie Phantom", // Class name
         "Can be invisible (ATTACK2 button)", // Class description
         "models/player/custom_player/caleon1/mummy/mummy", // Class model
+        "", // Arms models
         80, // Class base HP
         12.0, // Class damage
         1.1, // Class speed

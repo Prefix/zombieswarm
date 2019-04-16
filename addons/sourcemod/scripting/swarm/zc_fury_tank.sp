@@ -43,6 +43,7 @@ public void OnPluginStart()
         "Zombie Fury [TANK]", // Class name
         "Can rage (ATTACK2 button) with Iron skin", // Class description
         "models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", // Class model
+        "", // Arms models
         135, // Class base HP
         30.0, // Class damage
         ZOMBIE_SPEED, // Class speed

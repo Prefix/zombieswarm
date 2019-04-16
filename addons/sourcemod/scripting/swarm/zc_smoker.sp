@@ -30,6 +30,7 @@ public void OnPluginStart()
         "Zombie Smoker", // Class name
         "Can drag other people (ATTACK2 button)", // Class description
         "models/player/custom_player/borodatm.ru/l4d2/smoker", // Class model
+        "", // Arms models
         80, // Class base HP
         15.0, // Class damage
         1.0, // Class speed
