@@ -389,14 +389,14 @@ public Action sayCommand(int client, int args)
 
     BreakString(text, sArg1, sizeof(sArg1));
     
-    if( StrEqual(sArg1, "!level") || StrEqual(sArg1, "level") || StrEqual(sArg1, "!xp") || StrEqual(sArg1, "xp") )
+    if( StrEqual(sArg1, "/level") ||  StrEqual(sArg1, "!level") || StrEqual(sArg1, "level") || StrEqual(sArg1, "/xp") || StrEqual(sArg1, "!xp") || StrEqual(sArg1, "xp") )
     {
         CPrintToChat(client, "{blue}LEVEL {default}[{green}%d{default}]", playerLevel[client]);
         CPrintToChat(client, "{blue}UNLOCKS {default}[{green}%d {default}/ {green}%d{default}]", pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
         
         return Plugin_Handled
     }
-    else if ( (StrEqual(sArg1, "!top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
+    else if ( (StrEqual(sArg1, "!top10") || (StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
     {
         char sQuery[ 256 ]; 
     
@@ -406,7 +406,7 @@ public Action sayCommand(int client, int args)
         
         return Plugin_Handled;
     }
-    else if ( (StrEqual(sArg1, "!guns") || StrEqual(sArg1, "guns")) && GetConVarInt(cvarMenuReOpen) )
+    else if ( (StrEqual(sArg1, "!guns") || StrEqual(sArg1, "guns") || StrEqual(sArg1, "/guns")) && GetConVarInt(cvarMenuReOpen) )
     {
         #if defined _zombieplaguemod_included
         if (zpLoaded && ZP_IsPlayerZombie(client)) return Plugin_Handled;
