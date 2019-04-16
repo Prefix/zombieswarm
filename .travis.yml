@@ -10,8 +10,6 @@ matrix:
     - env: SOURCEMOD=1.10
 
 env:
-  - SOURCEMOD=1.7
-  - SOURCEMOD=1.8
   - SOURCEMOD=1.9
   - SOURCEMOD=1.10
 
