@@ -396,7 +396,7 @@ public Action sayCommand(int client, int args)
         
         return Plugin_Handled
     }
-    else if ( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
+    else if (( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
     {
         char sQuery[ 256 ]; 
     
@@ -406,7 +406,7 @@ public Action sayCommand(int client, int args)
         
         return Plugin_Handled;
     }
-    else if ( StrEqual(sArg1, "!guns") || StrEqual(sArg1, "guns") || StrEqual(sArg1, "/guns")) && GetConVarInt(cvarMenuReOpen) )
+    else if (( StrEqual(sArg1, "!guns") || StrEqual(sArg1, "guns") || StrEqual(sArg1, "/guns")) && GetConVarInt(cvarMenuReOpen) )
     {
         #if defined _zombieplaguemod_included
         if (zpLoaded && ZP_IsPlayerZombie(client)) return Plugin_Handled;
