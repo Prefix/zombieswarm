@@ -21,5 +21,4 @@ before_script:
   - chmod +x spcomp
 
 script:
-  - cd addons/sourcemod/scripting/
   - ./compile.sh swarm/*.sp
