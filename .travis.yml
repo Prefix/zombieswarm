@@ -23,4 +23,6 @@ before_script:
   - chmod +x spcomp
 
 script:
-  - ./compile.sh zombieswarm.sh
+  - cd
+  - cd addons/sourcemod/scripting/
+  - ./compile.sh swarm/*.sp
