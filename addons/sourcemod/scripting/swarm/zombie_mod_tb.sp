@@ -114,6 +114,8 @@ void ThreePlayersBalance() {
         // Lets make some checks in order to know if player needs to be switched.
         if(!IsValidClient(client) || GetClientTeam(client) == CS_TEAM_SPECTATOR || player == client)
             continue;
+        if (IsFakeClient(client) || IsClientSourceTV(client)) 
+            continue;
         // Debug message
         //PrintToChatAll("ThreePlayersBalance: Selected Zombie %N", client);
         // Switch player to zombies team
@@ -128,6 +130,8 @@ int GetCountOfCustom(bool findt = false, bool both = false) {
     for (int client = 1; client <= MaxClients; client++) 
     {
         if(!IsValidClient(client) || GetClientTeam(client) == CS_TEAM_SPECTATOR)
+            continue;
+        if (IsFakeClient(client) || IsClientSourceTV(client)) 
             continue;
         ZMPlayer ZClient = ZMPlayer(client);
         int team = ZClient.Team;
@@ -154,6 +158,8 @@ int GetRandomPlayer(bool getCT = false, bool anyTeam = false) {
     for (int client = 1; client <= MaxClients; client++) 
     {
         if(!IsValidClient(client) || GetClientTeam(client) == CS_TEAM_SPECTATOR)
+            continue;
+        if (IsFakeClient(client) || IsClientSourceTV(client)) 
             continue;
         bool found = false;
         ZMPlayer ZClient = ZMPlayer(client);
@@ -227,6 +233,8 @@ void MakeTeamBalance()
     {
         int player = GetRandomPlayer(morect);
         if(!IsValidClient(player))
+            continue;
+        if (IsFakeClient(player) || IsClientSourceTV(player)) 
             continue;
 
         int team;
