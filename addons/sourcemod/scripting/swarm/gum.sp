@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <cstrike>
+#include <clientprefs>
 #include <colorvariables>
 
 #undef REQUIRE_PLUGIN
@@ -46,7 +47,8 @@ bool zmLoaded;
 
 Handle cvarMenuTime, cvarDamageReward, cvarDamageRewardVIP, cvarDamageDeal, cvarWeaponMenu,
 cvarMenuDelay, cvarMenuReOpen, cvarSaveType, cvarEnableTop10,
-cvarWeaponRestriction, cvarMenuAutoReOpenTime, cvarMaxSecondary;
+cvarWeaponRestriction, cvarMenuAutoReOpenTime, cvarMaxSecondary, ClientPrimaryCookie = INVALID_HANDLE,
+ClientSecondaryCookie = INVALID_HANDLE;
 
 Database conDatabase = null;
 Handle menuTimer[MAXPLAYERS + 1] = null;
@@ -77,6 +79,16 @@ public void OnPluginStart()
     cvarEnableTop10 = CreateConVar("gum_enable_top10", "1", "Enable !top10 ? 1 - Yes, 0 - No.")
     
     cvarMaxSecondary = CreateConVar("gum_max_secondary", "9", "Max pistols level we have.");
+    
+    ClientPrimaryCookie = RegClientCookie("GunXPClientPrimary", "Cookie to store client selections from GunXP Primary menu", CookieAccess_Private);
+    ClientSecondaryCookie = RegClientCookie("GunXPSecondaryPrimary", "Cookie to store client selections from GunXP Secondary menu", CookieAccess_Private);
+    
+    for (new i = MaxClients; i > 0; --i) {
+        if (!AreClientCookiesCached(i)) {
+            continue;
+        }
+        OnClientCookiesCached(i);
+    }
 
     // Events
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -171,6 +183,15 @@ public void OnLibraryAdded(const char[] name)
         zmLoaded = true;
     #endif
 }
+public OnClientCookiesCached(client) {
+    char primaryValue[5], secondaryValue[5];
+    
+    GetClientCookie(client, ClientPrimaryCookie, primaryValue, sizeof(primaryValue));
+    GetClientCookie(client, ClientSecondaryCookie, secondaryValue, sizeof(secondaryValue));
+    
+    rememberPrimary[client] = StringToInt(primaryValue);
+    rememberSecondary[client] = StringToInt(secondaryValue);
+}  
 
 #if defined _zombieplaguemod_included
 public Action ZP_OnExtraBuyCommand(int client, char[] extraitem_command)
@@ -229,9 +250,11 @@ public void OnClientPutInServer(int client)
     if ( IsValidClient(client) && !IsFakeClient(client) )
     {
         loadData(client);
-
-        rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
-        rememberSecondary[client] = 0;
+        
+        if (!AreClientCookiesCached(client)) {
+        	rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
+        	rememberSecondary[client] = 0;
+        }
         
         SendConVarValue(client, FindConVar("mp_playercashawards"), "0");
         SendConVarValue(client, FindConVar("mp_teamcashawards"), "0");
@@ -661,6 +684,10 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
         weaponSelected[client] = true;
         
         rememberSecondary[client] = item;
+        
+        char value[5];
+        IntToString(rememberSecondary[client],value,sizeof(value));
+        SetClientCookie(client,ClientSecondaryCookie,value);
 
         giveWeaponSelection(client, item, 1);
     
@@ -721,6 +748,10 @@ public int primaryWeaponMenuHandler(Menu menu, MenuAction action, int client, in
         #endif
     
         rememberPrimary[client] = item + GetConVarInt(cvarMaxSecondary);
+        
+        char value[5];
+        IntToString(rememberPrimary[client],value,sizeof(value));
+        SetClientCookie(client,ClientPrimaryCookie,value);
     
         giveWeaponSelection(client, item + GetConVarInt(cvarMaxSecondary), 0);
     } 
