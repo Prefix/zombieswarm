@@ -64,7 +64,8 @@ char c_OverrideHintText[MAXPLAYERS + 1][MAX_HINT_SIZE];
 char downloadFilesPath[PLATFORM_MAX_PATH];
 
 Handle timerGhostHint[MAXPLAYERS + 1] = null, timerZombieRespawn[MAXPLAYERS + 1];
-Handle timerGhostSpawn = null, forwardZombieSelected = null, forwardZombieRightClick = null;
+Handle forwardZombieSelected = null, forwardZombieRightClick = null;
+Handle timerCountDown = INVALID_HANDLE;
 
 int timerZombieRespawnLeft[MAXPLAYERS + 1];
 
@@ -95,6 +96,19 @@ char zombiesWinSounds[][] =
     "zombie_mod/zwin2.mp3",
     "zombie_mod/zwin3.mp3"
 };
+
+char countdownSounds[][] = {
+	"zombie_mod/countdown/1.mp3",
+	"zombie_mod/countdown/2.mp3",
+	"zombie_mod/countdown/3.mp3",
+	"zombie_mod/countdown/4.mp3",
+	"zombie_mod/countdown/5.mp3",
+	"zombie_mod/countdown/6.mp3",
+	"zombie_mod/countdown/7.mp3",
+	"zombie_mod/countdown/8.mp3",
+	"zombie_mod/countdown/9.mp3",
+	"zombie_mod/countdown/10.mp3",
+}
 
 public void OnPluginStart()
 {
@@ -310,6 +324,22 @@ public void OnMapStart()
             LogError("Cannot locate sounds file '%s'", soundsPath);
         }
     }
+    
+    for(int s = 0; s < sizeof(countdownSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", countdownSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(countdownSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
 
     FakePrecacheSoundEx("sound/radio/terwin.wav");
     FakePrecacheSoundEx("sound/radio/ctwin.wav");
@@ -682,14 +712,16 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
 {
-    timerGhostSpawn = CreateTimer( 10.0, timerGhostSpawnCallback, _, TIMER_FLAG_NO_MAPCHANGE);
+	isGhostCanSpawn = false;
+	if (timerCountDown != INVALID_HANDLE) {
+		KillTimer(timerCountDown);
+	}
+	
+	timerCountDown = CreateTimer(1.0, CountDown, _, TIMER_REPEAT);
 }
 
 public Action eventRoundStartNoCopy(Event event, const char[] name, bool dontBroadcast)
 {
-    if (timerGhostSpawn != null) {
-        delete timerGhostSpawn;
-    }
     
     roundKillCounter = 0;
     
@@ -1382,11 +1414,30 @@ public void setZombieClassParameters(int client)
     SetEntityGravity(client, zClassGravity[zombieClass[client]]);
 }
 
-public Action timerGhostSpawnCallback(Handle timer)
-{
-    timerGhostSpawn = null;
-    
-    isGhostCanSpawn = true;
+public Action CountDown(Handle timer) {
+	
+	static int countdownNumber = 10; 
+	
+	if (countdownNumber <= 0) {
+		countdownNumber = 10;
+		isGhostCanSpawn = true;
+		timerCountDown = INVALID_HANDLE;
+		
+		return Plugin_Stop;
+	}
+	
+	for (int client = 1; client <= MaxClients; client++) {
+		if (IsValidClient(client)) {
+			if (GetClientTeam(client) == CS_TEAM_T) {
+				playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
+			}
+		}
+	}
+	
+	countdownNumber--;
+	isGhostCanSpawn = false;
+	
+	return Plugin_Continue;
 }
 
 public int nativeIsGhost(Handle plugin, int numParams)
@@ -1555,14 +1606,14 @@ public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)
 
     pTeam[client] = team;
     if (!IsValidClient(client))
-    return;
-    if (GetClientTeam(client == team))
-    return;
+    	return;
+    if (GetClientTeam(client) == team)
+    	return;
 
     if (!IsPlayerAlive(client)) 
-    ChangeClientTeam(client, team);
+    	ChangeClientTeam(client, team);
     else 
-    CS_SwitchTeam(client, team);
+    	CS_SwitchTeam(client, team);
 }
 
 public int Native_ZMPlayer_ZMClassGet(Handle plugin, int numParams)
