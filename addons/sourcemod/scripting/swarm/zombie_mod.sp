@@ -1427,19 +1427,11 @@ public Action CountDown(Handle timer) {
 	}
 	
 	for (int client = 1; client <= MaxClients; client++) {
-<<<<<<< HEAD
-		if (IsValidClient(client)) {
-			if (GetClientTeam(client) == CS_TEAM_T) {
-				playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
-			}
-		}
-=======
 		if (!IsValidClient(client))
-            continue;
-        if(GetClientTeam(client) != CS_TEAM_T)
-            continue;
+			continue;
+		if(GetClientTeam(client) != CS_TEAM_T)
+			continue;
 		playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
->>>>>>> remotes/origin/master
 	}
 	
 	countdownNumber--;
