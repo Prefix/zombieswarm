@@ -1555,14 +1555,14 @@ public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)
 
     pTeam[client] = team;
     if (!IsValidClient(client))
-    return;
-    if (GetClientTeam(client == team))
-    return;
+    	return;
+    if (GetClientTeam(client) == team)
+    	return;
 
     if (!IsPlayerAlive(client)) 
-    ChangeClientTeam(client, team);
+    	ChangeClientTeam(client, team);
     else 
-    CS_SwitchTeam(client, team);
+    	CS_SwitchTeam(client, team);
 }
 
 public int Native_ZMPlayer_ZMClassGet(Handle plugin, int numParams)
