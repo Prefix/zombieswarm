@@ -24,18 +24,16 @@ int explosionSprite;
 
 public void OnPluginStart()
 {
-    // We are registering item
-    registeredClass = ZombieClass(
-        "Boomer", // Class name
-        "Explodes on death", // Class description
-        "models/player/custom_player/borodatm.ru/l4d2/boomer", // Class model
-        "", // Zombie Arms "" - Default arms "path/to/arms" - Path to arms model
-        105, // Class base hp
-        20.0, // Class damage
-        1.1, // Class speed
-        0.8, // Class gravity
-        false // Is class excluded from normal rotation
-    );
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
+    registeredClass.GetDesc("Explodes on death", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 105;
+    registeredClass.Damage = 20.0;
+    registeredClass.Speed = 1.1;
+    registeredClass.Gravity = 0.8;
+    registeredClass.Excluded = false;
                         
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
 }

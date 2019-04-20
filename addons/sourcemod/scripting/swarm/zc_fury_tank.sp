@@ -38,18 +38,16 @@ Handle timerNextTank;
 
 public void OnPluginStart()
 {
-    // We are registering item
-    registeredClass = ZombieClass(
-        "Zombie Fury [TANK]", // Class name
-        "Can rage (ATTACK2 button) with Iron skin", // Class description
-        "models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", // Class model
-        "", // Arms models
-        135, // Class base HP
-        30.0, // Class damage
-        ZOMBIE_SPEED, // Class speed
-        0.8, // Class gravity
-        true // Is class excluded from normal rotation
-    );
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("Zombie Fury [TANK]", MAX_CLASS_NAME_SIZE);
+    registeredClass.GetDesc("Can rage (ATTACK2 button) with Iron skin", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 135;
+    registeredClass.Damage = 30.0;
+    registeredClass.Speed = ZOMBIE_SPEED;
+    registeredClass.Gravity = 0.8;
+    registeredClass.Excluded = false;
                         
     HookEvent("player_spawn", eventPlayerSpawn);
     HookEvent("player_death", eventPlayerDeath);

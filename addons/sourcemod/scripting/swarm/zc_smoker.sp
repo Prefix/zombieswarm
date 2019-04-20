@@ -25,18 +25,16 @@ int pullTarget[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    // We are registering item
-    registeredClass = ZombieClass(
-        "Zombie Smoker", // Class name
-        "Can drag other people (ATTACK2 button)", // Class description
-        "models/player/custom_player/borodatm.ru/l4d2/smoker", // Class model
-        "", // Arms models
-        80, // Class base HP
-        15.0, // Class damage
-        1.0, // Class speed
-        0.8, // Class gravity
-        false // Is class excluded from normal rotation
-    );
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("Zombie Smoker", MAX_CLASS_NAME_SIZE);
+    registeredClass.GetDesc("Can drag other people (ATTACK2 button)", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/smoker", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 80;
+    registeredClass.Damage = 15.0;
+    registeredClass.Speed = 1.0;
+    registeredClass.Gravity = 0.8;
+    registeredClass.Excluded = false;
                         
     HookEvent("player_spawn", eventPlayerSpawn);
     HookEvent("player_death", eventPlayerDeath);

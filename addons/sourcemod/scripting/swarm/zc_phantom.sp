@@ -34,18 +34,16 @@ bool hasInvisibility[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    // We are registering item
-    registeredClass = ZombieClass(
-        "Zombie Phantom", // Class name
-        "Can be invisible (ATTACK2 button)", // Class description
-        "models/player/custom_player/caleon1/mummy/mummy", // Class model
-        "", // Arms models
-        80, // Class base HP
-        12.0, // Class damage
-        1.1, // Class speed
-        0.8, // Class gravity 
-        false // Is class excluded from normal rotation
-    );
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("", MAX_CLASS_NAME_SIZE);
+    registeredClass.GetDesc("", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 105;
+    registeredClass.Damage = 20.0;
+    registeredClass.Speed = 1.1;
+    registeredClass.Gravity = 0.8;
+    registeredClass.Excluded = false;
                         
     HookEvent("player_spawn", eventPlayerSpawn);
 }

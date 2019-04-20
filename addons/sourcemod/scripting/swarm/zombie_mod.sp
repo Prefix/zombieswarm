@@ -24,14 +24,22 @@
 #define MENU_DISPLAY_TIME 20
 
 #define MAX_CLASS 20
-#define MAX_CLASS_NAME_SIZE 64
-#define MAX_CLASS_DESC_SIZE 128
 #define MAX_HINT_SIZE 512
 
 #define HIDEHUD_RADAR 1 << 12
 
 #define EF_NOSHADOW                 (1 << 4)
 #define EF_NORECEIVESHADOW          (1 << 6)
+
+#define DEFAULT_ZM_NAME "Unnamed Zombie"
+#define DEFAULT_ZM_DESC "This zombie needs more information"
+#define DEFAULT_ZM_MODEL_PATH "models/player/kuristaja/zombies/classic/classic"
+#define DEFAULT_ZM_ARMS_PATH ""
+#define DEFAULT_ZM_HEALTH 100
+#define DEFAULT_ZM_DAMAGE 20.0
+#define DEFAULT_ZM_SPEED 1.0
+#define DEFAULT_ZM_GRAVITY 1.0
+#define DEFAULT_ZM_EXCLUDED false
 
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
 
@@ -182,11 +190,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("isGhost", nativeIsGhost);
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
-    CreateNative("getZombieClass", nativeGetZombieClass)
     CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
-    CreateNative("setZombieClass", nativeSetZombieClass);
-    CreateNative("registerZombieClass", nativeRegisterZombieClass);
-    CreateNative("getLastButtons", nativeGetLastButtons);
 
     // Our MethodMap
 
@@ -233,6 +237,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.SetDesc", Native_ZombieClass_DescSet);
     CreateNative("ZombieClass.GetModel", Native_ZombieClass_ModelGet);
     CreateNative("ZombieClass.SetModel", Native_ZombieClass_ModelSet);
+    CreateNative("ZombieClass.GetArms", Native_ZombieClass_ArmsGet);
+    CreateNative("ZombieClass.SetArms", Native_ZombieClass_ArmsSet);
 
     return APLRes_Success;
 }
@@ -1613,7 +1619,7 @@ public int nativeGetTeam(Handle plugin, int numParams)
     int client = GetNativeCell( 1 );
     bool trueform = GetNativeCell( 2 );
     if (trueform == true)
-    return pTeam[client];
+        return pTeam[client];
 
     return GetClientTeam(client);
 }
@@ -1625,12 +1631,12 @@ public int nativeSetTeam(Handle plugin, int numParams)
 
     pTeam[client] = team;
     if (!IsValidClient(client))
-    return;
+        return;
 
     if (!IsPlayerAlive(client)) 
-    ChangeClientTeam(client, team);
+        ChangeClientTeam(client, team);
     else 
-    CS_SwitchTeam(client, team);
+        CS_SwitchTeam(client, team);
 }
 
 public int nativeGetZombieClass(Handle plugin, int numParams)
@@ -1643,42 +1649,6 @@ public int nativeGetZombieClass(Handle plugin, int numParams)
 public int nativeGetRandomZombieClass(Handle plugin, int numParams)
 {
     return getRandZombieClass();
-}
-
-public int nativeSetZombieClass(Handle plugin, int numParams)
-{
-    int client = GetNativeCell( 1 );
-    int class = GetNativeCell( 2 );
-
-    zombieClass[client] = class;
-    
-    setZombieClassParameters(client);
-}
-
-public int nativeGetLastButtons(Handle plugin, int numParams)
-{
-    int client = GetNativeCell( 1 );
-
-    return g_fLastButtons[client];
-}
-
-public int nativeRegisterZombieClass(Handle plugin, int numParams)
-{
-    GetNativeString(1, zClassName[numClasses], MAX_CLASS_NAME_SIZE);
-    GetNativeString(2, zClassDesc[numClasses], MAX_CLASS_DESC_SIZE);
-    GetNativeString(3, zClassModel[numClasses], MAX_CLASS_DESC_SIZE);
-
-    zClassHp[numClasses] = view_as<int>(GetNativeCell(4));
-
-    zClassDamage[numClasses] = view_as<float>(GetNativeCell(5));
-    zClassSpeed[numClasses] = view_as<float>(GetNativeCell(6));
-    zClassGravity[numClasses]= view_as<float>(GetNativeCell(7));
-    
-    zClassExcluded[numClasses]= view_as<bool>(GetNativeCell(8));
-    
-    numClasses++;
-    
-    return numClasses-1;
 }
 
 public void callZombieSelected(int client, int zClass)
@@ -1846,18 +1816,18 @@ public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
 //    Natives for MethodMap ZombieClass
 public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 {
-    GetNativeString(1, zClassName[numClasses], MAX_CLASS_NAME_SIZE);
-    GetNativeString(2, zClassDesc[numClasses], MAX_CLASS_DESC_SIZE);
-    GetNativeString(3, zClassModel[numClasses], MAX_CLASS_DESC_SIZE);
-    GetNativeString(4, zClassArms[numClasses], MAX_CLASS_DESC_SIZE);
+    Format(zClassName[numClasses], MAX_CLASS_NAME_SIZE, "%s", DEFAULT_ZM_NAME);
+    Format(zClassDesc[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_DESC);
+    Format(zClassModel[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
+    Format(zClassArms[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
 
-    zClassHp[numClasses] = view_as<int>(GetNativeCell(5));
+    zClassHp[numClasses] = view_as<int>(DEFAULT_ZM_HEALTH);
 
-    zClassDamage[numClasses] = view_as<float>(GetNativeCell(6));
-    zClassSpeed[numClasses] = view_as<float>(GetNativeCell(7));
-    zClassGravity[numClasses]= view_as<float>(GetNativeCell(8));
+    zClassDamage[numClasses] = view_as<float>(DEFAULT_ZM_DAMAGE);
+    zClassSpeed[numClasses] = view_as<float>(DEFAULT_ZM_SPEED);
+    zClassGravity[numClasses] = view_as<float>(DEFAULT_ZM_GRAVITY);
     
-    zClassExcluded[numClasses]= view_as<bool>(GetNativeCell(9));
+    zClassExcluded[numClasses] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
     
     numClasses++;
     
@@ -1974,5 +1944,21 @@ public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
     SetNativeString(2, zClassModel[class.ID], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    int bytes = 0;
+    GetNativeString(2, zClassArms[class.ID], GetNativeCell(3), bytes);
+    return bytes;
+}
+
+public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    int bytes = 0;
+    SetNativeString(2, zClassArms[class.ID], GetNativeCell(3), true, bytes);
     return bytes;
 }
