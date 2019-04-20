@@ -30,6 +30,9 @@
 
 #define HIDEHUD_RADAR 1 << 12
 
+#define EF_NOSHADOW                 (1 << 4)
+#define EF_NORECEIVESHADOW          (1 << 6)
+
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
 
 public Plugin myinfo =
@@ -48,6 +51,8 @@ bool b_isGhost[MAXPLAYERS + 1]
 bool shouldCollide[MAXPLAYERS + 1];
 bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
 float lastPressedButtons[MAXPLAYERS + 1];
+int CTSpawns, TSpawns;
+float Spawns[5][MAXPLAYERS + 1][3];
 
 //ZombieClass classes[MAX_CLASS];
 int zClassHp[MAX_CLASS];
@@ -74,6 +79,7 @@ Handle cvarRespawnTimeZ, cvarRespawnTimeZVip, cvarRespawnTimeS, cvarRespawnTimeS
 bool isGhostCanSpawn, roundEnded;
 
 int roundKillCounter;
+int countdownNumber;
 
 Handle cvarAlpha;
 
@@ -82,6 +88,7 @@ int collisionOffset;
 int g_fLastButtons[MAXPLAYERS + 1 ];
 
 float f_HintSpeed[MAXPLAYERS + 1 ];
+int FogIndex = -1, SunIndex = -1, SkyCameraIndex = -1, CascadeLightIndex = -1;
 
 char humansWinSounds[][] = 
 {
@@ -110,6 +117,10 @@ char countdownSounds[][] = {
 	"zombie_mod/countdown/10.mp3",
 }
 
+// Convars
+
+ConVar cvarFog, cvarCountDown;
+
 public void OnPluginStart()
 {
     CreateConVar("zombie_mod", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
@@ -120,6 +131,13 @@ public void OnPluginStart()
     cvarRespawnTimeSVip = CreateConVar("zm_respawn_time_ct_vip", "55.0", "Vip players respawn time after team join or death");
     cvarRoundStartZombies = CreateConVar("zm_round_start_zombies", "5", "Round start zombies");
     cvarRoundKillsTeamJoinHumans = CreateConVar("zm_round_kills_teamjoin_humans", "25", "Human can join team after he is connected depends on round kills");
+    
+    // (UNSUPPORTED) SourceMod currently doesn't support this feature.
+    // Added, but disabled by default
+    cvarFog = CreateConVar("zm_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
+    cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
+    
+    HookConVarChange(cvarFog, OnConVarChange);
     
     HookEvent("player_spawn", eventPlayerSpawn);
     HookEvent("round_start", eventRoundStartNoCopy, EventHookMode_PostNoCopy);
@@ -143,7 +161,17 @@ public void OnPluginStart()
     // Configs
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
 }
-
+public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
+	if (convar == cvarFog) {
+		cvarFog.SetInt(StringToInt(newValue));
+		FogEnable(cvarFog.BoolValue);
+	}
+	else if (convar == cvarCountDown) {
+		int value = StringToInt(newValue) > 10?10:StringToInt(newValue);
+		cvarCountDown.SetInt(value);
+		countdownNumber = value;
+	}
+}
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
     // Register mod library
@@ -208,10 +236,73 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
     return APLRes_Success;
 }
+public void OnEntityCreated(int entity, const char[] classname) {
+	if(!entity)
+		return;
+	
+	if (StrEqual("info_player_terrorist",classname)) {
+		SDKHook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost);
+	}
+	else if (StrEqual("info_player_counterterrorist",classname)) {
+		SDKHook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost);
+	}
+	else if (StrEqual("sky_camera",classname)) {
+		SDKHook(entity, SDKHook_SpawnPost, OnSkyCameraSpawnPost);
+	}
+	else if (StrEqual("env_cascade_light",classname)) {
+		SDKHook(entity, SDKHook_SpawnPost, OnCascadeLightSpawnPost);
+	}
+}
 
+public void OnTsEntitySpawnPost(int EntRef) {
+	int entity = EntRefToEntIndex(EntRef);
+	float Vec[3];
+	
+	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
+	Vec[2] = (Vec[2] + 73);
+	Spawns[CS_TEAM_T][TSpawns] = Vec;
+	TSpawns++;
+	
+	SDKUnhook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost)
+}
+public void OnCTsEntitySpawnPost(int EntRef) {
+	int entity = EntRefToEntIndex(EntRef);
+	float Vec[3];
+
+	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
+	Vec[2] = (Vec[2] + 73);
+	Spawns[CS_TEAM_CT][CTSpawns] = Vec;
+	CTSpawns++;
+	
+	SDKUnhook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost)
+}
+public void OnSkyCameraSpawnPost(int EntRef) {
+	SkyCameraIndex = EntRefToEntIndex(EntRef);
+	AcceptEntityInput(SkyCameraIndex, "Kill");
+}
+public void OnCascadeLightSpawnPost(int EntRef) {
+	CascadeLightIndex = EntRefToEntIndex(EntRef);
+}
+public void OnMapEnd() {
+	float Vec[3];
+	Vec[0] = 0.0;
+	Vec[1] = 0.0;
+	Vec[2] = 0.0;
+	for (int i = 0; i <= TSpawns; i++) {
+		Spawns[CS_TEAM_T][i] = Vec;
+	}
+	for (int i = 0; i <= CTSpawns; i++) {
+		Spawns[CS_TEAM_T][i] = Vec;
+	}
+	
+	TSpawns = 0;
+	CTSpawns = 0;
+}
 public void OnMapStart()
 {
     roundEnded = false;
+    
+    countdownNumber = cvarCountDown.IntValue > 10?10:cvarCountDown.IntValue;
     
     PrecacheModel(DEFAULT_ARMS);
     
@@ -362,7 +453,68 @@ public void OnMapStart()
     SetConVarInt(FindConVar("mp_timelimit"), 20);
     SetConVarInt(FindConVar("mp_maxrounds"), 0);
     SetConVarInt(FindConVar("mp_friendlyfire"), 0);
-    
+
+    int ent; 
+    ent = FindEntityByClassname(-1, "env_fog_controller");
+    if (ent != -1)  {
+		FogIndex = ent;
+	}
+	else {
+		FogIndex = CreateEntityByName("env_fog_controller");
+		DispatchSpawn(FogIndex);
+	}
+
+    SunIndex = FindEntityByClassname(-1, "env_sun");
+
+    CreateFog();
+    FogEnable(cvarFog.BoolValue);
+}
+
+void CreateFog() {
+	if(FogIndex != -1)  {
+		DispatchKeyValueFloat(FogIndex, "fogmaxdensity", 0.99);
+		SetVariantInt(0);
+		AcceptEntityInput(FogIndex, "SetStartDist");
+		SetVariantInt(500);
+		AcceptEntityInput(FogIndex, "SetEndDist");
+		SetVariantInt(10000);
+		AcceptEntityInput(FogIndex, "SetFarZ");
+		
+		SetVariantString("200 200 200");
+		AcceptEntityInput(FogIndex, "SetColor");
+		
+		SetVariantString("200 200 200");
+		AcceptEntityInput(FogIndex, "SetColorSecondary");
+		
+	}
+}
+
+void FogEnable(bool status) {
+	if (FogIndex != -1) {
+		if (status) {
+			AcceptEntityInput(FogIndex, "TurnOn");
+		}
+		else
+			AcceptEntityInput(FogIndex, "TurnOff");
+	}
+	
+	if (SunIndex != -1) {
+		if (status)
+			AcceptEntityInput(SunIndex, "TurnOff");
+		else
+			AcceptEntityInput(SunIndex, "TurnOn");
+	}
+	
+	if (status) {
+		AcceptEntityInput(CascadeLightIndex, "Disable");
+		SetLightStyle(0,"a");
+	}
+	else {
+		AcceptEntityInput(CascadeLightIndex, "Enable");
+		SetLightStyle(0,"");
+	}
+	
+	DispatchKeyValue(0, "skyname", "embassy");
 }
 
 public void OnGameFrame()
@@ -876,6 +1028,18 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 }
                 
                 lastPressedButtons[client] = currentTime;
+            }
+            if ((buttons & IN_RELOAD)) {
+				if (TSpawns > 0) {
+					int random = GetRandomInt(0,TSpawns);
+					float spawn[3];
+					spawn = Spawns[CS_TEAM_T][random];
+					if (IsValidClient(client) && b_isGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
+						TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
+				}
+				else {
+					CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
+				}
             }
         } else {
             if(!(buttons & IN_ATTACK2))
@@ -1415,11 +1579,8 @@ public void setZombieClassParameters(int client)
 }
 
 public Action CountDown(Handle timer) {
-	
-	static int countdownNumber = 10; 
-	
 	if (countdownNumber <= 0) {
-		countdownNumber = 10;
+		countdownNumber = cvarCountDown.IntValue > 10?10:cvarCountDown.IntValue;
 		isGhostCanSpawn = true;
 		timerCountDown = INVALID_HANDLE;
 		
