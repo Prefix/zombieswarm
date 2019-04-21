@@ -98,6 +98,12 @@ int g_fLastButtons[MAXPLAYERS + 1 ];
 float f_HintSpeed[MAXPLAYERS + 1 ];
 int FogIndex = -1, SunIndex = -1, SkyCameraIndex = -1, CascadeLightIndex = -1;
 
+Handle cvarFogDensity;
+Handle cvarFogStartDist;
+Handle cvarFogEndDist;
+Handle cvarFogColor;
+Handle cvarFogZPlane;
+
 char humansWinSounds[][] = 
 {
     "zombie_mod/hwin1.mp3",
@@ -113,16 +119,16 @@ char zombiesWinSounds[][] =
 };
 
 char countdownSounds[][] = {
-	"zombie_mod/countdown/1.mp3",
-	"zombie_mod/countdown/2.mp3",
-	"zombie_mod/countdown/3.mp3",
-	"zombie_mod/countdown/4.mp3",
-	"zombie_mod/countdown/5.mp3",
-	"zombie_mod/countdown/6.mp3",
-	"zombie_mod/countdown/7.mp3",
-	"zombie_mod/countdown/8.mp3",
-	"zombie_mod/countdown/9.mp3",
-	"zombie_mod/countdown/10.mp3",
+    "zombie_mod/countdown/1.mp3",
+    "zombie_mod/countdown/2.mp3",
+    "zombie_mod/countdown/3.mp3",
+    "zombie_mod/countdown/4.mp3",
+    "zombie_mod/countdown/5.mp3",
+    "zombie_mod/countdown/6.mp3",
+    "zombie_mod/countdown/7.mp3",
+    "zombie_mod/countdown/8.mp3",
+    "zombie_mod/countdown/9.mp3",
+    "zombie_mod/countdown/10.mp3",
 }
 
 // Convars
@@ -130,9 +136,7 @@ char countdownSounds[][] = {
 ConVar cvarFog, cvarCountDown;
 
 public void OnPluginStart()
-{
-    CreateConVar("zombie_mod", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
-    
+{   
     cvarRespawnTimeZ = CreateConVar("zm_respawn_time_t", "3.0", "Vip players respawn time after team join or death");
     cvarRespawnTimeZVip = CreateConVar("zm_respawn_time_t_vip", "3.0", "Vip players respawn time after team join or death");
     cvarRespawnTimeS = CreateConVar("zm_respawn_time_ct", "60.0", "Players respawn time after team join or death");
@@ -142,7 +146,13 @@ public void OnPluginStart()
     
     // (UNSUPPORTED) SourceMod currently doesn't support this feature.
     // Added, but disabled by default
-    cvarFog = CreateConVar("zm_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
+    cvarFog = CreateConVar("zm_env_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
+    cvarFogDensity = CreateConVar("sm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
+    cvarFogStartDist = CreateConVar("sm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
+    cvarFogEndDist = CreateConVar("sm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
+    cvarFogColor = CreateConVar("sm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
+    cvarFogZPlane = CreateConVar("sm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
+
     cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
     
     HookConVarChange(cvarFog, OnConVarChange);
@@ -168,18 +178,19 @@ public void OnPluginStart()
     
     // Configs
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
-    AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm")
+    AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
+    CreateConVar("sm_zombieswarm_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 }
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
-	if (convar == cvarFog) {
-		cvarFog.SetInt(StringToInt(newValue));
-		FogEnable(cvarFog.BoolValue);
-	}
-	else if (convar == cvarCountDown) {
-		int value = StringToInt(newValue) > 10?10:StringToInt(newValue);
-		cvarCountDown.SetInt(value);
-		countdownNumber = value;
-	}
+    if (convar == cvarFog) {
+        cvarFog.SetInt(StringToInt(newValue));
+        FogEnable(cvarFog.BoolValue);
+    }
+    else if (convar == cvarCountDown) {
+        int value = StringToInt(newValue) > 10?10:StringToInt(newValue);
+        cvarCountDown.SetInt(value);
+        countdownNumber = value;
+    }
 }
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -244,66 +255,66 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     return APLRes_Success;
 }
 public void OnEntityCreated(int entity, const char[] classname) {
-	if(!entity)
-		return;
-	
-	if (StrEqual("info_player_terrorist",classname)) {
-		SDKHook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost);
-	}
-	else if (StrEqual("info_player_counterterrorist",classname)) {
-		SDKHook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost);
-	}
-	else if (StrEqual("sky_camera",classname)) {
-		SDKHook(entity, SDKHook_SpawnPost, OnSkyCameraSpawnPost);
-	}
-	else if (StrEqual("env_cascade_light",classname)) {
-		SDKHook(entity, SDKHook_SpawnPost, OnCascadeLightSpawnPost);
-	}
+    if(!entity)
+        return;
+    
+    if (StrEqual("info_player_terrorist",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost);
+    }
+    else if (StrEqual("info_player_counterterrorist",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost);
+    }
+    else if (StrEqual("sky_camera",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, OnSkyCameraSpawnPost);
+    }
+    else if (StrEqual("env_cascade_light",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, OnCascadeLightSpawnPost);
+    }
 }
 
 public void OnTsEntitySpawnPost(int EntRef) {
-	int entity = EntRefToEntIndex(EntRef);
-	float Vec[3];
-	
-	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
-	Vec[2] = (Vec[2] + 73);
-	Spawns[CS_TEAM_T][TSpawns] = Vec;
-	TSpawns++;
-	
-	SDKUnhook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost)
+    int entity = EntRefToEntIndex(EntRef);
+    float Vec[3];
+    
+    GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
+    Vec[2] = (Vec[2] + 73);
+    Spawns[CS_TEAM_T][TSpawns] = Vec;
+    TSpawns++;
+    
+    SDKUnhook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost)
 }
 public void OnCTsEntitySpawnPost(int EntRef) {
-	int entity = EntRefToEntIndex(EntRef);
-	float Vec[3];
+    int entity = EntRefToEntIndex(EntRef);
+    float Vec[3];
 
-	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
-	Vec[2] = (Vec[2] + 73);
-	Spawns[CS_TEAM_CT][CTSpawns] = Vec;
-	CTSpawns++;
-	
-	SDKUnhook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost)
+    GetEntPropVector(entity, Prop_Data, "m_vecOrigin", Vec);
+    Vec[2] = (Vec[2] + 73);
+    Spawns[CS_TEAM_CT][CTSpawns] = Vec;
+    CTSpawns++;
+    
+    SDKUnhook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost)
 }
 public void OnSkyCameraSpawnPost(int EntRef) {
-	SkyCameraIndex = EntRefToEntIndex(EntRef);
-	AcceptEntityInput(SkyCameraIndex, "Kill");
+    SkyCameraIndex = EntRefToEntIndex(EntRef);
+    AcceptEntityInput(SkyCameraIndex, "Kill");
 }
 public void OnCascadeLightSpawnPost(int EntRef) {
-	CascadeLightIndex = EntRefToEntIndex(EntRef);
+    CascadeLightIndex = EntRefToEntIndex(EntRef);
 }
 public void OnMapEnd() {
-	float Vec[3];
-	Vec[0] = 0.0;
-	Vec[1] = 0.0;
-	Vec[2] = 0.0;
-	for (int i = 0; i <= TSpawns; i++) {
-		Spawns[CS_TEAM_T][i] = Vec;
-	}
-	for (int i = 0; i <= CTSpawns; i++) {
-		Spawns[CS_TEAM_T][i] = Vec;
-	}
-	
-	TSpawns = 0;
-	CTSpawns = 0;
+    float Vec[3];
+    Vec[0] = 0.0;
+    Vec[1] = 0.0;
+    Vec[2] = 0.0;
+    for (int i = 0; i <= TSpawns; i++) {
+        Spawns[CS_TEAM_T][i] = Vec;
+    }
+    for (int i = 0; i <= CTSpawns; i++) {
+        Spawns[CS_TEAM_T][i] = Vec;
+    }
+    
+    TSpawns = 0;
+    CTSpawns = 0;
 }
 public void OnMapStart()
 {
@@ -339,8 +350,8 @@ public void OnMapStart()
         AddFileToDownloadsTable(zBuffer);
         
         if (strlen(zClassArms[zClass])) {
-        	Format(zBuffer,sizeof(zBuffer),"%s",zClassArms[zClass]);
-        	AddFileToDownloadsTable(zBuffer);
+            Format(zBuffer,sizeof(zBuffer),"%s",zClassArms[zClass]);
+            AddFileToDownloadsTable(zBuffer);
         }
     }
 
@@ -464,12 +475,12 @@ public void OnMapStart()
     int ent; 
     ent = FindEntityByClassname(-1, "env_fog_controller");
     if (ent != -1)  {
-		FogIndex = ent;
-	}
-	else {
-		FogIndex = CreateEntityByName("env_fog_controller");
-		DispatchSpawn(FogIndex);
-	}
+        FogIndex = ent;
+    }
+    else {
+        FogIndex = CreateEntityByName("env_fog_controller");
+        DispatchSpawn(FogIndex);
+    }
 
     SunIndex = FindEntityByClassname(-1, "env_sun");
 
@@ -478,50 +489,57 @@ public void OnMapStart()
 }
 
 void CreateFog() {
-	if(FogIndex != -1)  {
-		DispatchKeyValueFloat(FogIndex, "fogmaxdensity", 0.99);
-		SetVariantInt(0);
-		AcceptEntityInput(FogIndex, "SetStartDist");
-		SetVariantInt(500);
-		AcceptEntityInput(FogIndex, "SetEndDist");
-		SetVariantInt(10000);
-		AcceptEntityInput(FogIndex, "SetFarZ");
-		
-		SetVariantString("200 200 200");
-		AcceptEntityInput(FogIndex, "SetColor");
-		
-		SetVariantString("200 200 200");
-		AcceptEntityInput(FogIndex, "SetColorSecondary");
-		
-	}
+    if(FogIndex != -1)  {
+        float FogDensity = GetConVarFloat(cvarFogDensity);
+        int FogStartDist = GetConVarInt(cvarFogStartDist);
+        int FogEndDist = GetConVarInt(cvarFogEndDist);
+        int FogZPlane = GetConVarInt(cvarFogZPlane);
+        DispatchKeyValueFloat(FogIndex, "fogmaxdensity", FogDensity);
+        SetVariantInt(FogStartDist);
+        AcceptEntityInput(FogIndex, "SetStartDist");
+        SetVariantInt(FogEndDist);
+        AcceptEntityInput(FogIndex, "SetEndDist");
+        SetVariantInt(FogZPlane);
+        AcceptEntityInput(FogIndex, "SetFarZ");
+    
+        char FogColor[32];
+        GetConVarString(cvarFogColor, FogColor, sizeof(FogColor));    
+
+        SetVariantString(FogColor);
+        AcceptEntityInput(FogIndex, "SetColor");
+        
+        SetVariantString(FogColor);
+        AcceptEntityInput(FogIndex, "SetColorSecondary");
+        
+    }
 }
 
 void FogEnable(bool status) {
-	if (FogIndex != -1) {
-		if (status) {
-			AcceptEntityInput(FogIndex, "TurnOn");
-		}
-		else
-			AcceptEntityInput(FogIndex, "TurnOff");
-	}
-	
-	if (SunIndex != -1) {
-		if (status)
-			AcceptEntityInput(SunIndex, "TurnOff");
-		else
-			AcceptEntityInput(SunIndex, "TurnOn");
-	}
-	
-	if (status) {
-		AcceptEntityInput(CascadeLightIndex, "Disable");
-		SetLightStyle(0,"a");
-	}
-	else {
-		AcceptEntityInput(CascadeLightIndex, "Enable");
-		SetLightStyle(0,"");
-	}
-	
-	DispatchKeyValue(0, "skyname", "embassy");
+    if (FogIndex != -1) {
+        if (status) {
+            AcceptEntityInput(FogIndex, "TurnOn");
+        }
+        else
+            AcceptEntityInput(FogIndex, "TurnOff");
+    }
+    
+    if (SunIndex != -1) {
+        if (status)
+            AcceptEntityInput(SunIndex, "TurnOff");
+        else
+            AcceptEntityInput(SunIndex, "TurnOn");
+    }
+    
+    if (status) {
+        AcceptEntityInput(CascadeLightIndex, "Disable");
+        SetLightStyle(0,"a");
+    }
+    else {
+        AcceptEntityInput(CascadeLightIndex, "Enable");
+        SetLightStyle(0,"");
+    }
+    
+    DispatchKeyValue(0, "skyname", "embassy");
 }
 
 public void OnGameFrame()
@@ -871,12 +889,12 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	isGhostCanSpawn = false;
-	if (timerCountDown != INVALID_HANDLE) {
-		KillTimer(timerCountDown);
-	}
-	
-	timerCountDown = CreateTimer(1.0, CountDown, _, TIMER_REPEAT);
+    isGhostCanSpawn = false;
+    if (timerCountDown != INVALID_HANDLE) {
+        KillTimer(timerCountDown);
+    }
+    
+    timerCountDown = CreateTimer(1.0, CountDown, _, TIMER_REPEAT);
 }
 
 public Action eventRoundStartNoCopy(Event event, const char[] name, bool dontBroadcast)
@@ -1037,16 +1055,16 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 lastPressedButtons[client] = currentTime;
             }
             if ((buttons & IN_RELOAD)) {
-				if (TSpawns > 0) {
-					int random = GetRandomInt(0,TSpawns);
-					float spawn[3];
-					spawn = Spawns[CS_TEAM_T][random];
-					if (IsValidClient(client) && b_isGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
-						TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
-				}
-				else {
-					CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
-				}
+                if (TSpawns > 0) {
+                    int random = GetRandomInt(0,TSpawns);
+                    float spawn[3];
+                    spawn = Spawns[CS_TEAM_T][random];
+                    if (IsValidClient(client) && b_isGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
+                        TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
+                }
+                else {
+                    CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
+                }
             }
         } else {
             if(!(buttons & IN_ATTACK2))
@@ -1558,18 +1576,18 @@ public void setZombieClassParameters(int client)
     
     // Set zombie arms
     if (strlen(zClassArms[zombieClass[client]]) > 0) {
-		int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
-		if(ent != -1) {
-			AcceptEntityInput(ent, "KillHierarchy");
-		}
-		SetEntPropString(client, Prop_Send, "m_szArmsModel", zClassArms[zombieClass[client]]);
+        int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
+        if(ent != -1) {
+            AcceptEntityInput(ent, "KillHierarchy");
+        }
+        SetEntPropString(client, Prop_Send, "m_szArmsModel", zClassArms[zombieClass[client]]);
     }
     else {
-		int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
-		if(ent != -1) {
-			AcceptEntityInput(ent, "KillHierarchy");
-		}
-		SetEntPropString(client, Prop_Send, "m_szArmsModel", DEFAULT_ARMS);
+        int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
+        if(ent != -1) {
+            AcceptEntityInput(ent, "KillHierarchy");
+        }
+        SetEntPropString(client, Prop_Send, "m_szArmsModel", DEFAULT_ARMS);
     }
     
     // Set zombie health
@@ -1586,26 +1604,26 @@ public void setZombieClassParameters(int client)
 }
 
 public Action CountDown(Handle timer) {
-	if (countdownNumber <= 0) {
-		countdownNumber = cvarCountDown.IntValue > 10?10:cvarCountDown.IntValue;
-		isGhostCanSpawn = true;
-		timerCountDown = INVALID_HANDLE;
-		
-		return Plugin_Stop;
-	}
-	
-	for (int client = 1; client <= MaxClients; client++) {
-		if (!IsValidClient(client))
-			continue;
-		if(GetClientTeam(client) != CS_TEAM_T)
-			continue;
-		playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
-	}
-	
-	countdownNumber--;
-	isGhostCanSpawn = false;
-	
-	return Plugin_Continue;
+    if (countdownNumber <= 0) {
+        countdownNumber = cvarCountDown.IntValue > 10?10:cvarCountDown.IntValue;
+        isGhostCanSpawn = true;
+        timerCountDown = INVALID_HANDLE;
+        
+        return Plugin_Stop;
+    }
+    
+    for (int client = 1; client <= MaxClients; client++) {
+        if (!IsValidClient(client))
+            continue;
+        if(GetClientTeam(client) != CS_TEAM_T)
+            continue;
+        playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
+    }
+    
+    countdownNumber--;
+    isGhostCanSpawn = false;
+    
+    return Plugin_Continue;
 }
 
 public int nativeIsGhost(Handle plugin, int numParams)
@@ -1738,14 +1756,14 @@ public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)
 
     pTeam[client] = team;
     if (!IsValidClient(client))
-    	return;
+        return;
     if (GetClientTeam(client) == team)
-    	return;
+        return;
 
     if (!IsPlayerAlive(client)) 
-    	ChangeClientTeam(client, team);
+        ChangeClientTeam(client, team);
     else 
-    	CS_SwitchTeam(client, team);
+        CS_SwitchTeam(client, team);
 }
 
 public int Native_ZMPlayer_ZMClassGet(Handle plugin, int numParams)
@@ -1904,7 +1922,7 @@ public int Native_ZombieClass_NameGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassName[class.ID], GetNativeCell(3), bytes);
+    SetNativeString(2, zClassName[class.ID], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1912,7 +1930,7 @@ public int Native_ZombieClass_NameSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassName[class.ID], GetNativeCell(3), true, bytes);
+    GetNativeString(2, zClassName[class.ID], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1920,7 +1938,7 @@ public int Native_ZombieClass_DescGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), bytes);
+    SetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1928,7 +1946,7 @@ public int Native_ZombieClass_DescSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), true, bytes);
+    GetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1936,7 +1954,7 @@ public int Native_ZombieClass_ModelGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassModel[class.ID], GetNativeCell(3), bytes);
+    SetNativeString(2, zClassModel[class.ID], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1944,7 +1962,7 @@ public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassModel[class.ID], GetNativeCell(3), true, bytes);
+    GetNativeString(2, zClassModel[class.ID], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1952,7 +1970,7 @@ public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassArms[class.ID], GetNativeCell(3), bytes);
+    SetNativeString(2, zClassArms[class.ID], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1960,6 +1978,6 @@ public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassArms[class.ID], GetNativeCell(3), true, bytes);
+    GetNativeString(2, zClassArms[class.ID], GetNativeCell(3), bytes);
     return bytes;
 }
