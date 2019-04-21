@@ -36,12 +36,12 @@ public void OnPluginStart()
 {
     // We are registering zombie
     registeredClass = ZombieClass();
-    registeredClass.SetName("", MAX_CLASS_NAME_SIZE);
-    registeredClass.GetDesc("", MAX_CLASS_DESC_SIZE);
-    registeredClass.SetModel("", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = 105;
-    registeredClass.Damage = 20.0;
-    registeredClass.Speed = 1.1;
+    registeredClass.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
+    registeredClass.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 80;
+    registeredClass.Damage = 15.0;
+    registeredClass.Speed = 1.2;
     registeredClass.Gravity = 0.8;
     registeredClass.Excluded = false;
                         
