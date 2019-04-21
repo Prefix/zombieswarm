@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <sdktools>
-#include <zombiemod>
+#include <zombieswarm>
 
 public Plugin myinfo =
 {

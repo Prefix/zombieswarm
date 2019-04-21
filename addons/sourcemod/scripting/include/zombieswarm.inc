@@ -1,7 +1,7 @@
-#if defined _zombiemod_included
+#if defined _zombieswarm_included
   #endinput
 #endif
-#define _zombiemod_included
+#define _zombieswarm_included
 
 #define ZOMBIES_TEAM 2
 #define HUMAN_TEAM 3

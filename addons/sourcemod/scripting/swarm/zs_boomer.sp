@@ -2,7 +2,7 @@
 #include <cstrike>
 #include <sdktools>
 #include <sdkhooks>
-#include <zombiemod>
+#include <zombieswarm>
 
 public Plugin myinfo =
 {

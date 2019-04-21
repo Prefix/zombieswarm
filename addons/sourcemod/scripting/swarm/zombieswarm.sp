@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <zombiemod>
+#include <zombieswarm>
 #include <gum>
 #include <cstrike>
 #include <colorvariables>
@@ -183,7 +183,7 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
     // Register mod library
-    RegPluginLibrary("zombiemod");
+    RegPluginLibrary("zombieswarm");
 
     forwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
     forwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
