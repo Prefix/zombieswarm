@@ -133,7 +133,7 @@ public void OnPluginStart()
 {
     CreateConVar("zombie_mod", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
     
-    cvarRespawnTimeZ = CreateConVar("zm_respawn_time_t_vip", "3.0", "Vip players respawn time after team join or death");
+    cvarRespawnTimeZ = CreateConVar("zm_respawn_time_t", "3.0", "Vip players respawn time after team join or death");
     cvarRespawnTimeZVip = CreateConVar("zm_respawn_time_t_vip", "3.0", "Vip players respawn time after team join or death");
     cvarRespawnTimeS = CreateConVar("zm_respawn_time_ct", "60.0", "Players respawn time after team join or death");
     cvarRespawnTimeSVip = CreateConVar("zm_respawn_time_ct_vip", "55.0", "Vip players respawn time after team join or death");
@@ -168,6 +168,7 @@ public void OnPluginStart()
     
     // Configs
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
+    AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm")
 }
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
 	if (convar == cvarFog) {
