@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <cstrike>
 #include <sdktools>
-#include <zombiemod>
+#include <zombieswarm>
 
 #pragma newdecls required
 

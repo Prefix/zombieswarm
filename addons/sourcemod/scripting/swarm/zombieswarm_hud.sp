@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <gum>
 #include <sdktools>
-#include <zombiemod>
+#include <zombieswarm>
 
 #pragma semicolon 1
 #pragma newdecls required

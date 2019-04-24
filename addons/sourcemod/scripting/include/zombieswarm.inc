@@ -1,10 +1,15 @@
-#if defined _zombiemod_included
+#if defined _zombieswarm_included
   #endinput
 #endif
-#define _zombiemod_included
+#define _zombieswarm_included
 
 #define ZOMBIES_TEAM 2
 #define HUMAN_TEAM 3
+
+#define MAX_CLASS_NAME_SIZE 64
+#define MAX_CLASS_DESC_SIZE 128
+#define MAX_CLASS_MODEL_SIZE 128
+#define MAX_CLASS_ARMS_SIZE 128
 
 #define DISTANCE_BEFORE 3000.0 // Distance before pulling
 
@@ -55,7 +60,7 @@ methodmap ZMPlayer {
 
 methodmap ZombieClass {
       // Constructor
-      public native ZombieClass(char[] name, char[] desc, char[] model,char[] arms = "", int health, float damage, float speed, float gravity, bool excluded = false);
+      public native ZombieClass();
       // Methods
       property int ID {
             public native get();
@@ -99,13 +104,7 @@ native int getTeam( int client, bool trueform = false );
 
 native void setTeam( int client, int team );
 
-native int getZombieClass( int client );
-
 native int getRandomZombieClass();
-
-native void setZombieClass( int client, int class );
-
-native int registerZombieClass(char[] name, char[] desc, char[] model, int health, float damage, float speed, float gravity, bool excluded = false);
 
 native int getLastButtons( int client );
 

@@ -1,7 +1,7 @@
 #include <sourcemod>
 #include <cstrike>
 #include <sdktools>
-#include <zombiemod>
+#include <zombieswarm>
 
 public Plugin myinfo =
 {
@@ -24,18 +24,16 @@ float lastPressedButtons[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    // We are registering item
-    registeredClass = ZombieClass(
-        "Zombie Hunter", // Class name
-        "Has leaping (CTRL + ATTACK2 button)", // Class description
-        "models/player/custom/hunter/hunter", // Class model
-        "", // Arms models
-        80, // Class base HP
-        17.0, // Class damage
-        1.0, // Class speed
-        0.8, // Class gravity
-        false // Is class excluded from normal rotation
-    );
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
+    registeredClass.SetDesc("Has leaping (CTRL + ATTACK2 button)", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = 80;
+    registeredClass.Damage = 17.0;
+    registeredClass.Speed = 1.0;
+    registeredClass.Gravity = 0.8;
+    registeredClass.Excluded = false;
 }
 public void onZCSelected(int client, int classId)
 {
