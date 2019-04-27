@@ -22,8 +22,11 @@ int fireSprite;
 int haloSprite;
 int explosionSprite;
 
-public void OnPluginStart()
-{
+public void OnPluginStart() {                 
+    HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
+}
+public void ZS_OnLoaded() {
+
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
@@ -34,8 +37,6 @@ public void OnPluginStart()
     registeredClass.Speed = 1.1;
     registeredClass.Gravity = 0.8;
     registeredClass.Excluded = false;
-                        
-    HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
 }
 public void onZCSelected(int client, int classId)
 {

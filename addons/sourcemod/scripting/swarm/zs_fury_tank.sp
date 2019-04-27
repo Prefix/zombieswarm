@@ -37,7 +37,13 @@ Handle timerNextTank;
 #define SPAWNTIME 90.0
 
 public void OnPluginStart()
-{
+{                  
+    HookEvent("player_spawn", eventPlayerSpawn);
+    HookEvent("player_death", eventPlayerDeath);
+    HookEvent("round_start", eventRoundStart); 
+    HookEvent("round_end", eventRoundEnd);
+}
+public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Zombie Fury [TANK]", MAX_CLASS_NAME_SIZE);
@@ -48,11 +54,6 @@ public void OnPluginStart()
     registeredClass.Speed = ZOMBIE_SPEED;
     registeredClass.Gravity = 0.8;
     registeredClass.Excluded = false;
-                        
-    HookEvent("player_spawn", eventPlayerSpawn);
-    HookEvent("player_death", eventPlayerDeath);
-    HookEvent("round_start", eventRoundStart); 
-    HookEvent("round_end", eventRoundEnd);
 }
 public void onZCSelected(int client, int classId)
 {

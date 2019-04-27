@@ -13,8 +13,7 @@ public Plugin myinfo =
 
 ZombieClass registeredClass;
 
-public void OnPluginStart()
-{
+public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Zombie Classic", MAX_CLASS_NAME_SIZE);

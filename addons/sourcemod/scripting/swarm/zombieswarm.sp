@@ -5,6 +5,9 @@
 #include <gum>
 #include <cstrike>
 #include <colorvariables>
+#include <overlays>
+
+#include <swarm/utils>
 
 #pragma newdecls required
 
@@ -98,11 +101,7 @@ int g_fLastButtons[MAXPLAYERS + 1 ];
 float f_HintSpeed[MAXPLAYERS + 1 ];
 int FogIndex = -1, SunIndex = -1, SkyCameraIndex = -1, CascadeLightIndex = -1;
 
-Handle cvarFogDensity;
-Handle cvarFogStartDist;
-Handle cvarFogEndDist;
-Handle cvarFogColor;
-Handle cvarFogZPlane;
+
 
 char humansWinSounds[][] = 
 {
@@ -133,7 +132,11 @@ char countdownSounds[][] = {
 
 // Convars
 
-ConVar cvarFog, cvarCountDown;
+ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist, cvarFogColor, cvarFogZPlane,
+       cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable;
+       
+// Fowards
+Handle fw_ZSOnLoaded;
 
 public void OnPluginStart()
 {   
@@ -147,13 +150,17 @@ public void OnPluginStart()
     // (UNSUPPORTED) SourceMod currently doesn't support this feature.
     // Added, but disabled by default
     cvarFog = CreateConVar("zm_env_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
-    cvarFogDensity = CreateConVar("sm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
-    cvarFogStartDist = CreateConVar("sm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
-    cvarFogEndDist = CreateConVar("sm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
-    cvarFogColor = CreateConVar("sm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
-    cvarFogZPlane = CreateConVar("sm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
+    cvarFogDensity = CreateConVar("zm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
+    cvarFogStartDist = CreateConVar("zm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
+    cvarFogEndDist = CreateConVar("zm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
+    cvarFogColor = CreateConVar("zm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
+    cvarFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
 
     cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
+    
+    cvarOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
+    cvarOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
+    cvarOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
     
     HookConVarChange(cvarFog, OnConVarChange);
     
@@ -186,6 +193,46 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
         cvarFog.SetInt(StringToInt(newValue));
         FogEnable(cvarFog.BoolValue);
     }
+    else if (convar == cvarFogDensity) {
+    	float val = StringToFloat(newValue);
+    	cvarFogDensity.SetFloat(val);
+    	if (FogIndex != -1) {
+    		DispatchKeyValueFloat(FogIndex, "fogmaxdensity", val);
+        }
+    }
+    else if (convar == cvarFogStartDist) {
+    	int val = StringToInt(newValue);
+    	cvarFogStartDist.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetStartDist");
+    	}
+    }
+    else if (convar == cvarFogEndDist) {
+    	int val = StringToInt(newValue);
+    	cvarFogEndDist.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetEndDist");
+		}
+    }
+    else if (convar == cvarFogColor) {
+    	cvarFogColor.SetString(newValue);
+    	if (FogIndex != -1) {
+			SetVariantString(newValue);
+			AcceptEntityInput(FogIndex, "SetColor");
+			SetVariantString(newValue);
+			AcceptEntityInput(FogIndex, "SetColorSecondary");
+    	}
+    }
+    else if (convar == cvarFogZPlane) {
+    	int val = StringToInt(newValue);
+    	cvarFogZPlane.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetFarZ");
+    	}
+    }
     else if (convar == cvarCountDown) {
         int value = StringToInt(newValue) > 10?10:StringToInt(newValue);
         cvarCountDown.SetInt(value);
@@ -197,8 +244,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     // Register mod library
     RegPluginLibrary("zombieswarm");
 
+	 // Fowards
+   
     forwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
     forwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+    
     CreateNative("isGhost", nativeIsGhost);
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
@@ -251,6 +301,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.SetModel", Native_ZombieClass_ModelSet);
     CreateNative("ZombieClass.GetArms", Native_ZombieClass_ArmsGet);
     CreateNative("ZombieClass.SetArms", Native_ZombieClass_ArmsSet);
+    
+    fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
 
     return APLRes_Success;
 }
@@ -324,9 +376,102 @@ public void OnMapStart()
     
     PrecacheModel(DEFAULT_ARMS);
     
+    char soundsPath[PLATFORM_MAX_PATH];
+    
+    for(int s = 0; s < sizeof(humansWinSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", humansWinSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(humansWinSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+    for(int s = 0; s < sizeof(zombiesWinSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", zombiesWinSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(zombiesWinSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+    for(int s = 0; s < sizeof(countdownSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", countdownSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(countdownSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+
+    FakePrecacheSoundEx("sound/radio/terwin.wav");
+    FakePrecacheSoundEx("sound/radio/ctwin.wav");
+    
+    char overlay_ct[125], overlay_t[125];
+    cvarOverlayTWin.GetString(overlay_t,sizeof(overlay_t));
+    cvarOverlayCTWin.GetString(overlay_ct,sizeof(overlay_ct));
+    
+    PrecacheDecalAnyDownload(overlay_t);
+    PrecacheDecalAnyDownload(overlay_ct);
+    
+    // Set team names
+    SetConVarString(FindConVar("mp_teamname_1"), "HUMANS");
+    SetConVarString(FindConVar("mp_teamname_2"), "ZOMBIES");
+    
+    // Get round time
+    float roundTime = GetConVarFloat(FindConVar("mp_roundtime"));
+    
+    // Bug fix for standart maps
+    SetConVarFloat(FindConVar("mp_roundtime_hostage"), roundTime);
+    SetConVarFloat(FindConVar("mp_roundtime_defuse"),  roundTime);
+    
+    // Remove free armor
+    SetConVarInt(FindConVar("mp_free_armor"), 0);
+    
+    SetConVarInt(FindConVar("mp_timelimit"), 20);
+    SetConVarInt(FindConVar("mp_maxrounds"), 0);
+    SetConVarInt(FindConVar("mp_friendlyfire"), 0);
+
+    int ent; 
+    ent = FindEntityByClassname(-1, "env_fog_controller");
+    if (ent != -1)  {
+        FogIndex = ent;
+    }
+    else {
+        FogIndex = CreateEntityByName("env_fog_controller");
+        DispatchSpawn(FogIndex);
+    }
+
+    SunIndex = FindEntityByClassname(-1, "env_sun");
+
+    CreateFog();
+    FogEnable(cvarFog.BoolValue);
+    
+    Call_StartForward(fw_ZSOnLoaded);
+    Call_Finish();
+    
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
-    char soundsPath[PLATFORM_MAX_PATH];
 
     //**********************************************
     //* Zombie class precache                          *
@@ -403,89 +548,6 @@ public void OnMapStart()
         // We're done with this file now, so we can close it
         delete iDocument;
     }
-    
-    for(int s = 0; s < sizeof(humansWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", humansWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(humansWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(zombiesWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", zombiesWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(zombiesWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(countdownSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", countdownSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(countdownSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-
-    FakePrecacheSoundEx("sound/radio/terwin.wav");
-    FakePrecacheSoundEx("sound/radio/ctwin.wav");
-
-    
-    // Set team names
-    SetConVarString(FindConVar("mp_teamname_1"), "HUMANS");
-    SetConVarString(FindConVar("mp_teamname_2"), "ZOMBIES");
-    
-    // Get round time
-    float roundTime = GetConVarFloat(FindConVar("mp_roundtime"));
-    
-    // Bug fix for standart maps
-    SetConVarFloat(FindConVar("mp_roundtime_hostage"), roundTime);
-    SetConVarFloat(FindConVar("mp_roundtime_defuse"),  roundTime);
-    
-    // Remove free armor
-    SetConVarInt(FindConVar("mp_free_armor"), 0);
-    
-    SetConVarInt(FindConVar("mp_timelimit"), 20);
-    SetConVarInt(FindConVar("mp_maxrounds"), 0);
-    SetConVarInt(FindConVar("mp_friendlyfire"), 0);
-
-    int ent; 
-    ent = FindEntityByClassname(-1, "env_fog_controller");
-    if (ent != -1)  {
-        FogIndex = ent;
-    }
-    else {
-        FogIndex = CreateEntityByName("env_fog_controller");
-        DispatchSpawn(FogIndex);
-    }
-
-    SunIndex = FindEntityByClassname(-1, "env_sun");
-
-    CreateFog();
-    FogEnable(cvarFog.BoolValue);
 }
 
 void CreateFog() {
@@ -918,6 +980,8 @@ public Action eventRoundStartNoCopy(Event event, const char[] name, bool dontBro
     // Removes all entities with a targetname that match in ROUNDSTART_OBJECTIVE_ENTITIES,
     // and removes them, so standart map will avalible for playing
     removeMapEventEntity(ROUNDSTART_OBJECTIVE_ENTITIES); 
+    
+    ZS_ShowOverlayToAll("");
 }
 
 public Action eventWinPanelRound(Event event, const char[] name, bool dontBroadcast)
@@ -953,14 +1017,24 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             StopSound(client, SNDCHAN_STATIC, "radio/rounddraw.wav");
             StopSound(client, SNDCHAN_STATIC, "radio/terwin.wav");*/
             
+            char overlay[125];
+            
             if(winner == CS_TEAM_T) {
                 int randomSound = GetRandomInt(0, sizeof(zombiesWinSounds)-1);
+                cvarOverlayTWin.GetString(overlay,sizeof(overlay));
                 
                 playClientCommandSound(client, zombiesWinSounds[randomSound]);
             } else if(winner == CS_TEAM_CT) {
                 int randomSound = GetRandomInt(0, sizeof(humansWinSounds)-1);
+                cvarOverlayCTWin.GetString(overlay,sizeof(overlay));
                 
                 playClientCommandSound(client, humansWinSounds[randomSound]);
+            }
+            
+            if (cvarOverlayEnable.BoolValue) {
+            	if (strlen(overlay) > 0) {
+            		ShowOverlayAll(overlay,5.0);
+            	}
             }
         }
     }

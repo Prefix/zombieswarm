@@ -22,8 +22,7 @@ int hunterNumLeapSounds[MAXPLAYERS + 1];
 
 float lastPressedButtons[MAXPLAYERS + 1];
 
-public void OnPluginStart()
-{
+public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);

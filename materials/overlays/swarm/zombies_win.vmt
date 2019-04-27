@@ -1,0 +1,8 @@
+"Refract"
+{
+	"$model" 1
+	"$refractamount" "0"
+	"$bluramount" "0"
+	"$REFRACTTINTtexture" "overlays/swarm/zombies_win"
+	"$scale" "[1 1]"
+}

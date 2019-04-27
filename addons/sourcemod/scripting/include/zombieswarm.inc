@@ -19,6 +19,9 @@
 // Checks if user alive, whithout any errors.
 #define IsValidAlive(%1) ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && IsPlayerAlive(%1) )
 
+// Fowards
+forward void ZS_OnLoaded();
+
 methodmap ZMPlayer {
       // Constructor
       public native ZMPlayer(int client);

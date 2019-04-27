@@ -32,8 +32,10 @@ Handle timerCooldown[MAXPLAYERS + 1];
 
 bool hasInvisibility[MAXPLAYERS + 1];
 
-public void OnPluginStart()
-{
+public void OnPluginStart() {                 
+    HookEvent("player_spawn", eventPlayerSpawn);
+}
+public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
@@ -44,8 +46,6 @@ public void OnPluginStart()
     registeredClass.Speed = 1.2;
     registeredClass.Gravity = 0.8;
     registeredClass.Excluded = false;
-                        
-    HookEvent("player_spawn", eventPlayerSpawn);
 }
 public void onZCSelected(int client, int classId)
 {

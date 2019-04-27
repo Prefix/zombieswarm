@@ -23,8 +23,13 @@ int g_fLastButtons[MAXPLAYERS + 1 ], LaserCache;
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-public void OnPluginStart()
-{
+public void OnPluginStart() {                   
+    HookEvent("player_spawn", eventPlayerSpawn);
+    HookEvent("player_death", eventPlayerDeath);
+    HookEvent("round_start", eventRoundStart, EventHookMode_Pre);
+    HookEvent("round_end", eventRoundEnd);
+}
+public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass();
     registeredClass.SetName("Zombie Smoker", MAX_CLASS_NAME_SIZE);
@@ -35,11 +40,6 @@ public void OnPluginStart()
     registeredClass.Speed = 1.0;
     registeredClass.Gravity = 0.8;
     registeredClass.Excluded = false;
-                        
-    HookEvent("player_spawn", eventPlayerSpawn);
-    HookEvent("player_death", eventPlayerDeath);
-    HookEvent("round_start", eventRoundStart, EventHookMode_Pre);
-    HookEvent("round_end", eventRoundEnd);
 }
 public void onZCSelected(int client, int classId)
 {
