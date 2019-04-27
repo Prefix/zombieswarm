@@ -187,6 +187,9 @@ public void OnPluginStart()
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
     AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
     CreateConVar("sm_zombieswarm_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    
+    Call_StartForward(fw_ZSOnLoaded);
+    Call_Finish();
 }
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
     if (convar == cvarFog) {
@@ -245,7 +248,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     RegPluginLibrary("zombieswarm");
 
 	 // Fowards
-   
     forwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
     forwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
     
@@ -466,9 +468,6 @@ public void OnMapStart()
 
     CreateFog();
     FogEnable(cvarFog.BoolValue);
-    
-    Call_StartForward(fw_ZSOnLoaded);
-    Call_Finish();
     
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
