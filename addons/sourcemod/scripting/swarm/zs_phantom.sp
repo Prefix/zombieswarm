@@ -15,9 +15,6 @@ public Plugin myinfo =
 
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
 
-#define INVISIBILITY_DURATION 3.0
-#define INVISIBILITY_COOLDOWN 8.0
-
 ZombieClass registeredClass;
 
 float lastPressedButtons[MAXPLAYERS + 1];
@@ -28,12 +25,23 @@ float timeleft_cooldown[MAXPLAYERS + 1];
 // Timers
 Handle timerInvisibility[MAXPLAYERS + 1];
 Handle timerCountdown[MAXPLAYERS + 1];
-Handle timerCooldown[MAXPLAYERS + 1];
 
 bool hasInvisibility[MAXPLAYERS + 1];
 
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zInvisibility;
+
 public void OnPluginStart() {                 
     HookEvent("player_spawn", eventPlayerSpawn);
+    
+    zHP = CreateConVar("zs_phantom_hp", "80", "Zombie Phantom HP");
+    zDamage = CreateConVar("zs_phantom_damage","15.0","Zombie Phantom done damage");
+    zSpeed = CreateConVar("zs_phantom_speed","1.2","Zombie Phantom speed");
+    zGravity = CreateConVar("zs_phantom_gravity","0.8","Zombie Phantom gravity");
+    zExcluded = CreateConVar("zs_phantom_excluded","0","1 - Excluded, 0 - Not excluded");
+    zCooldown = CreateConVar("zs_phantom_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
+    zInvisibility = CreateConVar("zs_phantom_invisibility","3.0","Time in second until Phantom invisible");
+    
+    AutoExecConfig(true, "zombie.phantom", "sourcemod/zombieswarm");
 }
 public void ZS_OnLoaded() {
     // We are registering zombie
@@ -41,15 +49,12 @@ public void ZS_OnLoaded() {
     registeredClass.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = 80;
-    registeredClass.Damage = 15.0;
-    registeredClass.Speed = 1.2;
-    registeredClass.Gravity = 0.8;
-    registeredClass.Excluded = false;
-}
-public void onZCSelected(int client, int classId)
-{
-    // TODO list
+    registeredClass.Health = zHP.IntValue;
+    registeredClass.Damage = zDamage.FloatValue;
+    registeredClass.Speed = zSpeed.FloatValue;
+    registeredClass.Gravity = zGravity.FloatValue;
+    registeredClass.Excluded = zExcluded.BoolValue;
+    registeredClass.Cooldown = zCooldown.FloatValue;
 }
 
 public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -148,28 +153,22 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 }
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
-public void onZRightClick(int client, int class, int buttons)
-{
+public bool ZS_OnAbilityButtonPressed(int client, int ZClass) { 
     if ( !IsValidAlive(client) )
-        return;
+        return false;
 
     ZMPlayer player = ZMPlayer(client);
         
     if ( player.Ghost )
-        return;
+        return false;
         
     if ( player.Team != CS_TEAM_T)
-        return;
+        return false;
         
     if ( player.ZombieClass != registeredClass.ID )
-        return;
+        return false;
             
     float currentTime = GetGameTime();
-            
-    if (currentTime - (lastPressedButtons[client] + INVISIBILITY_DURATION) < INVISIBILITY_COOLDOWN)
-    {
-        return;
-    }
         
     if (timerInvisibility[client] != null) {
         delete timerInvisibility[client];
@@ -189,13 +188,14 @@ public void onZRightClick(int client, int class, int buttons)
     
     EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 
-    timeleft_countdown[client] = INVISIBILITY_DURATION;
+    timeleft_countdown[client] = zInvisibility.FloatValue;
     timerCountdown[client] = CreateTimer(0.1, countdownCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-    timerInvisibility[client] = CreateTimer(INVISIBILITY_DURATION, invisibilityCallback, client, TIMER_FLAG_NO_MAPCHANGE);
+    timerInvisibility[client] = CreateTimer(zInvisibility.FloatValue, invisibilityCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     
     lastPressedButtons[client] = currentTime;
+    
+    return true;
 }
-
 public Action countdownCallback(Handle timer, any client)
 {
     timerCountdown[client] = null;
@@ -232,33 +232,7 @@ public Action invisibilityCallback(Handle timer, any client)
     
     // Back to first state
     hasInvisibility[client] = false;
-    timeleft_cooldown[client] = INVISIBILITY_COOLDOWN-INVISIBILITY_DURATION;
-    timerCooldown[client] = CreateTimer(0.1, cooldownCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-
-    return Plugin_Continue;
-}
-
-public Action cooldownCallback(Handle timer, any client)
-{
-    timerCooldown[client] = null;
-    
-    if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-        timerCooldown[client] = null;
-        return Plugin_Continue;
-    }
-    ZMPlayer player = ZMPlayer(client);
-    if (timeleft_cooldown[client] <= 0.1) {
-        player.OverrideHint = false;
-        timerCooldown[client] = null;        
-        return Plugin_Continue;
-    }
-    timeleft_cooldown[client] -= 0.1;
-    player.OverrideHint = true;
-    char hinttext[512];
-    Format(hinttext, sizeof(hinttext), "<font color='#00FF00'>Ability cooldown for %.1fs!</font>", timeleft_cooldown[client]);
-    player.OverrideHintText(hinttext);
-
-    timerCooldown[client] = CreateTimer(0.1, cooldownCallback, client, TIMER_FLAG_NO_MAPCHANGE);
+    timeleft_cooldown[client] = zCooldown.FloatValue - zInvisibility.FloatValue;
 
     return Plugin_Continue;
 }

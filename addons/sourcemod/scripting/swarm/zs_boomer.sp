@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -13,17 +14,26 @@ public Plugin myinfo =
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-#define DAMAGE_EXPLODE 30.0
-#define DAMAGE_DISTANCE 250.0
-
 ZombieClass registeredClass;
 
 int fireSprite;
 int haloSprite;
 int explosionSprite;
 
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius;
+
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
+    
+    zHP = CreateConVar("zs_boomer_hp", "105", "Zombie Boomer HP");
+    zDamage = CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
+    zSpeed = CreateConVar("zs_boomer_speed","1.1","Zombie Boomer speed");
+    zGravity = CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");
+    zExcluded = CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
+    zExplodeDamage = CreateConVar("zs_boomer_explode_damage","30.0","Zombie Boomer damage done then he explode");
+    zRadius = CreateConVar("zs_boomer_radius","250.0","Explosion radius");
+    
+    AutoExecConfig(true, "zombie.boomer", "sourcemod/zombieswarm");
 }
 public void ZS_OnLoaded() {
 
@@ -32,20 +42,11 @@ public void ZS_OnLoaded() {
     registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Explodes on death", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = 105;
-    registeredClass.Damage = 20.0;
-    registeredClass.Speed = 1.1;
-    registeredClass.Gravity = 0.8;
-    registeredClass.Excluded = false;
-}
-public void onZCSelected(int client, int classId)
-{
-    // TODO list
-}
-
-public void OnClientPostAdminCheck(int client)
-{
-    
+    registeredClass.Health = zHP.IntValue;
+    registeredClass.Damage = zDamage.FloatValue;
+    registeredClass.Speed = zSpeed.FloatValue;
+    registeredClass.Gravity = zGravity.FloatValue;
+    registeredClass.Excluded = zExcluded.BoolValue;
 }
 
 public void OnMapStart()
@@ -66,8 +67,6 @@ public void OnMapStart()
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId(GetEventInt(event,"userid"));
-
-    //if (IsValidClient(victim) && getZombieClass(victim) == registeredClass && !isGhost(victim) && getTeam(victim) == CS_TEAM_T)
     
     if ( !IsValidClient(victim) )
         return Plugin_Continue;
@@ -95,17 +94,17 @@ stock explodePlayer(int client)
     {
         ZMPlayer player = ZMPlayer(client);
         ZMPlayer enemyplayer = ZMPlayer(client);
-        if ( !IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team )
+        if (!IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
             continue;
 
         GetClientAbsOrigin ( enemy, targetOrigin );
         distanceBetween = GetVectorDistance ( targetOrigin, location );
         
-        if ( ( distanceBetween < DAMAGE_DISTANCE ) )
-        {
-            SDKHooks_TakeDamage(enemy, client, client, DAMAGE_EXPLODE, DMG_BLAST, -1, NULL_VECTOR, NULL_VECTOR);
+        if (( distanceBetween <= zRadius.FloatValue)) {
+            SDKHooks_TakeDamage(enemy, client, client, zExplodeDamage.FloatValue, DMG_BLAST, -1, NULL_VECTOR, NULL_VECTOR);
             
-            fadePlayer(enemy, 9, 10, {0, 133, 33, 210});
+            Util_Fade(enemy, 9, 10, {0, 133, 33, 210});
+            Util_ShakeScreen(enemy);
         }
     }
             

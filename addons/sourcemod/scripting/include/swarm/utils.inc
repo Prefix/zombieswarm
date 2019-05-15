@@ -3,14 +3,34 @@
 #endif
 #define _zombieswarm_utils_included
 
-ZS_ShowOverlayToClient(client, const String:overlaypath[]) {
-	ClientCommand(client, "r_screenoverlay \"%s\"", overlaypath);
-}
 
-ZS_ShowOverlayToAll(const String:overlaypath[]) {
-	for (int client = 1; client <= MaxClients; client++) {
-		if (IsClientInGame(client) && !IsFakeClient(client)) {
-			ZS_ShowOverlayToClient(client, overlaypath);
-		}
+stock Util_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
+	Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
+	
+	if(Fade != null) {
+		// Write shake information to message handle
+		Fade.SetInt("duration", RoundToNearest(duration * 1000.0)); 
+		Fade.SetInt("hold_time", RoundToNearest(hold * 1000.0)); 
+		Fade.SetInt("flags", 0x0009); 
+		Fade.SetColor("clr", color); 
+
+		// End usermsg and send to the client
+		EndMessage();
 	}
+} 
+stock void Util_ShakeScreen(int client, float duration = 3.0, float amplitude = 2.0, float freq = 1.0) {
+    // Create message
+    Protobuf Shake = view_as<Protobuf>(StartMessageOne("Shake", client));
+
+    // Validate message
+    if(Shake != null) {
+        // Write shake information to message handle
+        Shake.SetInt("command", 0);
+        Shake.SetFloat("local_amplitude", amplitude);
+        Shake.SetFloat("frequency", freq);
+        Shake.SetFloat("duration", duration);
+
+        // End usermsg and send to the client
+        EndMessage();
+    }
 }
