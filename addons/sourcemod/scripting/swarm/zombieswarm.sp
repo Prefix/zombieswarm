@@ -6,7 +6,6 @@
 #include <cstrike>
 #include <colorvariables>
 #include <overlays>
-
 #include <swarm/utils>
 
 #pragma newdecls required
@@ -78,7 +77,6 @@ Handle Cooldown[MAXPLAYERS + 1] = null;
 bool b_isGhost[MAXPLAYERS + 1], g_isCooldown[MAXPLAYERS + 1];
 bool shouldCollide[MAXPLAYERS + 1];
 bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
-float lastPressedButtons[MAXPLAYERS + 1];
 int CTSpawns, TSpawns;
 float Spawns[5][MAXPLAYERS + 1][3];
 
@@ -145,7 +143,8 @@ char countdownSounds[][] = {
 // Convars
 
 ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist, cvarFogColor, cvarFogZPlane,
-       cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable;
+       cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable,
+       cvarHumanGravity;
        
 // Fowards
 Handle fw_ZSOnLoaded, fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased;
@@ -167,12 +166,11 @@ public void OnPluginStart()
     cvarFogEndDist = CreateConVar("zm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
     cvarFogColor = CreateConVar("zm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
     cvarFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
-
     cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
-    
     cvarOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
     cvarOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
     cvarOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
+    cvarHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
     HookConVarChange(cvarFog, OnConVarChange);
     
@@ -327,7 +325,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     
     fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
     
-    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Ignore,Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Single,Param_Cell, Param_Cell);
     fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased",ET_Single,Param_Cell, Param_Cell);
 
     return APLRes_Success;
@@ -666,8 +664,6 @@ public void OnClientPostAdminCheck(int client)
     canJoin[client] = true;
     canIgnore[client] = false;
     
-    lastPressedButtons[client] = 0.0
-    
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
     SDKHook(client, SDKHook_TraceAttack, onTraceAttack);
     SDKHook(client, SDKHook_WeaponCanUse, onWeaponCanUse);
@@ -967,7 +963,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     
     setZombieGhostMode(client, false);
 
-    if (GetClientTeam(client) == CS_TEAM_T) {
+    if (GetClientTeam(client) == CS_TEAM_T && IsValidClient(client)) {
         
         // Set zombie ghost mode
         setZombieGhostMode(client, true);
@@ -988,19 +984,14 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         }
         menu.ExitButton = true;
         menu.Display(client, 0);
-
-        //CreateTimer( 0.1, teleportZombieToHuman, client, TIMER_FLAG_NO_MAPCHANGE );
+        
     } else if (GetClientTeam(client) == CS_TEAM_CT) {
-        SetEntityGravity(client, 0.8); 
+        SetEntityGravity(client, cvarHumanGravity.FloatValue); 
     }
     // Hide RADAR
     CreateTimer(0.0, RemoveRadar, client);
 }
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
-	
-	if (menu == null) 
-		return;
-		
 	if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T) {
 		char key[MAX_CLASS];
 		menu.GetItem(param2, key, sizeof(key));
@@ -1025,11 +1016,6 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
 		if (strlen(ZMClass[random][dataDescription])) {
 			CPrintToChat(client,"{red}%s",ZMClass[random][dataDescription]);
 		}
-		
-		delete menu;
-	}
-	else if (action == MenuAction_End) {
-		delete menu;
 	}
 }
 public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
@@ -1190,22 +1176,24 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 		ZMPlayer player = ZMPlayer(client);
 		bool status;
 		if (IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
-			if (GetEntProp(client, Prop_Data, "m_afButtonPressed") & ZMClass[zombieClass[client]][dataAbilityButton]) {
+			if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == ZMClass[zombieClass[client]][dataAbilityButton]) {
+				PrintToChatAll("paspaude");
 				Call_StartForward(fw_ZSOnAbilityButtonPressed);
 				Call_PushCell(client);
 				Call_PushCell(zombieClass[client]);
 				Call_PushCell(buttons);
 				Call_Finish(status);
 				
-				if (status) {
+				/*if (status) {
 					DataPack pack;
 					float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
 					Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
 					pack.WriteCell(client);
 					pack.WriteFloat(time);
-				}
+				}*/
 			}
-			if (GetEntProp(client, Prop_Data, "m_afButtonReleased") & ZMClass[zombieClass[client]][dataAbilityButton]) {
+			else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == ZMClass[zombieClass[client]][dataAbilityButton]) {
+				PrintToChatAll("atleido");
 				Call_StartForward(fw_ZSOnAbilityButtonReleased);
 				Call_PushCell(client);
 				Call_PushCell(zombieClass[client]);
@@ -1227,42 +1215,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 		}
 
 		if (b_isGhost[client]) {
-            float currentTime = GetGameTime();
-            
-            if (currentTime - lastPressedButtons[client] < 2.0)
-            {
-                g_fLastButtons[client] = buttons;
-                return Plugin_Continue;
-            }
-            
-            /*if((buttons & IN_USE))
-            {
-                float targetOrigin[3], changedTargetOrigin[3];
-                
-                int rClient = getRandomClient();
-                if (rClient > 0)
-                {
-                    GetClientAbsOrigin(rClient, targetOrigin);
-                    
-                    changedTargetOrigin[0] = targetOrigin[0];
-                    changedTargetOrigin[1] = targetOrigin[1];
-                    changedTargetOrigin[2] = targetOrigin[2];
-                    
-                    int isStuck = getPlayerStuckVector(client, changedTargetOrigin)
-                    if (isStuck < 0) {
-                        targetOrigin[0] = changedTargetOrigin[0];
-                        targetOrigin[1] = changedTargetOrigin[1];
-                        targetOrigin[2] = changedTargetOrigin[2];
-                    } else {
-                        
-                    }
-                    
-                    TeleportEntity(client, targetOrigin, NULL_VECTOR, NULL_VECTOR);
-                }
-                
-                lastPressedButtons[client] = currentTime;
-            }*/
-            
             if ((buttons & IN_ATTACK)) {
                 if (!IsClientInTargetsView(client)) {
                     if (isGhostCanSpawn) {
@@ -1278,8 +1230,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 } else {
                     showHintMessage(client, "<font color='#FF0000'>Hide from humans to respawn!</font>");
                 }
-                
-                lastPressedButtons[client] = currentTime;
             }
             if ((buttons & IN_RELOAD)) {
                 if (TSpawns > 0) {
@@ -1293,35 +1243,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                     CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
                 }
             }
-        } 
-		else {
-            if(!(buttons & IN_ATTACK2))
-            {
-                g_fLastButtons[client] = buttons;
-                return Plugin_Continue;
-            }
-            
-            char sWeapon[32];
-            GetClientWeapon(client, sWeapon, sizeof(sWeapon));
-            
-            if(StrContains(sWeapon, "knife")>=0)
-            {
-                callZombieRightClick(client, zombieClass[client], buttons);
-                g_fLastButtons[client] = buttons;
-                buttons &= ~IN_ATTACK2;
-                // disable animation
-                int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-                if(IsValidEntity(iWeapon))
-                SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", 99999.0);
-                return Plugin_Changed;
-            }
-            g_fLastButtons[client] = buttons;
-            
-            
-            return Plugin_Continue;
         }
     }
-    g_fLastButtons[client] = buttons;
     return Plugin_Continue;
 }
 
@@ -1847,7 +1770,8 @@ public Action CountDown(Handle timer) {
             continue;
         if(GetClientTeam(client) != CS_TEAM_T)
             continue;
-        playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
+        
+        Util_PlaySoundToClient(client,countdownSounds[(countdownNumber - 1)]);
     }
     
     countdownNumber--;
@@ -2085,7 +2009,7 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     ZMClass[numClasses][dataSpeed] = view_as<float>(DEFAULT_ZM_SPEED);
     ZMClass[numClasses][dataGravity] = view_as<float>(DEFAULT_ZM_GRAVITY);
     ZMClass[numClasses][dataExluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
-    ZMClass[numClasses][dataAbilityButton] = view_as<int>(IN_ATTACK2);
+    ZMClass[numClasses][dataAbilityButton] = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
     ZMClass[numClasses][dataCooldown] = view_as<float>(DEFAULT_ZM_COOLDOWN);
     ZMClass[numClasses][dataID] = numClasses-1;
     

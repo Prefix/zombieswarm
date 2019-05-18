@@ -34,3 +34,8 @@ stock void Util_ShakeScreen(int client, float duration = 3.0, float amplitude = 
         EndMessage();
     }
 }
+stock void Util_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
+	ClientCommand(client, "playgamesound Music.StopAllMusic");
+	ClientCommand(client, "play */%s", sound);
+	EmitSoundToClient(client, sound, -2, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SND_NOFLAGS, volume);
+}

@@ -154,17 +154,23 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 public bool ZS_OnAbilityButtonPressed(int client, int ZClass) { 
+    PrintToChatAll("client: %i",client);
+
     if ( !IsValidAlive(client) )
         return false;
 
     ZMPlayer player = ZMPlayer(client);
         
+    PrintToChatAll("ghost? %i",player.Ghost);
+    
     if ( player.Ghost )
         return false;
         
+    PrintToChatAll("T? %i",player.Team == CS_TEAM_T);
     if ( player.Team != CS_TEAM_T)
         return false;
         
+    PrintToChatAll("%i == %i",player.ZombieClass,registeredClass.ID);
     if ( player.ZombieClass != registeredClass.ID )
         return false;
             
