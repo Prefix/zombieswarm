@@ -268,6 +268,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
     CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
+    CreateNative("ZS_AbilityFinished",nativeAbilityFinished);
 
     // Our MethodMap
 
@@ -325,8 +326,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     
     fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
     
-    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Single,Param_Cell, Param_Cell);
-    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased",ET_Single,Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Ignore,Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased",ET_Ignore,Param_Cell, Param_Cell);
 
     return APLRes_Success;
 }
@@ -1138,6 +1139,21 @@ public Action eventTeamChange(Event event, const char[] name, bool dontBroadcast
     
     return Plugin_Handled;
 }
+
+public int nativeAbilityFinished(Handle plugin, int numParams) {
+	int client = GetNativeCell(1);
+	
+	if (!IsValidClient(client))
+		return false;
+	
+	DataPack pack;
+	float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
+	Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
+	pack.WriteCell(client);
+	pack.WriteFloat(time);
+	
+	return true;
+}
 public Action cooldownCallback(Handle timer, DataPack pack) {
 	pack.Reset();
 	int client = pack.ReadCell();
@@ -1153,6 +1169,7 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 		if (now > end) {
 			player.isCooldown = false;
 			player.OverrideHint = false;
+			
 			return Plugin_Stop;
 		}
 		else {
@@ -1174,47 +1191,27 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     
     if (GetClientTeam(client) == CS_TEAM_T) {
 		ZMPlayer player = ZMPlayer(client);
-		bool status;
+
 		if (IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
 			if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == ZMClass[zombieClass[client]][dataAbilityButton]) {
-				PrintToChatAll("paspaude");
 				Call_StartForward(fw_ZSOnAbilityButtonPressed);
 				Call_PushCell(client);
-				Call_PushCell(zombieClass[client]);
 				Call_PushCell(buttons);
-				Call_Finish(status);
+				Call_Finish();
 				
-				/*if (status) {
-					DataPack pack;
-					float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
-					Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
-					pack.WriteCell(client);
-					pack.WriteFloat(time);
-				}*/
+				player.isCooldown = true;
 			}
 			else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == ZMClass[zombieClass[client]][dataAbilityButton]) {
-				PrintToChatAll("atleido");
 				Call_StartForward(fw_ZSOnAbilityButtonReleased);
 				Call_PushCell(client);
-				Call_PushCell(zombieClass[client]);
 				Call_PushCell(buttons);
-				Call_Finish(status);
+				Call_Finish();
 				
-				if (status) {
-					if (Cooldown[client] != null) {
-						delete Cooldown[client];
-					}
-					
-					DataPack pack;
-					float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
-					Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
-					pack.WriteCell(client);
-					pack.WriteFloat(time);
-				}
+				player.isCooldown = true;
 			}
 		}
 
-		if (b_isGhost[client]) {
+		if (player.Ghost) {
             if ((buttons & IN_ATTACK)) {
                 if (!IsClientInTargetsView(client)) {
                     if (isGhostCanSpawn) {

@@ -57,23 +57,23 @@ public void OnMapStart() {
     AddFileToDownloadsTable( sPath );
 }
 
-public bool ZS_OnAbilityButtonPressed(int client, int ZClass, int buttons) {
+public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     if ( !IsValidAlive(client) )
-        return false;
+        return;
 
     ZMPlayer player = ZMPlayer(client);
         
     if ( player.Ghost )
-        return false;
+        return;
         
     if ( player.Team != CS_TEAM_T)
-        return false;
+        return;
         
     if ( player.ZombieClass != registeredClass.ID )
-        return false;
+        return;
         
     if (!((buttons & IN_DUCK) && (GetEntityFlags(client) & FL_ONGROUND)))
-        return false;
+        return;
 
     float cVelocity[3];
     
@@ -103,7 +103,8 @@ public bool ZS_OnAbilityButtonPressed(int client, int ZClass, int buttons) {
         
         hunterNumLeapSounds[client] = 0;
     }
-    
-    return true;
+}
+public void ZS_OnAbilityButtonReleased(int client, int buttons) {
+	ZS_AbilityFinished(client);
 }
 

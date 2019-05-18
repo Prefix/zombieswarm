@@ -21,10 +21,14 @@
 
 // Fowards
 forward void ZS_OnLoaded();
-forward bool ZS_OnAbilityButtonPressed(int client, int zClass, int buttons);
-forward bool ZS_OnAbilityButtonReleased(int client, int zClass, int buttons);
+forward void ZS_OnAbilityButtonPressed(int client, int buttons);
+forward void ZS_OnAbilityButtonReleased(int client, int buttons);
 forward void onZCSelected(int client, int zClass);
 forward void onZRightClick(int client, int zClass, int buttons);
+
+// natives
+
+native bool ZS_AbilityFinished(int client);
 
 methodmap ZMPlayer {
       // Constructor
