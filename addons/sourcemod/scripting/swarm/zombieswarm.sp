@@ -5,6 +5,8 @@
 #include <gum>
 #include <cstrike>
 #include <colorvariables>
+#include <overlays>
+#include <swarm/utils>
 
 #pragma newdecls required
 
@@ -40,8 +42,24 @@
 #define DEFAULT_ZM_SPEED 1.0
 #define DEFAULT_ZM_GRAVITY 1.0
 #define DEFAULT_ZM_EXCLUDED false
-
+#define DEFAULT_ZM_ABILITY_BUTTON IN_ATTACK2
+#define DEFAULT_ZM_COOLDOWN 5.0
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
+
+enum ZMClassData {
+	dataID,
+	dataHP,
+	dataAbilityButton,
+	Float:dataCooldown,
+	Float:dataSpeed,
+	Float:dataGravity,
+	Float:dataDamage,
+	String:dataName[MAX_CLASS_NAME_SIZE],
+	String:dataDescription[MAX_CLASS_DESC_SIZE],
+	String:dataModel[MAX_CLASS_DESC_SIZE],
+	String:dataArms[MAX_CLASS_DESC_SIZE],
+	bool:dataExluded
+}
 
 public Plugin myinfo =
 {
@@ -55,19 +73,14 @@ public Plugin myinfo =
 int numClasses;
 
 int zombieClass[MAXPLAYERS + 1], pTeam[MAXPLAYERS + 1];
-bool b_isGhost[MAXPLAYERS + 1]
+Handle Cooldown[MAXPLAYERS + 1] = null;
+bool b_isGhost[MAXPLAYERS + 1], g_isCooldown[MAXPLAYERS + 1];
 bool shouldCollide[MAXPLAYERS + 1];
 bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
-float lastPressedButtons[MAXPLAYERS + 1];
 int CTSpawns, TSpawns;
 float Spawns[5][MAXPLAYERS + 1][3];
 
-//ZombieClass classes[MAX_CLASS];
-int zClassHp[MAX_CLASS];
-float zClassSpeed[MAX_CLASS], zClassGravity[MAX_CLASS], zClassDamage[MAX_CLASS];
-char zClassName[MAX_CLASS][MAX_CLASS_NAME_SIZE], zClassDesc[MAX_CLASS][MAX_CLASS_DESC_SIZE],
-zClassModel[MAX_CLASS][MAX_CLASS_DESC_SIZE], zClassArms[MAX_CLASS][MAX_CLASS_DESC_SIZE];
-bool zClassExcluded[MAX_CLASS];
+int ZMClass[MAX_CLASS][ZMClassData]
 
 // Hint 
 
@@ -98,42 +111,43 @@ int g_fLastButtons[MAXPLAYERS + 1 ];
 float f_HintSpeed[MAXPLAYERS + 1 ];
 int FogIndex = -1, SunIndex = -1, SkyCameraIndex = -1, CascadeLightIndex = -1;
 
-Handle cvarFogDensity;
-Handle cvarFogStartDist;
-Handle cvarFogEndDist;
-Handle cvarFogColor;
-Handle cvarFogZPlane;
+
 
 char humansWinSounds[][] = 
 {
-    "zombie_mod/hwin1.mp3",
-    "zombie_mod/hwin2.mp3",
-    "zombie_mod/hwin3.mp3"
+    "swarm/hwin1.mp3",
+    "swarm/hwin2.mp3",
+    "swarm/hwin3.mp3"
 };
 
 char zombiesWinSounds[][] = 
 {
-    "zombie_mod/zwin1.mp3",
-    "zombie_mod/zwin2.mp3",
-    "zombie_mod/zwin3.mp3"
+    "swarm/zwin1.mp3",
+    "swarm/zwin2.mp3",
+    "swarm/zwin3.mp3"
 };
 
 char countdownSounds[][] = {
-    "zombie_mod/countdown/1.mp3",
-    "zombie_mod/countdown/2.mp3",
-    "zombie_mod/countdown/3.mp3",
-    "zombie_mod/countdown/4.mp3",
-    "zombie_mod/countdown/5.mp3",
-    "zombie_mod/countdown/6.mp3",
-    "zombie_mod/countdown/7.mp3",
-    "zombie_mod/countdown/8.mp3",
-    "zombie_mod/countdown/9.mp3",
-    "zombie_mod/countdown/10.mp3",
+    "swarm/countdown/1.mp3",
+    "swarm/countdown/2.mp3",
+    "swarm/countdown/3.mp3",
+    "swarm/countdown/4.mp3",
+    "swarm/countdown/5.mp3",
+    "swarm/countdown/6.mp3",
+    "swarm/countdown/7.mp3",
+    "swarm/countdown/8.mp3",
+    "swarm/countdown/9.mp3",
+    "swarm/countdown/10.mp3",
 }
 
 // Convars
 
-ConVar cvarFog, cvarCountDown;
+ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist, cvarFogColor, cvarFogZPlane,
+       cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable,
+       cvarHumanGravity;
+       
+// Fowards
+Handle fw_ZSOnLoaded, fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased;
 
 public void OnPluginStart()
 {   
@@ -147,13 +161,16 @@ public void OnPluginStart()
     // (UNSUPPORTED) SourceMod currently doesn't support this feature.
     // Added, but disabled by default
     cvarFog = CreateConVar("zm_env_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
-    cvarFogDensity = CreateConVar("sm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
-    cvarFogStartDist = CreateConVar("sm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
-    cvarFogEndDist = CreateConVar("sm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
-    cvarFogColor = CreateConVar("sm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
-    cvarFogZPlane = CreateConVar("sm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
-
+    cvarFogDensity = CreateConVar("zm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
+    cvarFogStartDist = CreateConVar("zm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
+    cvarFogEndDist = CreateConVar("zm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
+    cvarFogColor = CreateConVar("zm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
+    cvarFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
     cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
+    cvarOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
+    cvarOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
+    cvarOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
+    cvarHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
     HookConVarChange(cvarFog, OnConVarChange);
     
@@ -180,11 +197,57 @@ public void OnPluginStart()
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
     AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
     CreateConVar("sm_zombieswarm_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    
+    AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
+}
+public void OnAllPluginsLoaded() {
+	Call_StartForward(fw_ZSOnLoaded);
+	Call_Finish();
 }
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
     if (convar == cvarFog) {
         cvarFog.SetInt(StringToInt(newValue));
         FogEnable(cvarFog.BoolValue);
+    }
+    else if (convar == cvarFogDensity) {
+    	float val = StringToFloat(newValue);
+    	cvarFogDensity.SetFloat(val);
+    	if (FogIndex != -1) {
+    		DispatchKeyValueFloat(FogIndex, "fogmaxdensity", val);
+        }
+    }
+    else if (convar == cvarFogStartDist) {
+    	int val = StringToInt(newValue);
+    	cvarFogStartDist.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetStartDist");
+    	}
+    }
+    else if (convar == cvarFogEndDist) {
+    	int val = StringToInt(newValue);
+    	cvarFogEndDist.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetEndDist");
+		}
+    }
+    else if (convar == cvarFogColor) {
+    	cvarFogColor.SetString(newValue);
+    	if (FogIndex != -1) {
+			SetVariantString(newValue);
+			AcceptEntityInput(FogIndex, "SetColor");
+			SetVariantString(newValue);
+			AcceptEntityInput(FogIndex, "SetColorSecondary");
+    	}
+    }
+    else if (convar == cvarFogZPlane) {
+    	int val = StringToInt(newValue);
+    	cvarFogZPlane.SetInt(val);
+    	if (FogIndex != -1) {
+			SetVariantInt(val);
+			AcceptEntityInput(FogIndex, "SetFarZ");
+    	}
     }
     else if (convar == cvarCountDown) {
         int value = StringToInt(newValue) > 10?10:StringToInt(newValue);
@@ -197,8 +260,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     // Register mod library
     RegPluginLibrary("zombieswarm");
 
+	 // Fowards
     forwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
     forwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+    
     CreateNative("isGhost", nativeIsGhost);
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
@@ -224,6 +289,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZMPlayer.LastButtons.set", Native_ZMPlayer_LastButtonsSet);
     CreateNative("ZMPlayer.OverrideHint.get", Native_ZMPlayer_OverrideHintGet);
     CreateNative("ZMPlayer.OverrideHint.set", Native_ZMPlayer_OverrideHintSet);
+    CreateNative("ZMPlayer.isCooldown.get", Native_ZMPlayer_isCooldownGet);
+    CreateNative("ZMPlayer.isCooldown.set", Native_ZMPlayer_isCooldownSet);
     // Functions
     CreateNative("ZMPlayer.OverrideHintText", Native_ZMPlayer_OverrideHintText);
 
@@ -242,6 +309,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.Damage.set", Native_ZombieClass_DamageSet);
     CreateNative("ZombieClass.Excluded.get", Native_ZombieClass_ExcludedGet);
     CreateNative("ZombieClass.Excluded.set", Native_ZombieClass_ExcludedSet);
+    CreateNative("ZombieClass.Button.get", Native_ZombieClass_ButtonGet);
+    CreateNative("ZombieClass.Button.set", Native_ZombieClass_ButtonSet);
+    CreateNative("ZombieClass.Cooldown.get", Native_ZombieClass_CooldownGet);
+    CreateNative("ZombieClass.Cooldown.set", Native_ZombieClass_CooldownSet);
     // Functions
     CreateNative("ZombieClass.GetName", Native_ZombieClass_NameGet);
     CreateNative("ZombieClass.SetName", Native_ZombieClass_NameSet);
@@ -251,6 +322,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.SetModel", Native_ZombieClass_ModelSet);
     CreateNative("ZombieClass.GetArms", Native_ZombieClass_ArmsGet);
     CreateNative("ZombieClass.SetArms", Native_ZombieClass_ArmsSet);
+    
+    fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
+    
+    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Single,Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased",ET_Single,Param_Cell, Param_Cell);
 
     return APLRes_Success;
 }
@@ -324,9 +400,99 @@ public void OnMapStart()
     
     PrecacheModel(DEFAULT_ARMS);
     
+    char soundsPath[PLATFORM_MAX_PATH];
+    
+    for(int s = 0; s < sizeof(humansWinSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", humansWinSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(humansWinSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+    for(int s = 0; s < sizeof(zombiesWinSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", zombiesWinSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(zombiesWinSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+    for(int s = 0; s < sizeof(countdownSounds); s++)
+    {
+        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", countdownSounds[s]);
+        
+        if( FileExists(soundsPath) )
+        {
+            FakePrecacheSoundEx(countdownSounds[s]);
+            AddFileToDownloadsTable( soundsPath );
+        }
+        else
+        {
+            LogError("Cannot locate sounds file '%s'", soundsPath);
+        }
+    }
+    
+
+    FakePrecacheSoundEx("sound/radio/terwin.wav");
+    FakePrecacheSoundEx("sound/radio/ctwin.wav");
+    
+    char overlay_ct[125], overlay_t[125];
+    cvarOverlayTWin.GetString(overlay_t,sizeof(overlay_t));
+    cvarOverlayCTWin.GetString(overlay_ct,sizeof(overlay_ct));
+    
+    PrecacheDecalAnyDownload(overlay_t);
+    PrecacheDecalAnyDownload(overlay_ct);
+    
+    // Set team names
+    SetConVarString(FindConVar("mp_teamname_1"), "HUMANS");
+    SetConVarString(FindConVar("mp_teamname_2"), "ZOMBIES");
+    
+    // Get round time
+    float roundTime = GetConVarFloat(FindConVar("mp_roundtime"));
+    
+    // Bug fix for standart maps
+    SetConVarFloat(FindConVar("mp_roundtime_hostage"), roundTime);
+    SetConVarFloat(FindConVar("mp_roundtime_defuse"),  roundTime);
+    
+    // Remove free armor
+    SetConVarInt(FindConVar("mp_free_armor"), 0);
+    
+    SetConVarInt(FindConVar("mp_timelimit"), 20);
+    SetConVarInt(FindConVar("mp_maxrounds"), 0);
+    SetConVarInt(FindConVar("mp_friendlyfire"), 0);
+
+    int ent; 
+    ent = FindEntityByClassname(-1, "env_fog_controller");
+    if (ent != -1)  {
+        FogIndex = ent;
+    }
+    else {
+        FogIndex = CreateEntityByName("env_fog_controller");
+        DispatchSpawn(FogIndex);
+    }
+
+    SunIndex = FindEntityByClassname(-1, "env_sun");
+
+    CreateFog();
+    FogEnable(cvarFog.BoolValue);
+    
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
-    char soundsPath[PLATFORM_MAX_PATH];
 
     //**********************************************
     //* Zombie class precache                          *
@@ -336,21 +502,21 @@ public void OnMapStart()
         //****************  Player ****************//
         // Path should be models/player/custom_player/cso2_zombi/zombie
         
-        Format(zBuffer, sizeof(zBuffer), "%s.mdl", zClassModel[zClass]);
+        Format(zBuffer, sizeof(zBuffer), "%s.mdl", ZMClass[zClass][dataModel]);
         PrecacheModel(zBuffer);
         AddFileToDownloadsTable(zBuffer);
 
-        Format(zBuffer, sizeof(zBuffer), "%s.dx90.vtx", zClassModel[zClass]);
+        Format(zBuffer, sizeof(zBuffer), "%s.dx90.vtx", ZMClass[zClass][dataModel]);
         AddFileToDownloadsTable(zBuffer);
         
-        Format(zBuffer, sizeof(zBuffer), "%s.phy", zClassModel[zClass]);
+        Format(zBuffer, sizeof(zBuffer), "%s.phy", ZMClass[zClass][dataModel]);
         AddFileToDownloadsTable(zBuffer);
         
-        Format(zBuffer, sizeof(zBuffer), "%s.vvd", zClassModel[zClass]);
+        Format(zBuffer, sizeof(zBuffer), "%s.vvd", ZMClass[zClass][dataModel]);
         AddFileToDownloadsTable(zBuffer);
         
-        if (strlen(zClassArms[zClass])) {
-            Format(zBuffer,sizeof(zBuffer),"%s",zClassArms[zClass]);
+        if (strlen(ZMClass[zClass][dataArms])) {
+            Format(zBuffer,sizeof(zBuffer),"%s",ZMClass[zClass][dataArms]);
             AddFileToDownloadsTable(zBuffer);
         }
     }
@@ -403,91 +569,16 @@ public void OnMapStart()
         // We're done with this file now, so we can close it
         delete iDocument;
     }
-    
-    for(int s = 0; s < sizeof(humansWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", humansWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(humansWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(zombiesWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", zombiesWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(zombiesWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(countdownSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", countdownSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            FakePrecacheSoundEx(countdownSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-
-    FakePrecacheSoundEx("sound/radio/terwin.wav");
-    FakePrecacheSoundEx("sound/radio/ctwin.wav");
-
-    
-    // Set team names
-    SetConVarString(FindConVar("mp_teamname_1"), "HUMANS");
-    SetConVarString(FindConVar("mp_teamname_2"), "ZOMBIES");
-    
-    // Get round time
-    float roundTime = GetConVarFloat(FindConVar("mp_roundtime"));
-    
-    // Bug fix for standart maps
-    SetConVarFloat(FindConVar("mp_roundtime_hostage"), roundTime);
-    SetConVarFloat(FindConVar("mp_roundtime_defuse"),  roundTime);
-    
-    // Remove free armor
-    SetConVarInt(FindConVar("mp_free_armor"), 0);
-    
-    SetConVarInt(FindConVar("mp_timelimit"), 20);
-    SetConVarInt(FindConVar("mp_maxrounds"), 0);
-    SetConVarInt(FindConVar("mp_friendlyfire"), 0);
-
-    int ent; 
-    ent = FindEntityByClassname(-1, "env_fog_controller");
-    if (ent != -1)  {
-        FogIndex = ent;
-    }
-    else {
-        FogIndex = CreateEntityByName("env_fog_controller");
-        DispatchSpawn(FogIndex);
-    }
-
-    SunIndex = FindEntityByClassname(-1, "env_sun");
-
-    CreateFog();
-    FogEnable(cvarFog.BoolValue);
 }
+public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char[] sample, int &entity, int &iChannel, float &flVolume, int &iLevel, int &iPitch, int &iFlags) {
+	if (entity && entity <= MaxClients && (StrContains(sample, "physics") != -1 || StrContains(sample, "footsteps") != -1)) {
+		if (IsClientInGame(entity) && b_isGhost[entity]){
+			return Plugin_Handled;
+		}
+	}
 
+	return Plugin_Continue
+}
 void CreateFog() {
     if(FogIndex != -1)  {
         float FogDensity = GetConVarFloat(cvarFogDensity);
@@ -573,8 +664,6 @@ public void OnClientPostAdminCheck(int client)
     canJoin[client] = true;
     canIgnore[client] = false;
     
-    lastPressedButtons[client] = 0.0
-    
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
     SDKHook(client, SDKHook_TraceAttack, onTraceAttack);
     SDKHook(client, SDKHook_WeaponCanUse, onWeaponCanUse);
@@ -604,8 +693,13 @@ public void OnClientDisconnect(int client)
         if (timerZombieRespawn[client] != null) {
             delete timerZombieRespawn[client];
         }
+        
+        if (Cooldown[client] != null) {
+        	delete Cooldown[client];
+        }
         timerZombieRespawnLeft[client] = 0;
         g_fLastButtons[client] = 0;
+        g_isCooldown[client] = false;
     }
 }
 
@@ -658,8 +752,8 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     if (GetClientTeam(victim) == CS_TEAM_CT) {
         char sWeapon[32];
         GetClientWeapon(attacker, sWeapon, sizeof(sWeapon));
-        if(StrContains(sWeapon, "knife")>=0) {
-            damage = zClassDamage[zombieClass[attacker]];
+        if(StrContains(sWeapon, "knife") >=0 ) {
+            damage = ZMClass[zombieClass[attacker]][dataDamage];
             return Plugin_Changed;
         }
     }
@@ -835,6 +929,10 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     } else if (GetClientTeam(victim) == CS_TEAM_T) {
         timerZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(cvarRespawnTimeZVip) : GetConVarInt(cvarRespawnTimeZ);
         timerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
+        
+        if (Cooldown[victim] != null) {
+        	delete Cooldown[victim];
+        }
     }
 }
 
@@ -865,28 +963,61 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     
     setZombieGhostMode(client, false);
 
-    if (GetClientTeam(client) == CS_TEAM_T) {
+    if (GetClientTeam(client) == CS_TEAM_T && IsValidClient(client)) {
         
         // Set zombie ghost mode
         setZombieGhostMode(client, true);
         
         timerGhostHint[client] = CreateTimer( 1.0, ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
-
-        // Set random zombie class
-        zombieClass[client] = getRandZombieClass();
         
-        setZombieClassParameters(client);
+        Menu menu = new Menu(ZombieClassMenuHandler);
+        menu.SetTitle("Select zombie class:");
         
-        callZombieSelected(client, zombieClass[client]);
+        char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS];
         
-        //CreateTimer( 0.1, teleportZombieToHuman, client, TIMER_FLAG_NO_MAPCHANGE );
+        for(int i = 0; i < numClasses; i++) {
+            if(!ZMClass[i][dataExluded]) {
+                Format(className,sizeof(className),"%s",ZMClass[i][dataName]);
+                IntToString(i,key,sizeof(key));
+                menu.AddItem(key, className);
+            }
+        }
+        menu.ExitButton = true;
+        menu.Display(client, 0);
+        
     } else if (GetClientTeam(client) == CS_TEAM_CT) {
-        SetEntityGravity(client, 0.8); 
+        SetEntityGravity(client, cvarHumanGravity.FloatValue); 
     }
     // Hide RADAR
     CreateTimer(0.0, RemoveRadar, client);
 }
-
+public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
+	if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T) {
+		char key[MAX_CLASS];
+		menu.GetItem(param2, key, sizeof(key));
+		int classInt = StringToInt(key);
+		
+		zombieClass[client] = classInt;
+		setZombieClassParameters(client);
+		callZombieSelected(client, zombieClass[client]);
+		
+		CPrintToChat(client,"You selected: {red}%s",ZMClass[classInt][dataName]);
+		if (strlen(ZMClass[classInt][dataDescription])) {
+			CPrintToChat(client,"{red}%s",ZMClass[classInt][dataDescription]);
+		}
+	}
+	else if (action == MenuAction_Cancel) {
+		int random = getRandomZombieClass();
+		zombieClass[client] = random;
+		setZombieClassParameters(client);
+		callZombieSelected(client, zombieClass[client]);
+		
+		CPrintToChat(client,"Random Zombie class: {red}%s",ZMClass[random][dataName]);
+		if (strlen(ZMClass[random][dataDescription])) {
+			CPrintToChat(client,"{red}%s",ZMClass[random][dataDescription]);
+		}
+	}
+}
 public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
 {
     isGhostCanSpawn = false;
@@ -953,14 +1084,29 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             StopSound(client, SNDCHAN_STATIC, "radio/rounddraw.wav");
             StopSound(client, SNDCHAN_STATIC, "radio/terwin.wav");*/
             
+            char overlay[125];
+            
             if(winner == CS_TEAM_T) {
                 int randomSound = GetRandomInt(0, sizeof(zombiesWinSounds)-1);
+                cvarOverlayTWin.GetString(overlay,sizeof(overlay));
                 
                 playClientCommandSound(client, zombiesWinSounds[randomSound]);
             } else if(winner == CS_TEAM_CT) {
                 int randomSound = GetRandomInt(0, sizeof(humansWinSounds)-1);
+                cvarOverlayCTWin.GetString(overlay,sizeof(overlay));
                 
                 playClientCommandSound(client, humansWinSounds[randomSound]);
+            }
+            
+            if (cvarOverlayEnable.BoolValue) {
+            	if (strlen(overlay) > 0) {
+            		ShowOverlayAll(overlay,5.0);
+            	}
+            }
+            
+            g_isCooldown[client] = false;
+            if (Cooldown[client]) {
+            	delete Cooldown[client];
             }
         }
     }
@@ -992,57 +1138,90 @@ public Action eventTeamChange(Event event, const char[] name, bool dontBroadcast
     
     return Plugin_Handled;
 }
+public Action cooldownCallback(Handle timer, DataPack pack) {
+	pack.Reset();
+	int client = pack.ReadCell();
+	float end = pack.ReadFloat();
+		
+	if (!IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client)) {
+		return Plugin_Stop;
+	}
+	else {
+		float now = GetGameTime();
+		ZMPlayer player = ZMPlayer(client);
+		
+		if (now > end) {
+			player.isCooldown = false;
+			player.OverrideHint = false;
+			return Plugin_Stop;
+		}
+		else {
+			player.OverrideHint = true;
+			player.isCooldown = true;
+			float left = end - now;
+			char hintText[512];
+			Format(hintText, sizeof(hintText), "<font color='#00FF00'>Ability cooldown for %.1fs!</font>",left);
+			player.OverrideHintText(hintText);
+		}
+	}
 
+	return Plugin_Continue;
+}
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !IsValidAlive(client) )
     return Plugin_Continue;
     
     if (GetClientTeam(client) == CS_TEAM_T) {
-        if (b_isGhost[client]) {
-            float currentTime = GetGameTime();
-            
-            if (currentTime - lastPressedButtons[client] < 2.0)
-            {
-                g_fLastButtons[client] = buttons;
-                return Plugin_Continue;
-            }
-            
-            /*if((buttons & IN_USE))
-            {
-                float targetOrigin[3], changedTargetOrigin[3];
-                
-                int rClient = getRandomClient();
-                if (rClient > 0)
-                {
-                    GetClientAbsOrigin(rClient, targetOrigin);
-                    
-                    changedTargetOrigin[0] = targetOrigin[0];
-                    changedTargetOrigin[1] = targetOrigin[1];
-                    changedTargetOrigin[2] = targetOrigin[2];
-                    
-                    int isStuck = getPlayerStuckVector(client, changedTargetOrigin)
-                    if (isStuck < 0) {
-                        targetOrigin[0] = changedTargetOrigin[0];
-                        targetOrigin[1] = changedTargetOrigin[1];
-                        targetOrigin[2] = changedTargetOrigin[2];
-                    } else {
-                        
-                    }
-                    
-                    TeleportEntity(client, targetOrigin, NULL_VECTOR, NULL_VECTOR);
-                }
-                
-                lastPressedButtons[client] = currentTime;
-            }*/
-            
+		ZMPlayer player = ZMPlayer(client);
+		bool status;
+		if (IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
+			if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == ZMClass[zombieClass[client]][dataAbilityButton]) {
+				PrintToChatAll("paspaude");
+				Call_StartForward(fw_ZSOnAbilityButtonPressed);
+				Call_PushCell(client);
+				Call_PushCell(zombieClass[client]);
+				Call_PushCell(buttons);
+				Call_Finish(status);
+				
+				/*if (status) {
+					DataPack pack;
+					float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
+					Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
+					pack.WriteCell(client);
+					pack.WriteFloat(time);
+				}*/
+			}
+			else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == ZMClass[zombieClass[client]][dataAbilityButton]) {
+				PrintToChatAll("atleido");
+				Call_StartForward(fw_ZSOnAbilityButtonReleased);
+				Call_PushCell(client);
+				Call_PushCell(zombieClass[client]);
+				Call_PushCell(buttons);
+				Call_Finish(status);
+				
+				if (status) {
+					if (Cooldown[client] != null) {
+						delete Cooldown[client];
+					}
+					
+					DataPack pack;
+					float time = ZMClass[zombieClass[client]][dataCooldown] + GetGameTime();
+					Cooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
+					pack.WriteCell(client);
+					pack.WriteFloat(time);
+				}
+			}
+		}
+
+		if (b_isGhost[client]) {
             if ((buttons & IN_ATTACK)) {
                 if (!IsClientInTargetsView(client)) {
                     if (isGhostCanSpawn) {
                         setZombieGhostMode(client, false);
                         
                         // Set zombie speed
-                        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zClassSpeed[zombieClass[client]]);
+                        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", ZMClass[zombieClass[client]][dataSpeed]);
                         
                         showHintMessage(client, "<font color='#FFFFFF'>You've been revived! Slash and Smash!</font>");
                     } else {
@@ -1051,8 +1230,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 } else {
                     showHintMessage(client, "<font color='#FF0000'>Hide from humans to respawn!</font>");
                 }
-                
-                lastPressedButtons[client] = currentTime;
             }
             if ((buttons & IN_RELOAD)) {
                 if (TSpawns > 0) {
@@ -1066,32 +1243,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                     CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
                 }
             }
-        } else {
-            if(!(buttons & IN_ATTACK2))
-            {
-                g_fLastButtons[client] = buttons;
-                return Plugin_Continue;
-            }
-            
-            char sWeapon[32];
-            GetClientWeapon(client, sWeapon, sizeof(sWeapon));
-
-            if(StrContains(sWeapon, "knife")>=0)
-            {
-                callZombieRightClick(client, zombieClass[client], buttons);
-                g_fLastButtons[client] = buttons;
-                buttons &= ~IN_ATTACK2;
-                // disable animation
-                int iWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-                if(IsValidEntity(iWeapon))
-                SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", 99999.0);
-                return Plugin_Changed;
-            }
-            g_fLastButtons[client] = buttons;
-            return Plugin_Continue;
         }
     }
-    g_fLastButtons[client] = buttons;
     return Plugin_Continue;
 }
 
@@ -1150,7 +1303,7 @@ public Action ghostHint(Handle timer, any client)
         showHintMessage(client, "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>");
     } else {
         char sHintText[196];
-        Format(sHintText, sizeof(sHintText), "<font color='#00FF00'>%s</font><br/><font color='#FFFFFF'>%s</font>", zClassName[zombieClass[client]], zClassDesc[zombieClass[client]]);
+        Format(sHintText, sizeof(sHintText), "<font color='#00FF00'>%s</font><br/><font color='#FFFFFF'>%s</font>", ZMClass[zombieClass[client]][dataName], ZMClass[zombieClass[client]][dataDescription]);
         
         showHintMessage(client, sHintText);
     }
@@ -1447,10 +1600,10 @@ public int getRandomClient()
 
 stock int getZombieHealthRate(int client)
 {
-    int value = (RoundToCeil(SquareRoot(float(zClassHp[zombieClass[client]])/(getZombies()+1)/2.0))+2)*zClassHp[zombieClass[client]];
+    int value = (RoundToCeil(SquareRoot(float(ZMClass[zombieClass[client]][dataHP])/(getZombies()+1)/2.0))+2)*ZMClass[zombieClass[client]][dataHP];
 
     if (getHumans() < getZombies()) {
-        value = (RoundToCeil(SquareRoot(float(zClassHp[zombieClass[client]])/(getZombies()+1)/2.0)))*zClassHp[zombieClass[client]];
+        value = (RoundToCeil(SquareRoot(float(ZMClass[zombieClass[client]][dataHP])/(getZombies()+1)/2.0)))*ZMClass[zombieClass[client]][dataHP];
     }
     
     return value;
@@ -1558,7 +1711,7 @@ public int getRandZombieClass()
     
     for(int zClass = 0; zClass < numClasses; zClass++)
     {
-        if(zClassExcluded[zClass] == false) {
+        if(ZMClass[zClass][dataExluded] == false) {
             tclasses[classCount++] = zClass;
         }
     }
@@ -1571,16 +1724,16 @@ public void setZombieClassParameters(int client)
     if (pTeam[client] != CS_TEAM_T) return;
     // Set zombie class model
     char zBuffer[PLATFORM_MAX_PATH];
-    Format(zBuffer, sizeof(zBuffer), "%s.mdl", zClassModel[zombieClass[client]]);
+    Format(zBuffer, sizeof(zBuffer), "%s.mdl", ZMClass[zombieClass[client]][dataModel]);
     SetEntityModel(client, zBuffer);
     
     // Set zombie arms
-    if (strlen(zClassArms[zombieClass[client]]) > 0) {
+    if (strlen(ZMClass[zombieClass[client]][dataArms]) > 0) {
         int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
         if(ent != -1) {
             AcceptEntityInput(ent, "KillHierarchy");
         }
-        SetEntPropString(client, Prop_Send, "m_szArmsModel", zClassArms[zombieClass[client]]);
+        SetEntPropString(client, Prop_Send, "m_szArmsModel", ZMClass[zombieClass[client]][dataArms]);
     }
     else {
         int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
@@ -1597,10 +1750,10 @@ public void setZombieClassParameters(int client)
     if(b_isGhost[client])
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.4);
     else
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zClassSpeed[zombieClass[client]])
+    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", ZMClass[zombieClass[client]][dataSpeed])
     
     // Set zombie gravity
-    SetEntityGravity(client, zClassGravity[zombieClass[client]]);
+    SetEntityGravity(client, ZMClass[zombieClass[client]][dataGravity]);
 }
 
 public Action CountDown(Handle timer) {
@@ -1617,7 +1770,8 @@ public Action CountDown(Handle timer) {
             continue;
         if(GetClientTeam(client) != CS_TEAM_T)
             continue;
-        playClientCommandSound(client,countdownSounds[(countdownNumber - 1)]);
+        
+        Util_PlaySoundToClient(client,countdownSounds[(countdownNumber - 1)]);
     }
     
     countdownNumber--;
@@ -1831,24 +1985,37 @@ public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
     int client = player.Client;
     GetNativeString(2, c_OverrideHintText[client], MAX_HINT_SIZE);
 }
+public int Native_ZMPlayer_isCooldownSet(Handle plugin, int numParams) {
+	ZMPlayer player = GetNativeCell(1);
+	int client = player.Client;
+	g_isCooldown[client] = GetNativeCell(2);
+}
+public int Native_ZMPlayer_isCooldownGet(Handle plugin, int numParams) {
+	ZMPlayer player = GetNativeCell(1);
+	int client = player.Client;
+	return g_isCooldown[client];
+}
 
 //    Natives for MethodMap ZombieClass
 public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 {
-    Format(zClassName[numClasses], MAX_CLASS_NAME_SIZE, "%s", DEFAULT_ZM_NAME);
-    Format(zClassDesc[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_DESC);
-    Format(zClassModel[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
-    Format(zClassArms[numClasses], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
+    Format(ZMClass[numClasses][dataName], MAX_CLASS_NAME_SIZE, "%s", DEFAULT_ZM_NAME);
+    Format(ZMClass[numClasses][dataDescription], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_DESC);
+    Format(ZMClass[numClasses][dataModel], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
+    Format(ZMClass[numClasses][dataArms], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
 
-    zClassHp[numClasses] = view_as<int>(DEFAULT_ZM_HEALTH);
-
-    zClassDamage[numClasses] = view_as<float>(DEFAULT_ZM_DAMAGE);
-    zClassSpeed[numClasses] = view_as<float>(DEFAULT_ZM_SPEED);
-    zClassGravity[numClasses] = view_as<float>(DEFAULT_ZM_GRAVITY);
-    
-    zClassExcluded[numClasses] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
+    ZMClass[numClasses][dataHP] = view_as<int>(DEFAULT_ZM_HEALTH);
+    ZMClass[numClasses][dataDamage] = view_as<float>(DEFAULT_ZM_DAMAGE);
+    ZMClass[numClasses][dataSpeed] = view_as<float>(DEFAULT_ZM_SPEED);
+    ZMClass[numClasses][dataGravity] = view_as<float>(DEFAULT_ZM_GRAVITY);
+    ZMClass[numClasses][dataExluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
+    ZMClass[numClasses][dataAbilityButton] = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
+    ZMClass[numClasses][dataCooldown] = view_as<float>(DEFAULT_ZM_COOLDOWN);
+    ZMClass[numClasses][dataID] = numClasses-1;
     
     numClasses++;
+    
+    LogMessage("Zombie ID %i",numClasses-1);
     
     return numClasses-1;
 }
@@ -1861,68 +2028,90 @@ public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
 public int Native_ZombieClass_HealthGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return zClassHp[class.ID];
+    return ZMClass[class.ID][dataHP];
 }
 
 public int Native_ZombieClass_HealthSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    zClassHp[class.ID] = GetNativeCell(2);
+    ZMClass[class.ID][dataHP] = GetNativeCell(2);
 }
 
 public int Native_ZombieClass_SpeedGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return view_as<int>(zClassSpeed[class.ID]);
+    return view_as<int>(ZMClass[class.ID][dataSpeed]);
 }
 
 public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    zClassSpeed[class.ID] = GetNativeCell(2);
+    ZMClass[class.ID][dataSpeed] = GetNativeCell(2);
 }
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return view_as<int>(zClassGravity[class.ID]);
+    return view_as<int>(ZMClass[class.ID][dataGravity]);
 }
 
 public int Native_ZombieClass_GravitySet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    zClassGravity[class.ID] = GetNativeCell(2);
+    ZMClass[class.ID][dataGravity] = GetNativeCell(2);
 }
 
 public int Native_ZombieClass_ExcludedGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return view_as<int>(zClassExcluded[class.ID]);
+    return view_as<int>(ZMClass[class.ID][dataExluded]);
 }
 
 public int Native_ZombieClass_ExcludedSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    zClassExcluded[class.ID] = GetNativeCell(2);
+    ZMClass[class.ID][dataExluded] = GetNativeCell(2);
+}
+
+public int Native_ZombieClass_ButtonGet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    return view_as<int>(ZMClass[class.ID][dataAbilityButton]);
+}
+
+public int Native_ZombieClass_ButtonSet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    ZMClass[class.ID][dataAbilityButton] = GetNativeCell(2);
+}
+public int Native_ZombieClass_CooldownSet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    ZMClass[class.ID][dataCooldown] = GetNativeCell(2);
+}
+public int Native_ZombieClass_CooldownGet(Handle plugin, int numParams)
+{
+    ZombieClass class = GetNativeCell(1);
+    return view_as<int>(ZMClass[class.ID][dataCooldown]);
 }
 
 public int Native_ZombieClass_DamageGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return view_as<int>(zClassDamage[class.ID]);
+    return view_as<int>(ZMClass[class.ID][dataDamage]);
 }
 
 public int Native_ZombieClass_DamageSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    zClassDamage[class.ID] = GetNativeCell(2);
+    ZMClass[class.ID][dataDamage] = GetNativeCell(2);
 }
 
 public int Native_ZombieClass_NameGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassName[class.ID], GetNativeCell(3), true, bytes);
+    SetNativeString(2, ZMClass[class.ID][dataName], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1930,7 +2119,7 @@ public int Native_ZombieClass_NameSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassName[class.ID], GetNativeCell(3), bytes);
+    GetNativeString(2, ZMClass[class.ID][dataName], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1938,7 +2127,7 @@ public int Native_ZombieClass_DescGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), true, bytes);
+    SetNativeString(2, ZMClass[class.ID][dataDescription], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1946,7 +2135,7 @@ public int Native_ZombieClass_DescSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassDesc[class.ID], GetNativeCell(3), bytes);
+    GetNativeString(2, ZMClass[class.ID][dataDescription], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1954,7 +2143,7 @@ public int Native_ZombieClass_ModelGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassModel[class.ID], GetNativeCell(3), true, bytes);
+    SetNativeString(2, ZMClass[class.ID][dataModel], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1962,7 +2151,7 @@ public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassModel[class.ID], GetNativeCell(3), bytes);
+    GetNativeString(2, ZMClass[class.ID][dataModel], GetNativeCell(3), bytes);
     return bytes;
 }
 
@@ -1970,7 +2159,7 @@ public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    SetNativeString(2, zClassArms[class.ID], GetNativeCell(3), true, bytes);
+    SetNativeString(2, ZMClass[class.ID][dataArms], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -1978,6 +2167,6 @@ public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
     int bytes = 0;
-    GetNativeString(2, zClassArms[class.ID], GetNativeCell(3), bytes);
+    GetNativeString(2, ZMClass[class.ID][dataArms], GetNativeCell(3), bytes);
     return bytes;
 }

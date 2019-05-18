@@ -19,6 +19,13 @@
 // Checks if user alive, whithout any errors.
 #define IsValidAlive(%1) ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && IsPlayerAlive(%1) )
 
+// Fowards
+forward void ZS_OnLoaded();
+forward bool ZS_OnAbilityButtonPressed(int client, int zClass, int buttons);
+forward bool ZS_OnAbilityButtonReleased(int client, int zClass, int buttons);
+forward void onZCSelected(int client, int zClass);
+forward void onZRightClick(int client, int zClass, int buttons);
+
 methodmap ZMPlayer {
       // Constructor
       public native ZMPlayer(int client);
@@ -54,6 +61,10 @@ methodmap ZMPlayer {
             public native get();
             public native set(const bool val);
       }
+      property bool isCooldown {
+      		public native get();
+      		public native set(const bool val);
+      }
       // Zombie class related
       public native void OverrideHintText(char[] text);
 }
@@ -85,6 +96,14 @@ methodmap ZombieClass {
             public native get();
             public native set(const bool val);
       }
+      property int Button {
+            public native get();
+            public native set(int val);
+      }
+      property float Cooldown {
+      		public native get();
+      		public native set(float val);
+      }
       // Zombie class related
       public native void GetName(char[] text, int size);
       public native void SetName(char[] text, int size);
@@ -93,10 +112,6 @@ methodmap ZombieClass {
       public native void GetModel(char[] text, int size);
       public native void SetModel(char[] text, int size);
 }
-
-forward void onZCSelected(int client, int zClass);
-
-forward void onZRightClick(int client, int zClass, int buttons);
 
 native bool isGhost( int client );
 

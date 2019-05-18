@@ -13,17 +13,9 @@ public Plugin myinfo =
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-#define ZOMBIE_SPEED 1.0
-
 #define SOUND_FURY "zombie_mod/fury.mp3"
 
-#define FURY_DURATION 4.0
-#define FURY_COOLDOWN 12.0
-#define FURY_SPEED 1.15
-
 ZombieClass registeredClass;
-
-float lastPressedButtons[MAXPLAYERS + 1];
 
 Handle timerFury[MAXPLAYERS + 1];
 Handle timerFuryEffect[MAXPLAYERS + 1];
@@ -36,23 +28,38 @@ Handle timerNextTank;
 
 #define SPAWNTIME 90.0
 
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration;
+
 public void OnPluginStart()
-{
-    // We are registering zombie
-    registeredClass = ZombieClass();
-    registeredClass.SetName("Zombie Fury [TANK]", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Can rage (ATTACK2 button) with Iron skin", MAX_CLASS_DESC_SIZE);
-    registeredClass.SetModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = 135;
-    registeredClass.Damage = 30.0;
-    registeredClass.Speed = ZOMBIE_SPEED;
-    registeredClass.Gravity = 0.8;
-    registeredClass.Excluded = false;
-                        
+{                  
     HookEvent("player_spawn", eventPlayerSpawn);
     HookEvent("player_death", eventPlayerDeath);
     HookEvent("round_start", eventRoundStart); 
     HookEvent("round_end", eventRoundEnd);
+    
+    zHP = CreateConVar("zs_tank_hp", "135", "Zombie Tank HP");
+    zDamage = CreateConVar("zs_tank_damage","30.0","Zombie Tank done damage");
+    zSpeed = CreateConVar("zs_tank_speed","1.15","Zombie Tank speed");
+    zGravity = CreateConVar("zs_tank_gravity","0.8","Zombie Tank gravity");
+    zExcluded = CreateConVar("zs_tank_excluded","1","1 - Excluded, 0 - Not excluded");
+    zCooldown = CreateConVar("zs_tank_cooldown","12.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = CreateConVar("zs_tank_duration","4.0","How long in second Tank using his ability");
+    
+    AutoExecConfig(true, "zombie.tank", "sourcemod/zombieswarm");
+}
+public void ZS_OnLoaded() {
+    // We are registering zombie
+    registeredClass = ZombieClass();
+    registeredClass.SetName("Zombie Fury [TANK]", MAX_CLASS_NAME_SIZE);
+    registeredClass.SetDesc("Can rage (E button) with Iron skin", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", MAX_CLASS_MODEL_SIZE);
+    registeredClass.Health = zHP.IntValue;
+    registeredClass.Damage = zDamage.FloatValue;
+    registeredClass.Speed = zSpeed.FloatValue;
+    registeredClass.Gravity = zGravity.FloatValue;
+    registeredClass.Excluded = zExcluded.BoolValue;
+    registeredClass.Cooldown = zCooldown.FloatValue;
+    registeredClass.Button = IN_USE;
 }
 public void onZCSelected(int client, int classId)
 {
@@ -164,7 +171,6 @@ public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast
 
 public void OnClientPostAdminCheck(int client)
 {
-    lastPressedButtons[client] = 0.0;
     
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
     SDKHook(client, SDKHook_TraceAttack, onTraceAttack);
@@ -244,26 +250,20 @@ public void OnClientDisconnect(int client)
 }
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
-public void onZRightClick(int client, int class, int buttons)
-{
+public bool ZS_OnAbilityButtonPressed(int client, int ZClass) {
     if ( !IsValidAlive(client) )
-        return;
+        return false;
         
     ZMPlayer player = ZMPlayer(client);
 
     if ( player.Ghost )
-        return;
+        return false;
         
     if ( player.Team != CS_TEAM_T)
-        return;
+        return false;
         
     if ( player.ZombieClass != registeredClass.ID )
-        return;
-            
-    float currentTime = GetGameTime();
-            
-    if (currentTime - lastPressedButtons[client] < FURY_COOLDOWN)
-        return;
+        return false;            
         
     if (timerFury[client] != null)
         delete timerFury[client];
@@ -274,14 +274,14 @@ public void onZRightClick(int client, int class, int buttons)
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
     SetEntityRenderColor(client, 204, 0, 0, 255);
     
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", FURY_SPEED);
+    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zSpeed.FloatValue);
     
     float position[3];
     GetClientAbsOrigin(client, position);
     
     position[2] += 8.0;
     
-    createAttachParticle(client, "firework_crate_ground_low_03", position, "fwcgl", FURY_DURATION);
+    createAttachParticle(client, "firework_crate_ground_low_03", position, "fwcgl", zDuration.FloatValue);
     
     position[2] += 5.0;
     
@@ -301,9 +301,9 @@ public void onZRightClick(int client, int class, int buttons)
     
     timerFuryEffect[client] = CreateTimer(0.5, furyEffectCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     
-    timerFury[client] = CreateTimer(FURY_DURATION, furyCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-
-    lastPressedButtons[client] = currentTime;
+    timerFury[client] = CreateTimer(zDuration.FloatValue, furyCallback, client, TIMER_FLAG_NO_MAPCHANGE);
+    
+    return true;
 }
 
 public Action furyCallback(Handle timer, any client)
@@ -319,7 +319,7 @@ public Action furyCallback(Handle timer, any client)
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
     SetEntityRenderColor(client, 255, 255, 255, 255);
     
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", ZOMBIE_SPEED);
+    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zSpeed.FloatValue);
     
     if (timerFuryEffect[client] != null) {
         delete timerFuryEffect[client];
