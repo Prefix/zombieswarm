@@ -250,20 +250,20 @@ public void OnClientDisconnect(int client)
 }
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
-public bool ZS_OnAbilityButtonPressed(int client, int ZClass) {
+public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     if ( !IsValidAlive(client) )
-        return false;
+        return;
         
     ZMPlayer player = ZMPlayer(client);
 
     if ( player.Ghost )
-        return false;
+        return;
         
     if ( player.Team != CS_TEAM_T)
-        return false;
+        return;
         
     if ( player.ZombieClass != registeredClass.ID )
-        return false;            
+        return;            
         
     if (timerFury[client] != null)
         delete timerFury[client];
@@ -302,8 +302,6 @@ public bool ZS_OnAbilityButtonPressed(int client, int ZClass) {
     timerFuryEffect[client] = CreateTimer(0.5, furyEffectCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     
     timerFury[client] = CreateTimer(zDuration.FloatValue, furyCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-    
-    return true;
 }
 
 public Action furyCallback(Handle timer, any client)

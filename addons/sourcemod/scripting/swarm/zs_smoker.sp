@@ -51,10 +51,6 @@ public void ZS_OnLoaded() {
     registeredClass.Excluded = zExcluded.BoolValue;
     registeredClass.Cooldown = zCooldown.FloatValue;
 }
-public void onZCSelected(int client, int classId)
-{
-    // TODO list
-}
 
 public void OnClientPutInServer(int client)
 {
@@ -264,36 +260,36 @@ public void OnMapStart()
     AddFileToDownloadsTable( sPath );
     
 }
-public bool ZS_OnAbilityButtonPressed(int client, int ZClass) {
+public void ZS_OnAbilityButtonPressed(int client, int buttons) {
 	if (!IsValidAlive(client))
-		return false;
+		return;
 
 	ZMPlayer player = ZMPlayer(client);
         
 	if (player.Ghost)
-		return false;
+		return;
 	if (player.Team != CS_TEAM_T)
-		return false;
+		return;
 	if ( player.ZombieClass != registeredClass.ID )
-		return false;
+		return;
 	
 	int target = WhoPulling(client);
 	if(IsValidClient(target) && target != client) {
-		return false;
+		return;
 	}
         
 	target = GetClientAimTarget(client, true);
 
 	if ( !IsValidAlive(target) ) 
-		return false;
+		return;
 	if (!IsClientInTargetView(client, target))
-		return false;
+		return;
 	if (IsBeingPulled(target) && WhoPulling(target) != client)
-		return false;
+		return;
         
 	ZMPlayer TargetPlayer = ZMPlayer(target);
 	if (target == client || TargetPlayer.Team == player.Team)
-		return false;
+		return;
         
 	SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
 
@@ -301,15 +297,14 @@ public bool ZS_OnAbilityButtonPressed(int client, int ZClass) {
 	EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
         
 	pullTarget[client] = target; 
-	
-	return true;
 }
-public bool ZS_OnAbilityButtonReleased(int client, int ZClass) {
+public void ZS_OnAbilityButtonReleased(int client, int buttons) {
+	
+	ZS_AbilityFinished(client);
+	
 	if (SmokerTimer[client] != null) {
 		delete SmokerTimer[client];
-		return true;
 	}
-	return false;
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
