@@ -10,6 +10,11 @@
 #define MAX_CLASS_DESC_SIZE 128
 #define MAX_CLASS_MODEL_SIZE 128
 #define MAX_CLASS_ARMS_SIZE 128
+#define MAX_CLASS_UNIQUE_NAME_SIZE 64
+
+#define MAX_ABILITY_NAME_SIZE 64
+#define MAX_ABILITY_DESC_SIZE 128
+#define MAX_ABILITY_UNIQUE_NAME_SIZE 64
 
 #define DISTANCE_BEFORE 3000.0 // Distance before pulling
 
@@ -31,90 +36,184 @@ forward void onZRightClick(int client, int zClass, int buttons);
 native bool ZS_AbilityFinished(int client);
 
 methodmap ZMPlayer {
-      // Constructor
-      public native ZMPlayer(int client);
-      // Methods
-      // XP related
-      property int Client {
-            public native get();
-      }
-      property int Level {
-            public native get();
-      }
-      property int XP {
-            public native get();
-            public native set(const int val);
-      }
-      property bool Ghost {
-            public native get();
-            public native set(const bool val);
-      }
-      property int Team {
-            public native get();
-            public native set(const int val);
-      }
-      property int ZombieClass {
-            public native get();
-            public native set(const int val);
-      }
-      property int LastButtons {
-            public native get();
-            public native set(const int val);
-      }
-      property bool OverrideHint {
-            public native get();
-            public native set(const bool val);
-      }
-      property bool isCooldown {
-      		public native get();
-      		public native set(const bool val);
-      }
-      // Zombie class related
-      public native void OverrideHintText(char[] text);
+    // Constructor
+    public native ZMPlayer(int client);
+    // Properties
+    property int Client {
+        public native get();
+    }
+    property int Level {
+        public native get();
+    }
+    property int XP {
+        public native get();
+        public native set(const int val);
+    }
+    property bool Ghost {
+        public native get();
+        public native set(const bool val);
+    }
+    property int Team {
+        public native get();
+        public native set(const int val);
+    }
+    property int ZombieClass {
+        public native get();
+        public native set(const int val);
+    }
+    property int LastButtons {
+        public native get();
+        public native set(const int val);
+    }
+    property bool OverrideHint {
+        public native get();
+        public native set(const bool val);
+    }
+    property bool isCooldown {
+        public native get();
+        public native set(const bool val);
+    }
+    // Methods
+    public native void OverrideHintText(char[] text);
+}
+
+methodmap ZMPlayerAbility {
+    // Constructor
+    public native ZMPlayerAbility(int client);
+    // Properties
+    property bool isCooldown {
+        public native get();
+        public native set(const bool val);
+    }
+    property int Client {
+        public native get();
+    }
+    property int ZombieClass {
+        public native get();
+    }
+    property bool isPassive {
+        public native get();
+    }
+    property bool isActive {
+        public native get();
+    }
+    property bool isActive {
+        public native get();
+    }
+    property float Cooldown {
+        public native get();
+        public native set(const float val);
+    }
+}
+
+enum AbilityTypes {
+    ZM_ABILITY_NONE,
+    ZM_ABILITY_PASSIVE,
+    ZM_ABILITY_ACTIVE,
+    ZM_ABILITY_TRIGGERED
+}
+enum StartType {
+    ZM_ABILITY_START_NONE,
+    ZM_ABILITY_START_PASSIVE,
+    ZM_ABILITY_START_TRIGGERED,
+    ZM_ABILITY_START_PRESSBUTTON,
+    ZM_ABILITY_START_HOLDBUTTON,
+}
+enum EndType {
+    ZM_ABILITY_END_NONE = (1 << 0),
+    ZM_ABILITY_END_RELEASEBUTTON = (1 << 1),
+    ZM_ABILITY_END_TRIGGERED = (1 << 2),
+    ZM_ABILITY_END_DURATION = (1 << 3)
+}
+
+methodmap ZombieAbility {
+    // Constructor
+    public native ZombieAbility(int zclass);
+    // Properties
+    property int ZombieClass {
+        public native get();
+    }
+    property bool Excluded {
+        public native get();
+        public native set(const bool val);
+    }
+    property int AbilityType {
+        public native get();
+        public native set(const int val);
+    }
+    property int StartType {
+        public native get();
+        public native set(const int val);
+    }
+    property int EndType {
+        public native get();
+        public native set(const int val);
+    }
+    property int MaximumDuration {
+        public native get();
+        public native set(const int val);
+    }
+    property float Cooldown {
+        public native get();
+        public native set(const int val);
+    }
+    property int Buttons {
+        public native get();
+        public native set(const int val);
+    }
+    // Methods
+    public native void GetUniqueName(char[] text, int size);
+    public native void SetUniqueName(const char[] text, int size);
+    public native void GetName(char[] text, int size);
+    public native void SetName(const char[] text, int size);
+    public native void GetDesc(char[] text, int size);
+    public native void SetDesc(const char[] text, int size);
 }
 
 methodmap ZombieClass {
-      // Constructor
-      public native ZombieClass();
-      // Methods
-      property int ID {
-            public native get();
-      }
-      property int Health {
-            public native get();
-            public native set(const int val);
-      }
-      property float Speed {
-            public native get();
-            public native set(const float val);
-      }
-      property float Gravity {
-            public native get();
-            public native set(const float val);
-      }
-      property float Damage {
-            public native get();
-            public native set(const float val);
-      }
-      property bool Excluded {
-            public native get();
-            public native set(const bool val);
-      }
-      property int Button {
-            public native get();
-            public native set(int val);
-      }
-      property float Cooldown {
-      		public native get();
-      		public native set(float val);
-      }
-      // Zombie class related
-      public native void GetName(char[] text, int size);
-      public native void SetName(char[] text, int size);
-      public native void GetDesc(char[] text, int size);
-      public native void SetDesc(char[] text, int size);
-      public native void GetModel(char[] text, int size);
-      public native void SetModel(char[] text, int size);
+    // Constructor
+    public native ZombieClass();
+    // Methods
+    property int ID {
+        public native get();
+    }
+    property int Health {
+        public native get();
+        public native set(const int val);
+    }
+    property float Speed {
+        public native get();
+        public native set(const float val);
+    }
+    property float Gravity {
+        public native get();
+        public native set(const float val);
+    }
+    property float Damage {
+        public native get();
+        public native set(const float val);
+    }
+    property bool Excluded {
+        public native get();
+        public native set(const bool val);
+    }
+    property int Button {
+        public native get();
+        public native set(int val);
+    }
+    property float Cooldown {
+        public native get();
+        public native set(float val);
+    }
+    // Zombie class related
+    public native void GetUniqueName(char[] text, int size);
+    public native void SetUniqueName(const char[] text, int size);
+    public native void GetName(char[] text, int size);
+    public native void SetName(const char[] text, int size);
+    public native void GetDesc(char[] text, int size);
+    public native void SetDesc(const char[] text, int size);
+    public native void GetModel(char[] text, int size);
+    public native void SetModel(const char[] text, int size);
 }
 
 native bool isGhost( int client );
@@ -129,77 +228,77 @@ native int getLastButtons( int client );
 
 stock void velocityByAim(int client, float distance, float velocity[3])
 {
-	float vAngles[3];
-	
-	GetClientEyeAngles(client, vAngles);
-	
-	velocity[0] = Cosine(DegToRad(vAngles[1])) * distance;
-	velocity[1] = Sine(DegToRad(vAngles[1])) * distance;
-	velocity[2] = Sine(DegToRad(-vAngles[0])) * distance;
+    float vAngles[3];
+    
+    GetClientEyeAngles(client, vAngles);
+    
+    velocity[0] = Cosine(DegToRad(vAngles[1])) * distance;
+    velocity[1] = Sine(DegToRad(vAngles[1])) * distance;
+    velocity[2] = Sine(DegToRad(-vAngles[0])) * distance;
 }
 
 stock bool FakePrecacheSoundEx( const char[] szPath )
 {
-	char sPathStar[PLATFORM_MAX_PATH];
-	Format(sPathStar, sizeof(sPathStar), "*/%s", szPath);
-	
-	AddToStringTable( FindStringTable( "soundprecache" ), sPathStar );
-	return true;
+    char sPathStar[PLATFORM_MAX_PATH];
+    Format(sPathStar, sizeof(sPathStar), "*/%s", szPath);
+    
+    AddToStringTable( FindStringTable( "soundprecache" ), sPathStar );
+    return true;
 }
 
 stock bool IsClientInTargetView(int client, int target)
 {
-	float playerOrigin[3];
+    float playerOrigin[3];
 
-	bool HitPlayer = false;
-				
-	float targetOrigin[3], distanceBetween;
+    bool HitPlayer = false;
+                
+    float targetOrigin[3], distanceBetween;
 
-	GetClientAbsOrigin( client, playerOrigin);
-	GetClientAbsOrigin ( target, targetOrigin );
-	distanceBetween = GetVectorDistance ( targetOrigin, playerOrigin );
-						
-	if ( distanceBetween >= DISTANCE_BEFORE )
-	{
-		HitPlayer = false
-		return HitPlayer;
-	}
-						
-	targetOrigin[0] -= 20.0;
-	targetOrigin[2] -= 0.0;
-						
-	playerOrigin[0] -= 20.0
-	playerOrigin[2] -= 0.0
-				
-	for(new pos = 0; pos <= 11; pos++) // Check for position
-	{
-		targetOrigin[0] += 2.5;
-		targetOrigin[2] += 6.0;
-							
-		playerOrigin[0] += 2.5;
-		playerOrigin[2] += 6.0;
-										
-		Handle trace = TR_TraceRayFilterEx( playerOrigin, targetOrigin, MASK_SOLID, RayType_EndPoint, TraceEntityFilterRay);
-						
-		if ( !TR_DidHit(trace) )
-		{
-			HitPlayer = true;
-		}
+    GetClientAbsOrigin( client, playerOrigin);
+    GetClientAbsOrigin ( target, targetOrigin );
+    distanceBetween = GetVectorDistance ( targetOrigin, playerOrigin );
+                        
+    if ( distanceBetween >= DISTANCE_BEFORE )
+    {
+        HitPlayer = false
+        return HitPlayer;
+    }
+                        
+    targetOrigin[0] -= 20.0;
+    targetOrigin[2] -= 0.0;
+                        
+    playerOrigin[0] -= 20.0
+    playerOrigin[2] -= 0.0
+                
+    for(new pos = 0; pos <= 11; pos++) // Check for position
+    {
+        targetOrigin[0] += 2.5;
+        targetOrigin[2] += 6.0;
+                            
+        playerOrigin[0] += 2.5;
+        playerOrigin[2] += 6.0;
+                                        
+        Handle trace = TR_TraceRayFilterEx( playerOrigin, targetOrigin, MASK_SOLID, RayType_EndPoint, TraceEntityFilterRay);
+                        
+        if ( !TR_DidHit(trace) )
+        {
+            HitPlayer = true;
+        }
 
-		delete trace;
-	}
-	
-	return HitPlayer;
+        delete trace;
+    }
+    
+    return HitPlayer;
 }
 
 stock fadePlayer(int client, int duration = 5, int time = 6, color[4] = {0, 0, 0, 255} )
 {
-	Handle message = StartMessageOne("Fade", client, USERMSG_RELIABLE);
-	PbSetInt(message, "duration", duration*300);
-	PbSetInt(message, "hold_time", time*300);
-	PbSetInt(message, "flags", 0x0009);
-	PbSetColor(message, "clr", color);
-	EndMessage();
+    Handle message = StartMessageOne("Fade", client, USERMSG_RELIABLE);
+    PbSetInt(message, "duration", duration*300);
+    PbSetInt(message, "hold_time", time*300);
+    PbSetInt(message, "flags", 0x0009);
+    PbSetColor(message, "clr", color);
+    EndMessage();
 } 
 
 stock void createAttachParticle(int client, const char[] effectName, float fPos[3], const char[] attachTo, float lifetime)
@@ -207,24 +306,24 @@ stock void createAttachParticle(int client, const char[] effectName, float fPos[
     int particle = createParticle(effectName);
     
     if (IsValidEdict(particle))
-	{
-		TeleportEntity(particle, fPos, NULL_VECTOR, NULL_VECTOR);
-		
-		SetVariantString("!activator");
-		AcceptEntityInput(particle, "SetParent", client, particle, 0);
-		SetVariantString("primary");
+    {
+        TeleportEntity(particle, fPos, NULL_VECTOR, NULL_VECTOR);
         
-		if (!StrEqual(attachTo, ""))
-		{
-			SetVariantString(attachTo);
-			AcceptEntityInput(particle, "SetParentAttachment", particle, particle, 0);
-		}
-		
-		DispatchSpawn(particle);
-		
-		AcceptEntityInput(particle, "Start");
-		ActivateEntity(particle);
-	}
+        SetVariantString("!activator");
+        AcceptEntityInput(particle, "SetParent", client, particle, 0);
+        SetVariantString("primary");
+        
+        if (!StrEqual(attachTo, ""))
+        {
+            SetVariantString(attachTo);
+            AcceptEntityInput(particle, "SetParentAttachment", particle, particle, 0);
+        }
+        
+        DispatchSpawn(particle);
+        
+        AcceptEntityInput(particle, "Start");
+        ActivateEntity(particle);
+    }
     
     particleDeathTimer(particle, lifetime);
 }
@@ -269,13 +368,13 @@ stock void precacheParticle( const char[] effectName )
 
 stock void playClientCommandSound(int client, const char[] sound)
 {
-	ClientCommand(client, "playgamesound Music.StopAllMusic");
-	ClientCommand(client, "play */%s", sound);
+    ClientCommand(client, "playgamesound Music.StopAllMusic");
+    ClientCommand(client, "play */%s", sound);
 }
 
 public void showHintMessage(int client, const char[] message)
 {
-	Handle hMessage = StartMessageOne("HintText", client);
-	PbSetString(hMessage, "text", message);
-	EndMessage();
+    Handle hMessage = StartMessageOne("HintText", client);
+    PbSetString(hMessage, "text", message);
+    EndMessage();
 }

@@ -26,6 +26,7 @@
 #define MENU_DISPLAY_TIME 20
 
 #define MAX_CLASS 20
+#define MAX_ABILITY 100
 #define MAX_HINT_SIZE 512
 
 #define HIDEHUD_RADAR 1 << 12
@@ -58,7 +59,38 @@ enum ZMClassData {
 	String:dataDescription[MAX_CLASS_DESC_SIZE],
 	String:dataModel[MAX_CLASS_DESC_SIZE],
 	String:dataArms[MAX_CLASS_DESC_SIZE],
-	bool:dataExluded
+	bool:dataExcluded,
+    String:dataUniqueName[MAX_CLASS_UNIQUE_NAME_SIZE]
+}
+
+enum ZMAbilityData {
+	abilityID,
+	abilityZombieClass,
+    abilityAbilityType,
+    abilityStartType,
+    abilityEndType,
+    abilityMaximumDuration,
+    abilityCooldown,
+    abilityButtons,
+    bool:abilityExluded,
+	String:dataName[MAX_ABILITY_NAME_SIZE],
+	String:dataDescription[MAX_ABILITY_DESC_SIZE],
+    String:dataUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
+}
+
+enum ZMPlayerAbilityData {
+	abilityID,
+	abilityZombieClass,
+    abilityAbilityType,
+    abilityStartType,
+    abilityEndType,
+    abilityMaximumDuration,
+    float:abilityCooldown,
+    abilityButtons,
+    bool:abilityExluded,
+	String:dataName[MAX_ABILITY_NAME_SIZE],
+	String:dataDescription[MAX_ABILITY_DESC_SIZE],
+    String:dataUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
 }
 
 public Plugin myinfo =
@@ -80,7 +112,9 @@ bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
 int CTSpawns, TSpawns;
 float Spawns[5][MAXPLAYERS + 1][3];
 
-int ZMClass[MAX_CLASS][ZMClassData]
+int ZMClass[MAX_CLASS][ZMClassData];
+int ZMAbility[MAX_ABILITY][ZMAbilityData];
+int ZMPlayerAbility[MAXPLAYERS + 1][ZMAbilityData];
 
 // Hint 
 
@@ -147,7 +181,10 @@ ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist,
        cvarHumanGravity;
        
 // Fowards
-Handle fw_ZSOnLoaded, fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased;
+Handle fw_ZSOnLoaded,
+    fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased,
+    fw_ZSOnAbilityStarted, fw_ZSOnAbilityFinished, 
+    fw_ZSOnAbilityCDStarted, fw_ZSOnAbilityCDEnded;
 
 public void OnPluginStart()
 {   
@@ -158,7 +195,6 @@ public void OnPluginStart()
     cvarRoundStartZombies = CreateConVar("zm_round_start_zombies", "5", "Round start zombies");
     cvarRoundKillsTeamJoinHumans = CreateConVar("zm_round_kills_teamjoin_humans", "25", "Human can join team after he is connected depends on round kills");
     
-    // (UNSUPPORTED) SourceMod currently doesn't support this feature.
     // Added, but disabled by default
     cvarFog = CreateConVar("zm_env_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
     cvarFogDensity = CreateConVar("zm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
@@ -166,6 +202,7 @@ public void OnPluginStart()
     cvarFogEndDist = CreateConVar("zm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
     cvarFogColor = CreateConVar("zm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
     cvarFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
+    // End of Fog CVARS
     cvarCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
     cvarOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
     cvarOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
@@ -268,7 +305,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
     CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
-    CreateNative("ZS_AbilityFinished",nativeAbilityFinished);
+    CreateNative("ZS_AbilityFinished", nativeAbilityFinished);
 
     // Our MethodMap
 
@@ -326,8 +363,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     
     fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
     
-    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed",ET_Ignore,Param_Cell, Param_Cell);
-    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased",ET_Ignore,Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
 
     return APLRes_Success;
 }
@@ -915,9 +956,9 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
     if ( !IsValidClient(victim) )
-    return;
+        return;
     if (IsClientSourceTV(victim)) 
-    return;
+        return;
 
     if (timerGhostHint[victim] != null) {
         delete timerGhostHint[victim];
@@ -977,7 +1018,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS];
         
         for(int i = 0; i < numClasses; i++) {
-            if(!ZMClass[i][dataExluded]) {
+            if(!ZMClass[i][dataExcluded]) {
                 Format(className,sizeof(className),"%s",ZMClass[i][dataName]);
                 IntToString(i,key,sizeof(key));
                 menu.AddItem(key, className);
@@ -1708,7 +1749,7 @@ public int getRandZombieClass()
     
     for(int zClass = 0; zClass < numClasses; zClass++)
     {
-        if(ZMClass[zClass][dataExluded] == false) {
+        if(ZMClass[zClass][dataExcluded] == false) {
             tclasses[classCount++] = zClass;
         }
     }
@@ -2005,7 +2046,7 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     ZMClass[numClasses][dataDamage] = view_as<float>(DEFAULT_ZM_DAMAGE);
     ZMClass[numClasses][dataSpeed] = view_as<float>(DEFAULT_ZM_SPEED);
     ZMClass[numClasses][dataGravity] = view_as<float>(DEFAULT_ZM_GRAVITY);
-    ZMClass[numClasses][dataExluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
+    ZMClass[numClasses][dataExcluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
     ZMClass[numClasses][dataAbilityButton] = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
     ZMClass[numClasses][dataCooldown] = view_as<float>(DEFAULT_ZM_COOLDOWN);
     ZMClass[numClasses][dataID] = numClasses-1;
@@ -2061,13 +2102,13 @@ public int Native_ZombieClass_GravitySet(Handle plugin, int numParams)
 public int Native_ZombieClass_ExcludedGet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    return view_as<int>(ZMClass[class.ID][dataExluded]);
+    return view_as<int>(ZMClass[class.ID][dataExcluded]);
 }
 
 public int Native_ZombieClass_ExcludedSet(Handle plugin, int numParams)
 {
     ZombieClass class = GetNativeCell(1);
-    ZMClass[class.ID][dataExluded] = GetNativeCell(2);
+    ZMClass[class.ID][dataExcluded] = GetNativeCell(2);
 }
 
 public int Native_ZombieClass_ButtonGet(Handle plugin, int numParams)
