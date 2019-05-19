@@ -15,7 +15,8 @@ public Plugin myinfo =
 
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
 
-ZombieClass registeredClass;
+ZombieClass Zombie;
+ZombieAbility Ability;
 
 float lastPressedButtons[MAXPLAYERS + 1];
 
@@ -45,16 +46,19 @@ public void OnPluginStart() {
 }
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass();
-    registeredClass.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
-    registeredClass.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = zHP.IntValue;
-    registeredClass.Damage = zDamage.FloatValue;
-    registeredClass.Speed = zSpeed.FloatValue;
-    registeredClass.Gravity = zGravity.FloatValue;
-    registeredClass.Excluded = zExcluded.BoolValue;
-    registeredClass.Cooldown = zCooldown.FloatValue;
+    Zombie = ZombieClass();
+    Zombie.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
+    Zombie.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
+    Zombie.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
+    Zombie.Health = zHP.IntValue;
+    Zombie.Damage = zDamage.FloatValue;
+    Zombie.Speed = zSpeed.FloatValue;
+    Zombie.Gravity = zGravity.FloatValue;
+    Zombie.Excluded = zExcluded.BoolValue;
+    
+    Ability = ZombieAbility(Zombie);
+    Ability.Cooldown = zCooldown.FloatValue;
+    Ability.Buttons = IN_USE;
 }
 
 public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -134,7 +138,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     ZMPlayer attackerplayer = ZMPlayer(attacker);
     ZMPlayer victimplayer = ZMPlayer(victim);
 
-    if ( attackerplayer.ZombieClass != registeredClass.ID )
+    if ( attackerplayer.ZombieClass != Zombie.ID )
         return Plugin_Continue;
         
     if ( victimplayer.Team != CS_TEAM_CT)
@@ -166,7 +170,7 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     if ( player.Team != CS_TEAM_T)
         return;
         
-    if ( player.ZombieClass != registeredClass.ID )
+    if ( player.ZombieClass != Zombie.ID )
         return;
             
     float currentTime = GetGameTime();

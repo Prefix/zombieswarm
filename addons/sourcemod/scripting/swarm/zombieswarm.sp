@@ -64,13 +64,12 @@ enum ZMClassData {
 }
 
 enum ZMAbilityData {
-	abilityID,
-	abilityZombieClass,
+	ZombieClass:abilityZombie,
     abilityAbilityType,
     abilityStartType,
     abilityEndType,
     abilityMaximumDuration,
-    abilityCooldown,
+    Float:abilityCooldown,
     abilityButtons,
     bool:abilityExluded,
 	String:dataName[MAX_ABILITY_NAME_SIZE],
@@ -79,13 +78,12 @@ enum ZMAbilityData {
 }
 
 enum ZMPlayerAbilityData {
-	abilityID,
-	abilityZombieClass,
+	ZombieClass:abilityZombie,
     abilityAbilityType,
     abilityStartType,
     abilityEndType,
     abilityMaximumDuration,
-    float:abilityCooldown,
+    Float:abilityCooldown,
     abilityButtons,
     bool:abilityExluded,
 	String:dataName[MAX_ABILITY_NAME_SIZE],
@@ -112,9 +110,14 @@ bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
 int CTSpawns, TSpawns;
 float Spawns[5][MAXPLAYERS + 1][3];
 
+int ZMAbilityTotal[MAX_CLASS];
+int ZMPlayerAbilityTotal[MAXPLAYERS + 1];
+ZombieClass ZMAbilityRef[MAX_ABILITY];
+ZombieAbility  ZMAbilityList[MAX_CLASS][MAX_ABILITY];
+ZMPlayer PlayerAbilityRef[MAX_ABILITY];
 int ZMClass[MAX_CLASS][ZMClassData];
-int ZMAbility[MAX_ABILITY][ZMAbilityData];
-int ZMPlayerAbility[MAXPLAYERS + 1][ZMAbilityData];
+int ZMAbilities[MAX_CLASS][MAX_ABILITY][ZMAbilityData];
+int PlayerAbilities[MAXPLAYERS + 1][MAX_ABILITY][ZMPlayerAbilityData];
 
 // Hint 
 
@@ -124,7 +127,6 @@ char c_OverrideHintText[MAXPLAYERS + 1][MAX_HINT_SIZE];
 char downloadFilesPath[PLATFORM_MAX_PATH];
 
 Handle timerGhostHint[MAXPLAYERS + 1] = null, timerZombieRespawn[MAXPLAYERS + 1];
-Handle forwardZombieSelected = null, forwardZombieRightClick = null;
 Handle timerCountDown = INVALID_HANDLE;
 
 int timerZombieRespawnLeft[MAXPLAYERS + 1];
@@ -175,16 +177,15 @@ char countdownSounds[][] = {
 }
 
 // Convars
-
 ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist, cvarFogColor, cvarFogZPlane,
        cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable,
        cvarHumanGravity;
        
 // Fowards
-Handle fw_ZSOnLoaded,
+Handle 
+	fw_ZSOnLoaded, fw_ZombieSelected = null,
     fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased,
-    fw_ZSOnAbilityStarted, fw_ZSOnAbilityFinished, 
-    fw_ZSOnAbilityCDStarted, fw_ZSOnAbilityCDEnded;
+    fw_ZSOnCooldownStarted, fw_ZSOnCooldownEnded;
 
 public void OnPluginStart()
 {   
@@ -297,24 +298,30 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     // Register mod library
     RegPluginLibrary("zombieswarm");
 
-	 // Fowards
-    forwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
-    forwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+    // Fowards
+    fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
+    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnCooldownStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZSOnCooldownEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
+    fw_ZombieSelected = CreateGlobalForward("ZS_OnZombieSelected", ET_Ignore, Param_Cell, Param_Cell);
     
+    // Natives
     CreateNative("isGhost", nativeIsGhost);
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
     CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
     CreateNative("ZS_AbilityFinished", nativeAbilityFinished);
+    CreateNative("ZS_AbilityStarted", nativeAbilityStarted);
 
-    // Our MethodMap
+    /*******************
+         Methodmaps
+     ******************/
 
-    // use MethodMapName.FunctionName format
+    // Player methodmap
     CreateNative("ZMPlayer.ZMPlayer", Native_ZMPlayer_Constructor);
-    // Properties
     CreateNative("ZMPlayer.Client.get", Native_ZMPlayer_ClientGet);
     CreateNative("ZMPlayer.Level.get", Native_ZMPlayer_LevelGet);
-    //CreateNative("ZMPlayer.Level.set", Native_ZMPlayer_LevelSet);
     CreateNative("ZMPlayer.XP.get", Native_ZMPlayer_XPGet);
     CreateNative("ZMPlayer.XP.set", Native_ZMPlayer_XPSet);
     CreateNative("ZMPlayer.Ghost.get", Native_ZMPlayer_GhostGet);
@@ -329,14 +336,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZMPlayer.OverrideHint.set", Native_ZMPlayer_OverrideHintSet);
     CreateNative("ZMPlayer.isCooldown.get", Native_ZMPlayer_isCooldownGet);
     CreateNative("ZMPlayer.isCooldown.set", Native_ZMPlayer_isCooldownSet);
-    // Functions
     CreateNative("ZMPlayer.OverrideHintText", Native_ZMPlayer_OverrideHintText);
 
-    // Our MethodMap -> ZombieClass
+    // Zombie methodmap
     CreateNative("ZombieClass.ZombieClass", Native_ZombieClass_Constructor);
-    // Class ID
     CreateNative("ZombieClass.ID.get", Native_ZombieClass_IDGet)
-    // Properties
     CreateNative("ZombieClass.Health.get", Native_ZombieClass_HealthGet);
     CreateNative("ZombieClass.Health.set", Native_ZombieClass_HealthSet);
     CreateNative("ZombieClass.Speed.get", Native_ZombieClass_SpeedGet);
@@ -351,7 +355,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.Button.set", Native_ZombieClass_ButtonSet);
     CreateNative("ZombieClass.Cooldown.get", Native_ZombieClass_CooldownGet);
     CreateNative("ZombieClass.Cooldown.set", Native_ZombieClass_CooldownSet);
-    // Functions
     CreateNative("ZombieClass.GetName", Native_ZombieClass_NameGet);
     CreateNative("ZombieClass.SetName", Native_ZombieClass_NameSet);
     CreateNative("ZombieClass.GetDesc", Native_ZombieClass_DescGet);
@@ -361,15 +364,23 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("ZombieClass.GetArms", Native_ZombieClass_ArmsGet);
     CreateNative("ZombieClass.SetArms", Native_ZombieClass_ArmsSet);
     
-    fw_ZSOnLoaded = CreateGlobalForward("ZS_OnLoaded", ET_Ignore);
+    // Zombie Abilities methodmap
+    CreateNative("ZombieAbility.ZombieAbility", Native_ZombieAbility_Constructor);
+    CreateNative("ZombieAbility.ID.get", Native_ZombieAbility_IDGet)
+    CreateNative("ZombieAbility.Cooldown.get", Native_ZombieAbility_CooldownGet);
+    CreateNative("ZombieAbility.Cooldown.set", Native_ZombieAbility_CooldownSet);
+    CreateNative("ZombieAbility.Buttons.get", Native_ZombieAbility_ButtonsGet);
+    CreateNative("ZombieAbility.Buttons.set", Native_ZombieAbility_ButtonsSet);
     
-    fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
-
+    // Player Abilities methodmap
+    CreateNative("PlayerAbility.PlayerAbility", Native_PlayerAbility_Constructor);
+    CreateNative("PlayerAbility.ID.get", Native_PlayerAbility_IDGet)
+    CreateNative("PlayerAbility.Cooldown.get", Native_PlayerAbility_CooldownGet);
+    CreateNative("PlayerAbility.Cooldown.set", Native_PlayerAbility_CooldownSet);
+    CreateNative("PlayerAbility.Buttons.get", Native_PlayerAbility_ButtonsGet);
+    CreateNative("PlayerAbility.Buttons.set", Native_PlayerAbility_ButtonsSet);
+    
+    
     return APLRes_Success;
 }
 public void OnEntityCreated(int entity, const char[] classname) {
@@ -1059,6 +1070,23 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
 			CPrintToChat(client,"{red}%s",ZMClass[random][dataDescription]);
 		}
 	}
+	ZMPlayer player = ZMPlayer(client);
+	for (int i = 0; i <= ZMAbilityTotal[zombieClass[client]]; i++) {
+		ZombieAbility ZMAbility = ZMAbilityList[zombieClass[client]][i];
+		PlayerAbility(player,ZMAbility);
+		
+		
+		
+		
+		//PlayerAbility Ability = PlayerAbility(player,ZMAbility);
+		
+		//Ability.Cooldown = ZMAbilities[zombieClass[client]][i][abilityCooldown];
+		//Ability.Buttons = ZMAbilities[zombieClass[client]][i][abilityButtons];
+	}
+	
+	Call_StartForward(fw_ZombieSelected);
+	Call_PushCell(player)
+	Call_Finish();
 }
 public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
 {
@@ -1193,7 +1221,14 @@ public int nativeAbilityFinished(Handle plugin, int numParams) {
 	pack.WriteCell(client);
 	pack.WriteFloat(time);
 	
+	Call_StartForward(fw_ZSOnCooldownStarted);
+	Call_PushCell(client);
+	Call_Finish();
+	
 	return true;
+}
+public int nativeAbilityStarted(Handle plugin, int numParams) {
+	
 }
 public Action cooldownCallback(Handle timer, DataPack pack) {
 	pack.Reset();
@@ -1210,6 +1245,10 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 		if (now > end) {
 			player.isCooldown = false;
 			player.OverrideHint = false;
+			
+			Call_StartForward(fw_ZSOnCooldownEnded);
+			Call_PushCell(client);
+			Call_Finish();
 			
 			return Plugin_Stop;
 		}
@@ -1228,27 +1267,32 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !IsValidAlive(client) )
-    return Plugin_Continue;
+         return Plugin_Continue;
     
     if (GetClientTeam(client) == CS_TEAM_T) {
 		ZMPlayer player = ZMPlayer(client);
 
 		if (IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
-			if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == ZMClass[zombieClass[client]][dataAbilityButton]) {
-				Call_StartForward(fw_ZSOnAbilityButtonPressed);
-				Call_PushCell(client);
-				Call_PushCell(buttons);
-				Call_Finish();
+			
+			for (int i = 0; i <= ZMAbilityTotal[player.ZombieClass]; i++) {
+				int abilityButton = PlayerAbilities[client][i][abilityButtons];
 				
-				player.isCooldown = true;
-			}
-			else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == ZMClass[zombieClass[client]][dataAbilityButton]) {
-				Call_StartForward(fw_ZSOnAbilityButtonReleased);
-				Call_PushCell(client);
-				Call_PushCell(buttons);
-				Call_Finish();
-				
-				player.isCooldown = true;
+				if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == abilityButton) {
+					Call_StartForward(fw_ZSOnAbilityButtonPressed);
+					Call_PushCell(client);
+					Call_PushCell(buttons);
+					Call_Finish();
+					
+					player.isCooldown = true;
+				}
+				else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == abilityButton) {
+					Call_StartForward(fw_ZSOnAbilityButtonReleased);
+					Call_PushCell(client);
+					Call_PushCell(buttons);
+					Call_Finish();
+					
+					player.isCooldown = true;
+				}
 			}
 		}
 
@@ -1865,7 +1909,7 @@ public int nativeGetRandomZombieClass(Handle plugin, int numParams)
 public void callZombieSelected(int client, int zClass)
 {
     // Start forward call
-    Call_StartForward(forwardZombieSelected);
+    Call_StartForward(fw_ZombieSelected);
 
     // Push the parameters
     Call_PushCell(client);
@@ -1875,19 +1919,6 @@ public void callZombieSelected(int client, int zClass)
     Call_Finish();
 }
 
-public void callZombieRightClick(int client, int zClass, int buttons)
-{
-    // Start forward call
-    Call_StartForward(forwardZombieRightClick);
-
-    // Push the parameters
-    Call_PushCell(client);
-    Call_PushCell(zClass);
-    Call_PushCell(buttons);
-
-    // Finish the call
-    Call_Finish();
-}
 //    CreateNative("ZMPlayer.ZMPlayer", Native_ZMPlayer_Constructor);
 public int Native_ZMPlayer_Constructor(Handle plugin, int numParams)
 {
@@ -2034,6 +2065,86 @@ public int Native_ZMPlayer_isCooldownGet(Handle plugin, int numParams) {
 	return g_isCooldown[client];
 }
 
+public int Native_ZombieAbility_Constructor(Handle plugin, int numParams) {
+	ZombieClass Zombie = view_as<ZombieClass>(GetNativeCell(1));
+	
+	// Default
+	ZMAbilities[Zombie.ID][ZMAbilityTotal[Zombie.ID]][abilityCooldown] = 5.0;
+	
+	ZMAbilityRef[ZMAbilityTotal[Zombie.ID]] = Zombie;
+	ZMAbilityList[Zombie.ID][ZMAbilityTotal[Zombie.ID]] = view_as<ZombieAbility>(Zombie);
+	
+	ZMAbilityTotal[Zombie.ID]++;
+	
+	return ZMAbilityTotal[Zombie.ID] - 1;
+}
+public int Native_ZombieAbility_IDGet(Handle plugin, int numParams) {
+    ZombieAbility Ability = GetNativeCell(1);
+    return int(Ability);
+}
+public int Native_ZombieAbility_CooldownSet(Handle plugin, int numParams) {
+    ZombieAbility Ability = GetNativeCell(1);
+    ZombieClass Zombie = ZMAbilityRef[Ability.ID];
+    ZMAbilities[Zombie.ID][Ability.ID][abilityCooldown] = GetNativeCell(2);
+}
+public int Native_ZombieAbility_CooldownGet(Handle plugin, int numParams) {
+    ZombieAbility Ability = GetNativeCell(1);
+    ZombieClass Zombie = ZMAbilityRef[Ability.ID];
+    return view_as<int>(ZMAbilities[Zombie.ID][Ability.ID][abilityCooldown]);
+}
+public int Native_ZombieAbility_ButtonsSet(Handle plugin, int numParams) {
+    ZombieAbility Ability = GetNativeCell(1);
+    ZombieClass Zombie = ZMAbilityRef[Ability.ID];
+    ZMAbilities[Zombie.ID][Ability.ID][abilityButtons] = GetNativeCell(2);
+}
+public int Native_ZombieAbility_ButtonsGet(Handle plugin, int numParams) {
+    ZombieAbility Ability = GetNativeCell(1);
+    ZombieClass Zombie = ZMAbilityRef[Ability.ID];
+    return view_as<int>(ZMAbilities[Zombie.ID][Ability.ID][abilityButtons]);
+}
+
+public int Native_PlayerAbility_Constructor(Handle plugin, int numParams) {
+	ZMPlayer Player = view_as<ZMPlayer>(GetNativeCell(1));
+	ZombieAbility Ability = view_as<ZombieAbility>(GetNativeCell(2));
+	
+	// Default
+	PlayerAbilities[Player.Client][ZMPlayerAbilityTotal[Player.Client]][abilityCooldown] = Ability.Cooldown;
+	
+	
+	
+	PlayerAbilityRef[ZMPlayerAbilityTotal[Player.Client]] = Player;
+	
+	ZMPlayerAbilityTotal[Player.Client]++;
+	
+	return ZMPlayerAbilityTotal[Player.Client] - 1;
+}
+public int Native_PlayerAbility_IDGet(Handle plugin, int numParams) {
+    PlayerAbility Ability = GetNativeCell(1);
+    return int(Ability);
+}
+public int Native_PlayerAbility_CooldownSet(Handle plugin, int numParams) {
+    PlayerAbility Ability = GetNativeCell(1);
+    ZMPlayer Player = PlayerAbilityRef[Ability.ID];
+    
+    PlayerAbilities[Player.Client][Ability.ID][abilityCooldown] = GetNativeCell(2);
+}
+public int Native_PlayerAbility_CooldownGet(Handle plugin, int numParams) {
+    PlayerAbility Ability = GetNativeCell(1);
+    ZMPlayer Player = PlayerAbilityRef[Ability.ID];
+    
+    return view_as<int>(PlayerAbilities[Player.Client][Ability.ID][abilityCooldown]);
+}
+public int Native_PlayerAbility_ButtonsSet(Handle plugin, int numParams) {
+    PlayerAbility Ability = GetNativeCell(1);
+    ZMPlayer Player = PlayerAbilityRef[Ability.ID];
+    PlayerAbilities[Player.Client][Ability.ID][abilityButtons] = GetNativeCell(2);
+}
+public int Native_PlayerAbility_ButtonsGet(Handle plugin, int numParams) {
+    PlayerAbility Ability = GetNativeCell(1);
+    ZMPlayer Player = PlayerAbilityRef[Ability.ID];
+    return view_as<int>(PlayerAbilities[Player.Client][Ability.ID][abilityButtons]);
+}
+
 //    Natives for MethodMap ZombieClass
 public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 {
@@ -2052,8 +2163,6 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     ZMClass[numClasses][dataID] = numClasses-1;
     
     numClasses++;
-    
-    LogMessage("Zombie ID %i",numClasses-1);
     
     return numClasses-1;
 }

@@ -28,12 +28,14 @@
 forward void ZS_OnLoaded();
 forward void ZS_OnAbilityButtonPressed(int client, int buttons);
 forward void ZS_OnAbilityButtonReleased(int client, int buttons);
-forward void onZCSelected(int client, int zClass);
-forward void onZRightClick(int client, int zClass, int buttons);
+forward void ZS_OnCooldownEnded(int client);
+forward void ZS_OnCooldownStarted(int client);
+forward void ZS_OnZombieSelected(int client);
 
 // natives
 
-native bool ZS_AbilityFinished(int client);
+native void ZS_AbilityFinished(int client);
+native void ZS_AbilityStarted(int client);
 
 methodmap ZMPlayer {
     // Constructor
@@ -77,10 +79,13 @@ methodmap ZMPlayer {
     public native void OverrideHintText(char[] text);
 }
 
-methodmap ZMPlayerAbility {
+methodmap PlayerAbility {
     // Constructor
-    public native ZMPlayerAbility(int client);
+    public native PlayerAbility(ZMPlayer client, ZombieAbility ability);
     // Properties
+    property int ID {
+    	public native get();
+    }
     property bool isCooldown {
         public native get();
         public native set(const bool val);
@@ -97,12 +102,13 @@ methodmap ZMPlayerAbility {
     property bool isActive {
         public native get();
     }
-    property bool isActive {
-        public native get();
-    }
     property float Cooldown {
         public native get();
         public native set(const float val);
+    }
+    property int Buttons {
+        public native get();
+        public native set(const int val);
     }
 }
 
@@ -128,10 +134,13 @@ enum EndType {
 
 methodmap ZombieAbility {
     // Constructor
-    public native ZombieAbility(int zclass);
+    public native ZombieAbility(ZombieClass zclass);
     // Properties
     property int ZombieClass {
         public native get();
+    }
+    property int ID {
+    	public native get();
     }
     property bool Excluded {
         public native get();
@@ -155,7 +164,7 @@ methodmap ZombieAbility {
     }
     property float Cooldown {
         public native get();
-        public native set(const int val);
+        public native set(const float val);
     }
     property int Buttons {
         public native get();
