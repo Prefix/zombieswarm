@@ -12,10 +12,6 @@
 
 #define TIMER_SPEED 1.0
 
-#define int(%1)            view_as<int>(%1)
-//#define bool(%1)           view_as<bool>(%1)
-//#define vfloat(%1)          view_as<float>(%1)
-
 #define PLUGIN_VERSION "1.0"
 #define PLUGIN_NAME    "Zombie Mod"
 
@@ -1909,7 +1905,7 @@ public int Native_ZMPlayer_Constructor(Handle plugin, int numParams)
 public int Native_ZMPlayer_ClientGet(Handle plugin, int numParams) 
 {
     ZMPlayer player = GetNativeCell(1);
-    return GetClientOfUserId( int(player) );
+    return GetClientOfUserId( view_as<int>(player) );
 }
 
 public int Native_ZMPlayer_LevelGet(Handle plugin, int numParams)
@@ -2084,90 +2080,90 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
 {
     ZombieClass temp_class = GetNativeCell(1);
-    return int(temp_class);
+    return view_as<int>(temp_class);
 }
 
 public int Native_ZombieClass_HealthGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
-    return int(g_aZombieClass.Get(class_id, dataHP));
+    int class_id = view_as<int>(GetNativeCell(1));
+    return view_as<int>(g_aZombieClass.Get(class_id, dataHP));
 }
 
 public int Native_ZombieClass_HealthSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int health = GetNativeCell(2);
     g_aZombieClass.Set(class_id, health, dataHP);
 }
 
 public int Native_ZombieClass_SpeedGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
-    return int(g_aZombieClass.Get(class_id, dataSpeed));
+    int class_id = view_as<int>(GetNativeCell(1));
+    return view_as<int>(g_aZombieClass.Get(class_id, dataSpeed));
 }
 
 public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     float speed = GetNativeCell(2);
     g_aZombieClass.Set(class_id, speed, dataSpeed);  
 }
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
-    return int(g_aZombieClass.Get(class_id, dataGravity));
+    int class_id = view_as<int>(GetNativeCell(1));
+    return view_as<int>(g_aZombieClass.Get(class_id, dataGravity));
 }
 
 public int Native_ZombieClass_GravitySet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     float gravity = GetNativeCell(2);
-    return int(g_aZombieClass.Set(class_id, gravity, dataSpeed));
+    return view_as<int>(g_aZombieClass.Set(class_id, gravity, dataSpeed));
 }
 
 public int Native_ZombieClass_ExcludedGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
-    return int(g_aZombieClass.Set(class_id, dataExcluded));
+    int class_id = view_as<int>(GetNativeCell(1));
+    return view_as<int>(g_aZombieClass.Set(class_id, dataExcluded));
 }
 
 public int Native_ZombieClass_ExcludedSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     bool excluded = GetNativeCell(2);
     g_aZombieClass.Set(class_id, excluded, dataExcluded);
 }
 
 public int Native_ZombieClass_ButtonGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     return view_as<int>(g_aZombieClass.Get(class_id, dataAbilityButton));
 }
 
 public int Native_ZombieClass_ButtonSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int buttons = GetNativeCell(2);
     g_aZombieClass.Set(class_id, buttons, dataAbilityButton);
 }
 
 public int Native_ZombieClass_CooldownGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     return view_as<int>(g_aZombieClass.Get(class_id, dataCooldown));
 }
 
 public int Native_ZombieClass_CooldownSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     float cooldown = GetNativeCell(2);
     g_aZombieClass.Set(class_id, cooldown, dataCooldown);  
 }
 
 public int Native_ZombieClass_DamageGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     return view_as<int>(temp_class[dataDamage]);
@@ -2175,14 +2171,14 @@ public int Native_ZombieClass_DamageGet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_DamageSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     float cooldown = GetNativeCell(2);
     g_aZombieClass.Set(class_id, cooldown, dataDamage); 
 }
 
 public int Native_ZombieClass_NameGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2192,7 +2188,7 @@ public int Native_ZombieClass_NameGet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_NameSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2203,7 +2199,7 @@ public int Native_ZombieClass_NameSet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_DescGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2213,7 +2209,7 @@ public int Native_ZombieClass_DescGet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_DescSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2224,7 +2220,7 @@ public int Native_ZombieClass_DescSet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_ModelGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2234,7 +2230,7 @@ public int Native_ZombieClass_ModelGet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2245,7 +2241,7 @@ public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2255,7 +2251,7 @@ public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
@@ -2266,7 +2262,7 @@ public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
 
 public int Native_ZombieClass_UniqueGet(Handle plugin, int numParams)
 {
-    int class_id = int(GetNativeCell(1));
+    int class_id = view_as<int>(GetNativeCell(1));
     int temp_class[g_eZMClassData];
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
