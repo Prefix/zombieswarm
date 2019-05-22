@@ -8,182 +8,22 @@
 #include <overlays>
 #include <swarm/utils>
 
+#pragma semicolon 1
 #pragma newdecls required
 
-#define TIMER_SPEED 1.0
-
-#define PLUGIN_VERSION "1.0"
-#define PLUGIN_NAME    "Zombie Mod"
-
-// Checks if user connected, whithout any errors.
-//#define IsValidClient(%1)  ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && !IsClientSourceTV(%1) )
-
-// Checks if user alive, whithout any errors.
-#define IsValidAlive(%1) ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && IsPlayerAlive(%1) )
-
-#define MENU_DISPLAY_TIME 20
-
-#define MAX_CLASS 20
-#define MAX_ABILITY 100
-#define MAX_HINT_SIZE 512
-
-#define HIDEHUD_RADAR 1 << 12
-
-#define EF_NOSHADOW                 (1 << 4)
-#define EF_NORECEIVESHADOW          (1 << 6)
-
-#define DEFAULT_ZM_NAME "Unnamed Zombie"
-#define DEFAULT_ZM_DESC "This zombie needs more information"
-#define DEFAULT_ZM_MODEL_PATH "models/player/kuristaja/zombies/classic/classic"
-#define DEFAULT_ZM_ARMS_PATH ""
-#define DEFAULT_ZM_HEALTH 100
-#define DEFAULT_ZM_DAMAGE 20.0
-#define DEFAULT_ZM_SPEED 1.0
-#define DEFAULT_ZM_GRAVITY 1.0
-#define DEFAULT_ZM_EXCLUDED false
-#define DEFAULT_ZM_ABILITY_BUTTON IN_ATTACK2
-#define DEFAULT_ZM_COOLDOWN 5.0
-#define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
-
-enum g_eZombieClass {
-    dataID,
-    dataHP,
-    dataAbilityButton,
-    Float:dataCooldown,
-    Float:dataSpeed,
-    Float:dataGravity,
-    Float:dataDamage,
-    String:dataName[MAX_CLASS_NAME_SIZE],
-    String:dataDescription[MAX_CLASS_DESC_SIZE],
-    String:dataModel[MAX_CLASS_DESC_SIZE],
-    String:dataArms[MAX_CLASS_DESC_SIZE],
-    bool:dataExcluded,
-    String:dataUniqueName[MAX_CLASS_UNIQUE_NAME_SIZE]
-}
-
-enum ZMAbilityData {
-    abilityID,
-    abilityZombieClass,
-    abilityAbilityType,
-    abilityStartType,
-    abilityEndType,
-    abilityMaximumDuration,
-    abilityCooldown,
-    abilityButtons,
-    bool:abilityExluded,
-    String:abilityName[MAX_ABILITY_NAME_SIZE],
-    String:abilityDescription[MAX_ABILITY_DESC_SIZE],
-    String:abilityUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
-}
-
-enum ZMPlayerAbilityData {
-    paAbilityID,
-    paZombieClass,
-    paAbilityType,
-    paStartType,
-    paEndType,
-    paMaximumDuration,
-    float:paCooldown,
-    paButtons,
-    bool:paExluded,
-    String:paName[MAX_ABILITY_NAME_SIZE],
-    String:paDescription[MAX_ABILITY_DESC_SIZE],
-    String:paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
-}
-
-ArrayList g_aZombieClass = null;
+// Globals
+#include "swarm/core/defines.sp"
+#include "swarm/core/enums.sp"
+#include "swarm/core/globals.sp"
 
 public Plugin myinfo =
 {
-    name = PLUGIN_NAME,
-    author = "Zombie Swarm Contributors",
-    description = "Zombie mod like Left4Dead",
-    version = PLUGIN_VERSION,
-    url = "https://github.com/Prefix/zombieswarm"
+    name = ZS_PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
-
-int numClasses;
-
-int zombieClass[MAXPLAYERS + 1], pTeam[MAXPLAYERS + 1];
-Handle Cooldown[MAXPLAYERS + 1] = null;
-bool b_isGhost[MAXPLAYERS + 1], g_isCooldown[MAXPLAYERS + 1];
-bool shouldCollide[MAXPLAYERS + 1];
-bool canJoin[MAXPLAYERS + 1], canIgnore[MAXPLAYERS + 1];
-int CTSpawns, TSpawns;
-float Spawns[5][MAXPLAYERS + 1][3];
-
-int ZMAbility[MAX_ABILITY][ZMAbilityData];
-int ZMPlayerAbility[MAXPLAYERS + 1][ZMAbilityData];
-
-// Hint 
-
-bool b_OverrideHint[MAXPLAYERS + 1];
-char c_OverrideHintText[MAXPLAYERS + 1][MAX_HINT_SIZE];
-
-char downloadFilesPath[PLATFORM_MAX_PATH];
-
-Handle timerGhostHint[MAXPLAYERS + 1] = null, timerZombieRespawn[MAXPLAYERS + 1];
-Handle forwardZombieSelected = null, forwardZombieRightClick = null;
-Handle timerCountDown = INVALID_HANDLE;
-
-int timerZombieRespawnLeft[MAXPLAYERS + 1];
-
-Handle cvarRespawnTimeZ, cvarRespawnTimeZVip, cvarRespawnTimeS, cvarRespawnTimeSVip, cvarRoundStartZombies, cvarRoundKillsTeamJoinHumans;
-
-bool isGhostCanSpawn, roundEnded;
-
-int roundKillCounter;
-int countdownNumber;
-
-Handle cvarAlpha;
-
-int collisionOffset;
-
-int g_fLastButtons[MAXPLAYERS + 1 ];
-
-float f_HintSpeed[MAXPLAYERS + 1 ];
-int FogIndex = -1, SunIndex = -1, SkyCameraIndex = -1, CascadeLightIndex = -1;
-
-
-
-char humansWinSounds[][] = 
-{
-    "swarm/hwin1.mp3",
-    "swarm/hwin2.mp3",
-    "swarm/hwin3.mp3"
-};
-
-char zombiesWinSounds[][] = 
-{
-    "swarm/zwin1.mp3",
-    "swarm/zwin2.mp3",
-    "swarm/zwin3.mp3"
-};
-
-char countdownSounds[][] = {
-    "swarm/countdown/1.mp3",
-    "swarm/countdown/2.mp3",
-    "swarm/countdown/3.mp3",
-    "swarm/countdown/4.mp3",
-    "swarm/countdown/5.mp3",
-    "swarm/countdown/6.mp3",
-    "swarm/countdown/7.mp3",
-    "swarm/countdown/8.mp3",
-    "swarm/countdown/9.mp3",
-    "swarm/countdown/10.mp3",
-}
-
-// Convars
-
-ConVar cvarFog, cvarCountDown, cvarFogDensity, cvarFogStartDist, cvarFogEndDist, cvarFogColor, cvarFogZPlane,
-       cvarOverlayCTWin, cvarOverlayTWin, cvarOverlayEnable,
-       cvarHumanGravity;
-       
-// Fowards
-Handle fw_ZSOnLoaded,
-    fw_ZSOnAbilityButtonPressed, fw_ZSOnAbilityButtonReleased,
-    fw_ZSOnAbilityStarted, fw_ZSOnAbilityFinished, 
-    fw_ZSOnAbilityCDStarted, fw_ZSOnAbilityCDEnded;
 
 public void OnPluginStart()
 {   
@@ -234,7 +74,7 @@ public void OnPluginStart()
     // Configs
     BuildPath(Path_SM, downloadFilesPath, sizeof(downloadFilesPath), "configs/zm_downloads.txt");
     AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
-    CreateConVar("sm_zombieswarm_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("sm_zombieswarm_version", ZS_PLUGIN_VERSION, ZS_PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
     
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
@@ -336,7 +176,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     // Our MethodMap -> ZombieClass
     CreateNative("ZombieClass.ZombieClass", Native_ZombieClass_Constructor);
     // Class ID
-    CreateNative("ZombieClass.ID.get", Native_ZombieClass_IDGet)
+    CreateNative("ZombieClass.ID.get", Native_ZombieClass_IDGet);
     // Properties
     CreateNative("ZombieClass.Health.get", Native_ZombieClass_HealthGet);
     CreateNative("ZombieClass.Health.set", Native_ZombieClass_HealthSet);
@@ -367,10 +207,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     
     fw_ZSOnAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed", ET_Ignore, Param_Cell, Param_Cell);
     fw_ZSOnAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
-    fw_ZSOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
+    // TODO: When we start implenting abilities
+    //fw_ZSOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
+    //fw_ZSOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
+    //fw_ZSOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
+    //fw_ZSOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
 
     return APLRes_Success;
 }
@@ -401,7 +242,7 @@ public void OnTsEntitySpawnPost(int EntRef) {
     Spawns[CS_TEAM_T][TSpawns] = Vec;
     TSpawns++;
     
-    SDKUnhook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost)
+    SDKUnhook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost);
 }
 public void OnCTsEntitySpawnPost(int EntRef) {
     int entity = EntRefToEntIndex(EntRef);
@@ -412,7 +253,7 @@ public void OnCTsEntitySpawnPost(int EntRef) {
     Spawns[CS_TEAM_CT][CTSpawns] = Vec;
     CTSpawns++;
     
-    SDKUnhook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost)
+    SDKUnhook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost);
 }
 public void OnSkyCameraSpawnPost(int EntRef) {
     SkyCameraIndex = EntRefToEntIndex(EntRef);
@@ -623,7 +464,7 @@ public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char
         }
     }
 
-    return Plugin_Continue
+    return Plugin_Continue;
 }
 void CreateFog() {
     if(FogIndex != -1)  {
@@ -1011,7 +852,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         Menu menu = new Menu(ZombieClassMenuHandler);
         menu.SetTitle("Select zombie class:");
         
-        char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS];
+        char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS_ID];
         int temp_checker[g_eZombieClass];
         for (int i = 0; i < g_aZombieClass.Length; i++)
         {
@@ -1034,7 +875,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
     int temp_checker[g_eZombieClass];
     if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T) {
-        char key[MAX_CLASS];
+        char key[MAX_CLASS_ID];
         menu.GetItem(param2, key, sizeof(key));
         int classInt = StringToInt(key);
         g_aZombieClass.GetArray(classInt, temp_checker[0]);
@@ -1301,7 +1142,7 @@ public Action teleportZombieToHuman(Handle timer, any client)
         changedTargetOrigin[1] = targetOrigin[1];
         changedTargetOrigin[2] = targetOrigin[2];
         
-        int isStuck = getPlayerStuckVector(client, changedTargetOrigin)
+        int isStuck = getPlayerStuckVector(client, changedTargetOrigin);
         if (isStuck < 0) {
             targetOrigin[0] = changedTargetOrigin[0];
             targetOrigin[1] = changedTargetOrigin[1];
@@ -1459,9 +1300,9 @@ public int isPlayerStuck(int client)
     
     GetClientAbsOrigin(client, vecOrigin);
     
-    vecOrigin[0] -= 10.0
-    vecOrigin[1] -= 10.0
-    vecOrigin[2] -= 0.0
+    vecOrigin[0] -= 10.0;
+    vecOrigin[1] -= 10.0;
+    vecOrigin[2] -= 0.0;
     
     for(int pos = 0; pos <= 11; pos++) // Check for position
     {            
@@ -1491,41 +1332,13 @@ public int getPlayerStuckVector(int client, float vecOrigin[3])
     GetClientMins(client, vecMin);
     GetClientMaxs(client, vecMax);
     
-    vecSaved[0] = vecOrigin[0] // x
-    vecSaved[1] = vecOrigin[1] // y
-    vecSaved[2] = vecOrigin[2]    
+    vecSaved[0] = vecOrigin[0]; // x
+    vecSaved[1] = vecOrigin[1]; // y
+    vecSaved[2] = vecOrigin[2];    
     
-    vecOrigin[0] -= 100.0 // x
-    vecOrigin[1] -= 0.0 // y
-    vecOrigin[2] -= 0.0
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 10.5;
-        vecOrigin[1] += 10.5;
-        vecOrigin[2] += 10.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = 1;
-        } else {
-            i_index = -1;
-            delete trace;
-            break;
-        }
-        
-        delete trace;
-    }
-    
-    vecOrigin[0] = vecSaved[0] // x
-    vecOrigin[1] = vecSaved[1] // y
-    vecOrigin[2] = vecSaved[2]
-
-    vecOrigin[0] -= 100.0 // x
-    vecOrigin[1] -= 100.0 // y
-    vecOrigin[2] -= 0.0
+    vecOrigin[0] -= 100.0; // x
+    vecOrigin[1] -= 0.0; // y
+    vecOrigin[2] -= 0.0;
     
     for(int pos = 0; pos <= 11; pos++) // Check for position
     {            
@@ -1547,13 +1360,13 @@ public int getPlayerStuckVector(int client, float vecOrigin[3])
         delete trace;
     }
     
-    vecOrigin[0] = vecSaved[0] // x
-    vecOrigin[1] = vecSaved[1] // y
-    vecOrigin[2] = vecSaved[2]
+    vecOrigin[0] = vecSaved[0]; // x
+    vecOrigin[1] = vecSaved[1]; // y
+    vecOrigin[2] = vecSaved[2];
 
-    vecOrigin[0] -= 0.0 // x
-    vecOrigin[1] -= 100.0 // y
-    vecOrigin[2] -= 0.0
+    vecOrigin[0] -= 100.0; // x
+    vecOrigin[1] -= 100.0; // y
+    vecOrigin[2] -= 0.0;
     
     for(int pos = 0; pos <= 11; pos++) // Check for position
     {            
@@ -1575,13 +1388,41 @@ public int getPlayerStuckVector(int client, float vecOrigin[3])
         delete trace;
     }
     
-    vecOrigin[0] = vecSaved[0] // x
-    vecOrigin[1] = vecSaved[1] // y
-    vecOrigin[2] = vecSaved[2]
+    vecOrigin[0] = vecSaved[0]; // x
+    vecOrigin[1] = vecSaved[1]; // y
+    vecOrigin[2] = vecSaved[2];
 
-    vecOrigin[0] -= 0.0 // x
-    vecOrigin[1] -= 0.0 // y
-    vecOrigin[2] -= 0.0
+    vecOrigin[0] -= 0.0; // x
+    vecOrigin[1] -= 100.0; // y
+    vecOrigin[2] -= 0.0;
+    
+    for(int pos = 0; pos <= 11; pos++) // Check for position
+    {            
+        vecOrigin[0] += 10.5;
+        vecOrigin[1] += 10.5;
+        vecOrigin[2] += 10.0;
+        
+        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
+        
+        if(TR_DidHit(trace))
+        {
+            i_index = 1;
+        } else {
+            i_index = -1;
+            delete trace;
+            break;
+        }
+        
+        delete trace;
+    }
+    
+    vecOrigin[0] = vecSaved[0]; // x
+    vecOrigin[1] = vecSaved[1]; // y
+    vecOrigin[2] = vecSaved[2];
+
+    vecOrigin[0] -= 0.0; // x
+    vecOrigin[1] -= 0.0; // y
+    vecOrigin[2] -= 0.0;
     
     for(int pos = 0; pos <= 11; pos++) // Check for position
     {            
@@ -1794,7 +1635,7 @@ public void setZombieClassParameters(int client)
     if(b_isGhost[client])
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.4);
     else
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker[dataSpeed])
+    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker[dataSpeed]);
     
     // Set zombie gravity
     SetEntityGravity(client, temp_checker[dataGravity]);

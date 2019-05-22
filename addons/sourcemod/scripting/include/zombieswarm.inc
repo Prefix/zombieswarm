@@ -3,6 +3,12 @@
 #endif
 #define _zombieswarm_included
 
+#define ZS_PLUGIN_NAME "Zombie Swarm"
+#define ZS_PLUGIN_AUTHOR "Zombie Swarm Contributors"
+#define ZS_PLUGIN_DESCRIPTION "Zombie Swarm mod. On this mod you need to kill humans, not to infect them. Also zombie classes with special powers."
+#define ZS_PLUGIN_VERSION "Untracked"
+#define ZS_PLUGIN_URL "https://github.com/Bara/TroubleinTerroristTown"
+
 #define ZOMBIES_TEAM 2
 #define HUMAN_TEAM 3
 
@@ -15,6 +21,8 @@
 #define MAX_ABILITY_NAME_SIZE 64
 #define MAX_ABILITY_DESC_SIZE 128
 #define MAX_ABILITY_UNIQUE_NAME_SIZE 64
+
+#define MAX_CLASS_ID 10
 
 #define DISTANCE_BEFORE 3000.0 // Distance before pulling
 

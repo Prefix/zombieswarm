@@ -16,7 +16,7 @@ public Plugin myinfo =
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
 
 ZombieClass Zombie;
-ZombieAbility Ability;
+//ZombieAbility Ability;
 
 float lastPressedButtons[MAXPLAYERS + 1];
 
