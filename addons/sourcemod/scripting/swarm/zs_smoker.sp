@@ -40,7 +40,7 @@ public void OnPluginStart() {
 }
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass();
+    registeredClass = ZombieClass("smoker");
     registeredClass.SetName("Zombie Smoker", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Can drag other people (ATTACK2 button)", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/smoker", MAX_CLASS_MODEL_SIZE);

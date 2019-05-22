@@ -134,7 +134,7 @@ enum EndType {
 
 methodmap ZombieAbility {
     // Constructor
-    public native ZombieAbility(ZombieClass zclass);
+    public native ZombieAbility(ZombieClass zclass, const char[] unique);
     // Properties
     property int ZombieClass {
         public native get();
@@ -177,11 +177,12 @@ methodmap ZombieAbility {
     public native void SetName(const char[] text, int size);
     public native void GetDesc(char[] text, int size);
     public native void SetDesc(const char[] text, int size);
+    public native void GetUnique(char[] text, int size);
 }
 
 methodmap ZombieClass {
     // Constructor
-    public native ZombieClass();
+    public native ZombieClass(const char[] unique);
     // Methods
     property int ID {
         public native get();
@@ -223,6 +224,7 @@ methodmap ZombieClass {
     public native void SetDesc(const char[] text, int size);
     public native void GetModel(char[] text, int size);
     public native void SetModel(const char[] text, int size);
+    public native void GetUnique(char[] text, int size);
 }
 
 native bool isGhost( int client );

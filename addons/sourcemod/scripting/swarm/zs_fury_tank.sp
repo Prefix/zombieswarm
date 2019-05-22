@@ -49,7 +49,7 @@ public void OnPluginStart()
 }
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass();
+    registeredClass = ZombieClass("tank");
     registeredClass.SetName("Zombie Fury [TANK]", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Can rage (E button) with Iron skin", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", MAX_CLASS_MODEL_SIZE);

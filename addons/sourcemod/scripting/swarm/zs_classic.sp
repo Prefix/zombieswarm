@@ -28,7 +28,7 @@ public void OnPluginStart() {
 
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass();
+    registeredClass = ZombieClass("classic");
     registeredClass.SetName("Zombie Classic", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Default zombie class, has extra damage to humans.", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/kuristaja/zombies/classic/classic", MAX_CLASS_MODEL_SIZE);

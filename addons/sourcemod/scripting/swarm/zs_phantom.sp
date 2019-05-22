@@ -46,7 +46,7 @@ public void OnPluginStart() {
 }
 public void ZS_OnLoaded() {
     // We are registering zombie
-    Zombie = ZombieClass();
+    Zombie = ZombieClass("phantom");
     Zombie.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
     Zombie.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
     Zombie.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
@@ -55,10 +55,6 @@ public void ZS_OnLoaded() {
     Zombie.Speed = zSpeed.FloatValue;
     Zombie.Gravity = zGravity.FloatValue;
     Zombie.Excluded = zExcluded.BoolValue;
-    
-    Ability = ZombieAbility(Zombie);
-    Ability.Cooldown = zCooldown.FloatValue;
-    Ability.Buttons = IN_USE;
 }
 
 public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)

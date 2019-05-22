@@ -35,7 +35,7 @@ public void OnPluginStart() {
 
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass();
+    registeredClass = ZombieClass("hunter");
     registeredClass.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Has leaping (CTRL + ATTACK2 button)", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);

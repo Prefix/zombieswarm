@@ -38,7 +38,7 @@ public void OnPluginStart() {
 public void ZS_OnLoaded() {
 
     // We are registering zombie
-    registeredClass = ZombieClass();
+    registeredClass = ZombieClass("boomer");
     registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
     registeredClass.SetDesc("Explodes on death", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
