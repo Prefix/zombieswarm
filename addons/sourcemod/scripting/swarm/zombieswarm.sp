@@ -208,6 +208,8 @@ public void OnPluginStart()
     cvarOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
     cvarHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
+    g_aZombieClass = new ArrayList(view_as<int>(g_eZMClassData));
+    
     HookConVarChange(cvarFog, OnConVarChange);
     
     HookEvent("player_spawn", eventPlayerSpawn);
