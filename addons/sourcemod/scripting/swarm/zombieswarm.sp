@@ -1146,7 +1146,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             }
             
             g_isCooldown[client] = false;
-            if (Cooldown[client]) {
+            if (Cooldown[client] != null) {
                 delete Cooldown[client];
             }
         }
