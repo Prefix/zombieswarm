@@ -6,8 +6,8 @@
 #define ZS_PLUGIN_NAME "Zombie Swarm"
 #define ZS_PLUGIN_AUTHOR "Zombie Swarm Contributors"
 #define ZS_PLUGIN_DESCRIPTION "Zombie Swarm mod. On this mod you need to kill humans, not to infect them. Also zombie classes with special powers."
-#define ZS_PLUGIN_VERSION "Untracked"
-#define ZS_PLUGIN_URL "https://github.com/Bara/TroubleinTerroristTown"
+#define ZS_PLUGIN_VERSION "1"
+#define ZS_PLUGIN_URL "https://github.com/Prefix/zombieswarm/"
 
 #define ZOMBIES_TEAM 2
 #define HUMAN_TEAM 3
