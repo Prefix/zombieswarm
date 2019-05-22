@@ -14,7 +14,7 @@ enum g_eZombieClass {
     String:dataUniqueName[MAX_CLASS_UNIQUE_NAME_SIZE]
 }
 
-enum ZMAbilityData {
+enum g_eZombieAbility {
     abilityID,
     abilityZombieClass,
     abilityAbilityType,
@@ -29,7 +29,7 @@ enum ZMAbilityData {
     String:abilityUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
 }
 
-enum ZMPlayerAbilityData {
+enum g_ePlayerAbility {
     paAbilityID,
     paZombieClass,
     paAbilityType,
