@@ -4,6 +4,11 @@
 #define _zombieswarm_utils_included
 
 #define DISTANCE_BEFORE 3000.0
+
+char g_HumanWinSounds[64][PLATFORM_MAX_PATH];
+char g_ZombieWinSounds[64][PLATFORM_MAX_PATH];
+char g_CountdownSounds[64][PLATFORM_MAX_PATH];
+
 stock UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
 	Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
 	
@@ -390,4 +395,85 @@ stock int UTIL_GetRandomHuman()
     }
     
     return 0;
+}
+stock void Util_LoadSounds() {
+	char SoundPath[PLATFORM_MAX_PATH];
+	KeyValues Sounds = new KeyValues("Sounds");
+	BuildPath(Path_SM, SoundPath, sizeof(SoundPath), "configs/swarm/sounds.cfg");
+	
+	if (!Sounds.ImportFromFile(SoundPath)) {
+		LogError("Couldn't import: \"%s\"", SoundPath);
+		return;
+	}
+
+	if (!Sounds.GotoFirstSubKey(false)) {
+		LogError("No sounds in: \"%s\"", SoundPath);
+		return;
+	}
+	Sounds.Rewind();
+	char key[64], sound[PLATFORM_MAX_PATH];
+	
+	if (Sounds.JumpToKey("human_win")) {
+		if (Sounds.GotoFirstSubKey(false)) {
+			int i;
+			do {
+				Sounds.GetSectionName(key, sizeof(key));
+				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
+				g_HumanWinSounds[i] = sound;
+				Util_LoadSound(g_HumanWinSounds[i]);
+				i++;
+				
+			} while (Sounds.GotoNextKey(false));
+		}
+		else {
+			LogMessage("No Human win sounds found. Skip");
+		}
+		Sounds.GoBack();
+	}
+	if (Sounds.JumpToKey("zombie_win")) {
+		if (Sounds.GotoFirstSubKey(false)) {
+			int i;
+			do {
+				Sounds.GetSectionName(key, sizeof(key));
+				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
+				g_ZombieWinSounds[i] = sound;
+				Util_LoadSound(g_ZombieWinSounds[i]);
+				i++;
+				
+			} while (Sounds.GotoNextKey(false));
+		}
+		else {
+			LogMessage("No Zombie win sounds found. Skip");
+		}
+		Sounds.GoBack();
+	}
+	if (Sounds.JumpToKey("countdown")) {
+		if (Sounds.GotoFirstSubKey(false)) {
+			int i;
+			do {
+				Sounds.GetSectionName(key, sizeof(key));
+				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
+				g_CountdownSounds[i] = sound;
+				Util_LoadSound(g_CountdownSounds[i]);
+				i++;
+				
+			} while (Sounds.GotoNextKey(false));
+		}
+		else {
+			LogMessage("No Countdown sounds found. Skip");
+		}
+		Sounds.GoBack();
+	}
+}
+
+stock void Util_LoadSound(char[] sound) {
+	char soundsPath[PLATFORM_MAX_PATH];
+	Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
+	if (FileExists(soundsPath)) {
+		FakePrecacheSoundEx(sound);
+		AddFileToDownloadsTable(soundsPath);
+	}
+	else {
+		LogError("Cannot locate sounds file: '%s'", soundsPath);
+	}
 }

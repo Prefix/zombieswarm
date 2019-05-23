@@ -214,54 +214,6 @@ public void OnMapStart()
     
     PrecacheModel(DEFAULT_ARMS);
     
-    char soundsPath[PLATFORM_MAX_PATH];
-    
-    for(int s = 0; s < sizeof(g_sHumansWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", g_sHumansWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            UTIL_FakePrecacheSoundEx(g_sHumansWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(g_sZombiesWinSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", g_sZombiesWinSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            UTIL_FakePrecacheSoundEx(g_sZombiesWinSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-    for(int s = 0; s < sizeof(g_sCountdownSounds); s++)
-    {
-        Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", g_sCountdownSounds[s]);
-        
-        if( FileExists(soundsPath) )
-        {
-            UTIL_FakePrecacheSoundEx(g_sCountdownSounds[s]);
-            AddFileToDownloadsTable( soundsPath );
-        }
-        else
-        {
-            LogError("Cannot locate sounds file '%s'", soundsPath);
-        }
-    }
-    
-
     UTIL_FakePrecacheSoundEx("sound/radio/terwin.wav");
     UTIL_FakePrecacheSoundEx("sound/radio/ctwin.wav");
     
@@ -898,15 +850,15 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             char overlay[125];
             
             if(winner == CS_TEAM_T) {
-                int randomSound = GetRandomInt(0, sizeof(g_sZombiesWinSounds)-1);
+                int randomSound = GetRandomInt(0, sizeof(g_ZombieWinSounds)-1);
                 g_cOverlayTWin.GetString(overlay,sizeof(overlay));
                 
-                UTIL_PlayClientCommandSound(client, g_sZombiesWinSounds[randomSound]);
+                UTIL_PlayClientCommandSound(client, g_ZombieWinSounds[randomSound]);
             } else if(winner == CS_TEAM_CT) {
-                int randomSound = GetRandomInt(0, sizeof(g_sHumansWinSounds)-1);
+                int randomSound = GetRandomInt(0, sizeof(g_HumanWinSounds)-1);
                 g_cOverlayCTWin.GetString(overlay,sizeof(overlay));
                 
-                UTIL_PlayClientCommandSound(client, g_sHumansWinSounds[randomSound]);
+                UTIL_PlayClientCommandSound(client, g_HumanWinSounds[randomSound]);
             }
             
             if (g_cOverlayEnable.BoolValue) {
@@ -1339,7 +1291,7 @@ public Action CountDown(Handle timer) {
         if(GetClientTeam(client) != CS_TEAM_T)
             continue;
         
-        Util_PlaySoundToClient(client,g_sCountdownSounds[(g_iCountdownNumber - 1)]);
+        Util_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)]);
     }
     
     g_iCountdownNumber--;

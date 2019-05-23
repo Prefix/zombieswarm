@@ -4,6 +4,7 @@
 #define EF_NOSHADOW                 (1 << 4)
 #define EF_NORECEIVESHADOW          (1 << 6)
 #define TIMER_SPEED 1.0
+#define MAX_SOUNDS 64
 #define DEFAULT_ZM_NAME "Unnamed Zombie"
 #define DEFAULT_ZM_DESC "This zombie needs more information"
 #define DEFAULT_ZM_MODEL_PATH "models/player/kuristaja/zombies/classic/classic"

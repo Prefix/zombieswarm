@@ -67,30 +67,3 @@ int g_iFogIndex = -1;
 int g_iSunIndex = -1;
 int g_iSkyCameraIndex = -1;
 int g_iCascadeLightIndex = -1;
-// TODO: Some arrays (Should be placed in files later)
-char g_sHumansWinSounds[][] = 
-{
-    "swarm/hwin1.mp3",
-    "swarm/hwin2.mp3",
-    "swarm/hwin3.mp3"
-};
-
-char g_sZombiesWinSounds[][] = 
-{
-    "swarm/zwin1.mp3",
-    "swarm/zwin2.mp3",
-    "swarm/zwin3.mp3"
-};
-
-char g_sCountdownSounds[][] = {
-    "swarm/countdown/1.mp3",
-    "swarm/countdown/2.mp3",
-    "swarm/countdown/3.mp3",
-    "swarm/countdown/4.mp3",
-    "swarm/countdown/5.mp3",
-    "swarm/countdown/6.mp3",
-    "swarm/countdown/7.mp3",
-    "swarm/countdown/8.mp3",
-    "swarm/countdown/9.mp3",
-    "swarm/countdown/10.mp3",
-};
