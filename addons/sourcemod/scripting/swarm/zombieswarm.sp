@@ -73,7 +73,7 @@ public void OnPluginStart()
     if(g_cAlpha != null) SetConVarInt(g_cAlpha, 1);
     
     // Configs
-    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/zm_downloads.txt");
+    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/swarm/zm_downloads.txt");
     AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
     CreateConVar("sm_zombieswarm_version", ZS_PLUGIN_VERSION, ZS_PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
     
