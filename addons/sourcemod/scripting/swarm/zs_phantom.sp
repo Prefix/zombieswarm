@@ -5,13 +5,18 @@
 #include <zombieswarm>
 #include <swarm/utils>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Phantom"
+
 public Plugin myinfo =
 {
-    name = "Zombie Phantom",
-    author = "Zombie Swarm Contributors",
-    description = "Can be invisible",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
@@ -58,7 +63,7 @@ public void ZS_OnLoaded() {
     Zombie.Excluded = zExcluded.BoolValue;
 }
 
-public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -90,7 +95,7 @@ public void OnMapStart()
 
 public void OnClientPostAdminCheck(int client)
 {
-    lastPressedButtons[client] = 0.0
+    lastPressedButtons[client] = 0.0;
     
     SDKHook(client, SDKHook_SetTransmit, onSetTransmit);
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
@@ -218,7 +223,7 @@ public Action countdownCallback(Handle timer, any client)
     timeleft_countdown[client] -= 0.1;
     player.OverrideHint = true;
     char hinttext[512];
-    Format(hinttext, sizeof(hinttext), "<font color='#00FF00'>Invisible for %.1fs!</font>", timeleft_countdown[client])
+    Format(hinttext, sizeof(hinttext), "<font color='#00FF00'>Invisible for %.1fs!</font>", timeleft_countdown[client]);
     player.OverrideHintText(hinttext);
 
     timerCountdown[client] = CreateTimer(0.1, countdownCallback, client, TIMER_FLAG_NO_MAPCHANGE);

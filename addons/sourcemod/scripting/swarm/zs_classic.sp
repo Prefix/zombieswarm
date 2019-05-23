@@ -2,13 +2,18 @@
 #include <sdktools>
 #include <zombieswarm>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Classic"
+
 public Plugin myinfo =
 {
-    name = "Zombie Classic",
-    author = "Zombie Swarm Contributors",
-    description = "none",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 ZombieClass registeredClass;

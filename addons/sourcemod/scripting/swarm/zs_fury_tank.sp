@@ -5,13 +5,18 @@
 #include <zombieswarm>
 #include <swarm/utils>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Tank"
+
 public Plugin myinfo =
 {
-    name = "Zombie Fury",
-    author = "Zombie Swarm Contributors",
-    description = "Can rage",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 #define SOUND_FURY "zombie_mod/fury.mp3"
@@ -108,7 +113,7 @@ public void OnMapStart()
     UTIL_PrecacheParticle("slime_splash_01");
 }
 
-public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -128,7 +133,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     SetEntityRenderColor(client, 255, 255, 255, 255);
 }
 
-public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
