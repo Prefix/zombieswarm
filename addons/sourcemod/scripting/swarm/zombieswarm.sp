@@ -11,7 +11,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define DEBUG 1
+//#define DEBUG 1
 
 // Globals
 #include "swarm/core/defines.sp"
