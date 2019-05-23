@@ -257,6 +257,8 @@ public void OnMapStart()
     CreateFog();
     FogEnable(g_cFog.BoolValue);
     
+    Util_LoadSounds();
+    
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
 

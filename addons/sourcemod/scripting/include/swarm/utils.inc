@@ -470,7 +470,7 @@ stock void Util_LoadSound(char[] sound) {
 	char soundsPath[PLATFORM_MAX_PATH];
 	Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
 	if (FileExists(soundsPath)) {
-		FakePrecacheSoundEx(sound);
+		UTIL_FakePrecacheSoundEx(sound);
 		AddFileToDownloadsTable(soundsPath);
 	}
 	else {
