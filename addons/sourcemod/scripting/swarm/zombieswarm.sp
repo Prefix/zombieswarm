@@ -64,6 +64,9 @@ public void OnPluginStart()
     AddCommandListener( blockKill, "kill");
     AddCommandListener( blockKill, "spectate");
     AddCommandListener( blockKill, "explode");
+    AddCommandListener( blockKill, "jointeam");
+    AddCommandListener( blockKill, "explodevector");
+    AddCommandListener( blockKill, "killvector");
     AddCommandListener( joinTeam, "jointeam");
     
     g_iCollisionOffset = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
