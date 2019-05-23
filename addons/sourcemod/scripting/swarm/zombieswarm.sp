@@ -52,6 +52,11 @@ public void OnPluginStart()
     g_cHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
     g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
+    g_aZombieClassAbility = new ArrayList(view_as<int>(g_eZombieAbility));
+    for (int i = 1; i <= MaxClients; i++) 
+    { 
+        g_aPlayerAbility[i] = new ArrayList(view_as<int>(g_ePlayerAbility));
+    }
     
     HookConVarChange(g_cFog, OnConVarChange);
     
@@ -85,6 +90,7 @@ public void OnPluginStart()
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
 public void OnAllPluginsLoaded() {
+    g_aZombieClassAbility.Clear();
     Call_StartForward(g_hForwardZSOnLoaded);
     Call_Finish();
 }
@@ -473,6 +479,7 @@ public void OnClientDisconnect(int client)
     if (g_hTimerCooldown[client] != null) {
         delete g_hTimerCooldown[client];
     }
+    g_aPlayerAbility[client].Clear();
     g_iZombieRespawnLeft[client] = 0;
     g_fLastButtons[client] = 0;
     g_bCooldown[client] = false;
@@ -688,6 +695,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     if (g_hTimerGhostHint[victim] != null) {
         delete g_hTimerGhostHint[victim];
     }
+    g_aPlayerAbility[victim].Clear();
     if (GetClientTeam(victim) == CS_TEAM_CT && getHumans() > 1) {
         g_bCanIgnore[victim] = true;
         //CS_SwitchTeam( victim, CS_TEAM_T );
