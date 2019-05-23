@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -87,7 +88,7 @@ public void OnMapStart()
     tankAlive = false;
     tankReady = true;
 
-    FakePrecacheSoundEx( SOUND_FURY );
+    UTIL_FakePrecacheSoundEx( SOUND_FURY );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -103,15 +104,15 @@ public void OnMapStart()
     AddFileToDownloadsTable( "materials/sprites/halo01.vtf" );
     AddFileToDownloadsTable( "materials/sprites/halo01.vmt" );
     
-    precacheParticle("firework_crate_ground_low_03");
-    precacheParticle("slime_splash_01");
+    UTIL_PrecacheParticle("firework_crate_ground_low_03");
+    UTIL_PrecacheParticle("slime_splash_01");
 }
 
 public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
         
     if (timerFury[client] != null) {
@@ -131,7 +132,7 @@ public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return;
         
     if (timerFury[victim] != null) {
@@ -178,10 +179,10 @@ public void OnClientPostAdminCheck(int client)
 
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return Plugin_Continue;
         
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
         return Plugin_Continue;
         
     if (victim == attacker)
@@ -203,10 +204,10 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action onTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return Plugin_Continue;
         
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
         return Plugin_Continue;
         
     if (victim == attacker)
@@ -251,7 +252,7 @@ public void OnClientDisconnect(int client)
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 public void ZS_OnAbilityButtonPressed(int client, int buttons) {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
         
     ZMPlayer player = ZMPlayer(client);
@@ -268,7 +269,7 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     if (timerFury[client] != null)
         delete timerFury[client];
     
-    fadePlayer(client, 1, 1, {204, 0, 0, 150});
+    UTIL_Fade(client, 1, 1, {204, 0, 0, 150});
     
     // Make invisible zombie
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
@@ -281,7 +282,7 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     
     position[2] += 8.0;
     
-    createAttachParticle(client, "firework_crate_ground_low_03", position, "fwcgl", zDuration.FloatValue);
+    UTIL_CreateAttachParticle(client, "firework_crate_ground_low_03", position, "fwcgl", zDuration.FloatValue);
     
     position[2] += 5.0;
     
@@ -308,8 +309,8 @@ public Action furyCallback(Handle timer, any client)
 {
     timerFury[client] = null;
     
-    if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-    //if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
+    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
+    //if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
         return Plugin_Continue;
     }
     
@@ -330,8 +331,8 @@ public Action furyEffectCallback(Handle timer, any client)
 {
     timerFuryEffect[client] = null;
     
-    if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-    //if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
+    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
+    //if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
         return Plugin_Continue;
     }
     

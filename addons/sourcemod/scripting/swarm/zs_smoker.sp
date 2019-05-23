@@ -2,6 +2,7 @@
 #include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -54,7 +55,7 @@ public void ZS_OnLoaded() {
 
 public void OnClientPutInServer(int client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
     {
         pullTarget[client] = 0;
     }
@@ -79,7 +80,7 @@ public KillBeamTimer() {
 
     for (new i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i))
+        if (UTIL_IsValidClient(i))
         {
             if (SmokerTimer[i] != null)
             {
@@ -96,7 +97,7 @@ public bool IsBeingPulled(int client) {
     
     for (new i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i))
+        if (UTIL_IsValidClient(i))
         {
             if (SmokerTimer[i] != null)
             {
@@ -117,7 +118,7 @@ public int WhoPulling(int client) {
     
     for (new i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i))
+        if (UTIL_IsValidClient(i))
         {
             if (SmokerTimer[i] != null)
             {
@@ -136,7 +137,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
         
     if (SmokerTimer[client] != null) {
@@ -149,10 +150,10 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
     int victim   = GetClientOfUserId(GetEventInt(event, "userid"));
     
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
         return Plugin_Continue;
         
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return Plugin_Continue;
 
     ZMPlayer VictimPlayer = ZMPlayer(victim);
@@ -198,10 +199,10 @@ public Action BeamTimer(Handle timer, any client)
     
     int target = pullTarget[client];
     
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return Plugin_Handled;
     
-    if (!IsClientInTargetView(client, target)) {
+    if (!UTIL_IsClientInTargetView(client, target)) {
         pullTarget[client] = 0;
         
         return Plugin_Handled;
@@ -250,7 +251,7 @@ public Action BeamTimer(Handle timer, any client)
 
 public void OnMapStart()
 {
-    FakePrecacheSoundEx( SOUND_TONGUE );
+    UTIL_FakePrecacheSoundEx( SOUND_TONGUE );
     LaserCache = PrecacheModel("materials/sprites/laserbeam.vmt");
     
     // Format sound
@@ -261,7 +262,7 @@ public void OnMapStart()
     
 }
 public void ZS_OnAbilityButtonPressed(int client, int buttons) {
-	if (!IsValidAlive(client))
+	if (!UTIL_IsValidAlive(client))
 		return;
 
 	ZMPlayer player = ZMPlayer(client);
@@ -274,15 +275,15 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
 		return;
 	
 	int target = WhoPulling(client);
-	if(IsValidClient(target) && target != client) {
+	if(UTIL_IsValidClient(target) && target != client) {
 		return;
 	}
         
 	target = GetClientAimTarget(client, true);
 
-	if ( !IsValidAlive(target) ) 
+	if ( !UTIL_IsValidAlive(target) ) 
 		return;
-	if (!IsClientInTargetView(client, target))
+	if (!UTIL_IsClientInTargetView(client, target))
 		return;
 	if (IsBeingPulled(target) && WhoPulling(target) != client)
 		return;
@@ -308,7 +309,7 @@ public void ZS_OnAbilityButtonReleased(int client, int buttons) {
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return Plugin_Continue;
 
     ZMPlayer player = ZMPlayer(client);
@@ -355,7 +356,7 @@ public bool TraceEntityFilterHull(int entity, int contentsMask, any client)
 
 public bool TraceEntityFilterPlayer(int entity, int contentsMask, any client)
 {
-    if(IsValidClient(client) && entity == client)
+    if(UTIL_IsValidClient(client) && entity == client)
         return true;
     return false;
 } 

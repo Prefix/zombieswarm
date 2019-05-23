@@ -16,6 +16,3 @@
 #define DEFAULT_ZM_ABILITY_BUTTON IN_ATTACK2
 #define DEFAULT_ZM_COOLDOWN 5.0
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
-// TODO: Rid of macros
-//#define IsValidClient(%1)  ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && !IsClientSourceTV(%1) )
-#define IsValidAlive(%1) ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && IsPlayerAlive(%1) )

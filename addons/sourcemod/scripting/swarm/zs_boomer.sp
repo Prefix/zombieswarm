@@ -60,7 +60,7 @@ public void OnMapStart()
     explosionSprite = PrecacheModel( "sprites/sprite_fire01.vmt" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vtf" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
-    FakePrecacheSoundEx( "ambient/explosions/explode_8.mp3" );
+    UTIL_FakePrecacheSoundEx( "ambient/explosions/explode_8.mp3" );
     AddFileToDownloadsTable( "sound/ambient/explosions/explode_8.mp3" );
 }
 
@@ -68,7 +68,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
 {
     int victim = GetClientOfUserId(GetEventInt(event,"userid"));
     
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return Plugin_Continue;
 
     ZMPlayer player = ZMPlayer(victim);
@@ -94,7 +94,7 @@ stock explodePlayer(int client)
     {
         ZMPlayer player = ZMPlayer(client);
         ZMPlayer enemyplayer = ZMPlayer(client);
-        if (!IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
+        if (!UTIL_IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
             continue;
 
         GetClientAbsOrigin ( enemy, targetOrigin );
@@ -103,8 +103,8 @@ stock explodePlayer(int client)
         if (( distanceBetween <= zRadius.FloatValue)) {
             SDKHooks_TakeDamage(enemy, client, client, zExplodeDamage.FloatValue, DMG_BLAST, -1, NULL_VECTOR, NULL_VECTOR);
             
-            Util_Fade(enemy, 9, 10, {0, 133, 33, 210});
-            Util_ShakeScreen(enemy);
+            UTIL_Fade(enemy, 9, 10, {0, 133, 33, 210});
+            UTIL_ShakeScreen(enemy);
         }
     }
             

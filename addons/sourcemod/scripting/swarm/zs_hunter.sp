@@ -2,6 +2,7 @@
 #include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -48,7 +49,7 @@ public void ZS_OnLoaded() {
 }
 
 public void OnMapStart() {
-    FakePrecacheSoundEx( SOUND_LEAP );
+    UTIL_FakePrecacheSoundEx( SOUND_LEAP );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -58,7 +59,7 @@ public void OnMapStart() {
 }
 
 public void ZS_OnAbilityButtonPressed(int client, int buttons) {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
 
     ZMPlayer player = ZMPlayer(client);
@@ -80,7 +81,7 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     float eyePosition[3];
     GetClientEyeAngles(client, eyePosition);
 
-    velocityByAim(client, zLeep.FloatValue, cVelocity)
+    UTIL_VelocityByAim(client, zLeep.FloatValue, cVelocity)
 
     if ( eyePosition[0] > 15.0 ) {
         cVelocity[2] = 50.0

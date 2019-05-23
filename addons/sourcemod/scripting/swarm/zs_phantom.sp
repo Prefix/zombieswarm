@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -61,7 +62,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
         
     if (timerInvisibility[client] != null) {
@@ -78,7 +79,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 public void OnMapStart()
 {
-    FakePrecacheSoundEx( SOUND_INVISIBILITY );
+    UTIL_FakePrecacheSoundEx( SOUND_INVISIBILITY );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -110,7 +111,7 @@ public void OnClientDisconnect(int client)
 
 public Action onSetTransmit(int entity, int client) 
 {
-    if ( !IsValidAlive(entity) || !IsValidAlive(client) ) return Plugin_Continue;
+    if ( !UTIL_IsValidAlive(entity) || !UTIL_IsValidAlive(client) ) return Plugin_Continue;
     
     if (entity == client) return Plugin_Continue;
     
@@ -122,10 +123,10 @@ public Action onSetTransmit(int entity, int client)
 
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return Plugin_Continue;
         
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
         return Plugin_Continue;
         
     if (victim == attacker)
@@ -155,7 +156,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 public void ZS_OnAbilityButtonPressed(int client, int buttons) { 
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
 
     ZMPlayer player = ZMPlayer(client);
@@ -178,7 +179,7 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
         delete timerCountdown[client];
     }
     
-    fadePlayer(client, 1, 1, {255, 255, 255, 150});
+    UTIL_Fade(client, 1, 1, {255, 255, 255, 150});
     
     // Make invisible zombie
     hasInvisibility[client] = true;
@@ -199,7 +200,7 @@ public Action countdownCallback(Handle timer, any client)
 {
     timerCountdown[client] = null;
     
-    if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
+    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
         timerCountdown[client] = null;
         return Plugin_Continue;
     } 
@@ -229,7 +230,7 @@ public Action invisibilityCallback(Handle timer, any client)
 {
     timerInvisibility[client] = null;
     
-    if ( !IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
+    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
         return Plugin_Continue;
     }
     

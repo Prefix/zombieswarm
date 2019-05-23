@@ -222,7 +222,7 @@ public void OnMapStart()
         
         if( FileExists(soundsPath) )
         {
-            FakePrecacheSoundEx(g_sHumansWinSounds[s]);
+            UTIL_FakePrecacheSoundEx(g_sHumansWinSounds[s]);
             AddFileToDownloadsTable( soundsPath );
         }
         else
@@ -237,7 +237,7 @@ public void OnMapStart()
         
         if( FileExists(soundsPath) )
         {
-            FakePrecacheSoundEx(g_sZombiesWinSounds[s]);
+            UTIL_FakePrecacheSoundEx(g_sZombiesWinSounds[s]);
             AddFileToDownloadsTable( soundsPath );
         }
         else
@@ -252,7 +252,7 @@ public void OnMapStart()
         
         if( FileExists(soundsPath) )
         {
-            FakePrecacheSoundEx(g_sCountdownSounds[s]);
+            UTIL_FakePrecacheSoundEx(g_sCountdownSounds[s]);
             AddFileToDownloadsTable( soundsPath );
         }
         else
@@ -262,8 +262,8 @@ public void OnMapStart()
     }
     
 
-    FakePrecacheSoundEx("sound/radio/terwin.wav");
-    FakePrecacheSoundEx("sound/radio/ctwin.wav");
+    UTIL_FakePrecacheSoundEx("sound/radio/terwin.wav");
+    UTIL_FakePrecacheSoundEx("sound/radio/ctwin.wav");
     
     char overlay_ct[125], overlay_t[125];
     g_cOverlayTWin.GetString(overlay_t,sizeof(overlay_t));
@@ -454,14 +454,14 @@ public void OnGameFrame()
     int client;
     for (client = 1; client <= MaxClients; client++) 
     {
-        if (IsValidClient(client)) {
-            int target = isPlayerStuck(client); 
+        if (UTIL_IsValidClient(client)) {
+            int target = UTIL_IsPlayerStuck(client); 
             
             if (target < 0) {
                 g_bShouldCollide[client] = false;
             } else {
-                if (IsValidClient(target) && (g_bGhost[client] || g_bGhost[target])) {
-                    //if (IsValidClient(target)) {
+                if (UTIL_IsValidClient(target) && (g_bGhost[client] || g_bGhost[target])) {
+                    //if (UTIL_IsValidClient(target)) {
                     g_bShouldCollide[target] = true;
                     g_bShouldCollide[client] = true;
                 }
@@ -530,7 +530,7 @@ public void onPostThinkPost(int client)
 
 public Action onWeaponCanUse(int client, int weapon)
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
     return Plugin_Handled;
     
     char sWeapon[32];
@@ -545,7 +545,7 @@ public Action onWeaponCanUse(int client, int weapon)
 
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
 {
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
     return Plugin_Continue;
     
     if (GetClientTeam(victim) == CS_TEAM_T) {
@@ -553,7 +553,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
         return Plugin_Handled;
     }
     
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
     return Plugin_Continue;
     
     if (victim == attacker)
@@ -577,10 +577,10 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action onTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
     return Plugin_Continue;
     
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
     return Plugin_Continue;
     
     if (victim == attacker)
@@ -597,7 +597,7 @@ public Action onTraceAttack(int victim, int &attacker, int &inflictor, float &da
 
 public Action onSetTransmit(int entity, int client) 
 {
-    if ( !IsValidAlive(entity) || !IsValidAlive(client) ) return Plugin_Continue;
+    if ( !UTIL_IsValidAlive(entity) || !UTIL_IsValidAlive(client) ) return Plugin_Continue;
     
     if (entity == client) return Plugin_Continue;
     
@@ -639,10 +639,10 @@ public void onTouch(int ent1, int ent2)
     if(ent1 == ent2)
     return;
     
-    if(!IsValidClient(ent1))
+    if(!UTIL_IsValidClient(ent1))
     return;
     
-    if(!IsValidClient(ent2))
+    if(!UTIL_IsValidClient(ent2))
     return;
     
     //if(g_iTeam[ent1] != g_iTeam[ent2] && g_bGhost[ent1])
@@ -667,7 +667,7 @@ public Action joinTeam(int client, const char[] command, int argc)
     if (IsFakeClient(client))
     return Plugin_Continue;
     
-    if (!IsValidClient(client)) 
+    if (!UTIL_IsValidClient(client)) 
     return Plugin_Handled;
     
     if (IsPlayerAlive(client)) 
@@ -721,7 +721,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidClient(victim) )
+    if ( !UTIL_IsValidClient(victim) )
         return;
     if (IsClientSourceTV(victim)) 
         return;
@@ -755,7 +755,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
     return;
     
     if (g_hTimerZombieRespawn[client] != null) {
@@ -771,7 +771,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     
     setZombieGhostMode(client, false);
 
-    if (GetClientTeam(client) == CS_TEAM_T && IsValidClient(client)) {
+    if (GetClientTeam(client) == CS_TEAM_T && UTIL_IsValidClient(client)) {
         
         // Set zombie ghost mode
         setZombieGhostMode(client, true);
@@ -883,7 +883,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
     
     for (int client = 1; client <= MaxClients; client++) 
     { 
-        if (IsValidClient(client) )
+        if (UTIL_IsValidClient(client) )
         {    
             if (g_hTimerZombieRespawn[client] != null) {
                 delete g_hTimerZombieRespawn[client];
@@ -901,12 +901,12 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
                 int randomSound = GetRandomInt(0, sizeof(g_sZombiesWinSounds)-1);
                 g_cOverlayTWin.GetString(overlay,sizeof(overlay));
                 
-                playClientCommandSound(client, g_sZombiesWinSounds[randomSound]);
+                UTIL_PlayClientCommandSound(client, g_sZombiesWinSounds[randomSound]);
             } else if(winner == CS_TEAM_CT) {
                 int randomSound = GetRandomInt(0, sizeof(g_sHumansWinSounds)-1);
                 g_cOverlayCTWin.GetString(overlay,sizeof(overlay));
                 
-                playClientCommandSound(client, g_sHumansWinSounds[randomSound]);
+                UTIL_PlayClientCommandSound(client, g_sHumansWinSounds[randomSound]);
             }
             
             if (g_cOverlayEnable.BoolValue) {
@@ -953,7 +953,7 @@ public Action eventTeamChange(Event event, const char[] name, bool dontBroadcast
 public int nativeAbilityFinished(Handle plugin, int numParams) {
     int client = GetNativeCell(1);
 
-    if (!IsValidClient(client))
+    if (!UTIL_IsValidClient(client))
         return false;
 
     DataPack pack;
@@ -969,7 +969,7 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
     int client = pack.ReadCell();
     float end = pack.ReadFloat();
         
-    if (!IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client)) {
+    if (!UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client)) {
         return Plugin_Stop;
     }
     else {
@@ -996,12 +996,12 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
     return Plugin_Continue;
     
     if (GetClientTeam(client) == CS_TEAM_T) {
         ZMPlayer player = ZMPlayer(client);
-        if (IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
+        if (UTIL_IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
             int tButtons = view_as<int>(g_aZombieClass.Get(g_iZombieClass[client], dataAbilityButton));
             if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == tButtons) {
                 Call_StartForward(g_hForwardAbilityButtonPressed);
@@ -1023,19 +1023,19 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
         if (player.Ghost) {
             if ((buttons & IN_ATTACK)) {
-                if (!IsClientInTargetsView(client)) {
+                if (!UTIL_IsClientInTargetsView(client)) {
                     if (g_bGhostCanSpawn) {
                         setZombieGhostMode(client, false);
                         float tSpeed = view_as<float>(g_aZombieClass.Get(g_iZombieClass[client], view_as<int>(dataSpeed)));
                         // Set zombie speed
                         SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
                         
-                        showHintMessage(client, "<font color='#FFFFFF'>You've been revived! Slash and Smash!</font>");
+                        UTIL_ShowHintMessage(client, "<font color='#FFFFFF'>You've been revived! Slash and Smash!</font>");
                     } else {
-                        showHintMessage(client, "<font color='#FF0000'>Wait a little bit! <br/> Players are warming up.</font>");
+                        UTIL_ShowHintMessage(client, "<font color='#FF0000'>Wait a little bit! <br/> Players are warming up.</font>");
                     }
                 } else {
-                    showHintMessage(client, "<font color='#FF0000'>Hide from humans to respawn!</font>");
+                    UTIL_ShowHintMessage(client, "<font color='#FF0000'>Hide from humans to respawn!</font>");
                 }
             }
             if ((buttons & IN_RELOAD)) {
@@ -1043,7 +1043,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                     int random = GetRandomInt(0,g_iTSpawns);
                     float spawn[3];
                     spawn = g_fSpawns[CS_TEAM_T][random];
-                    if (IsValidClient(client) && g_bGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
+                    if (UTIL_IsValidClient(client) && g_bGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
                         TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
                 }
                 else {
@@ -1057,21 +1057,21 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
 public Action teleportZombieToHuman(Handle timer, any client)
 {
-    if ( !IsValidAlive(client) || g_iTeam[client] != CS_TEAM_T || !g_bGhost[client] ) {
+    if ( !UTIL_IsValidAlive(client) || g_iTeam[client] != CS_TEAM_T || !g_bGhost[client] ) {
         return Plugin_Continue;
     }
     
     float targetOrigin[3], changedTargetOrigin[3];
     
-    int rClient = getRandomClient();
-    if (IsValidClient(rClient))
+    int rClient = UTIL_GetRandomHuman();
+    if (UTIL_IsValidClient(rClient))
     {
         GetClientAbsOrigin(rClient, targetOrigin);
         changedTargetOrigin[0] = targetOrigin[0];
         changedTargetOrigin[1] = targetOrigin[1];
         changedTargetOrigin[2] = targetOrigin[2];
         
-        int isStuck = getPlayerStuckVector(client, changedTargetOrigin);
+        int isStuck = UTIL_GetPlayerStuckVector(client, changedTargetOrigin);
         if (isStuck < 0) {
             targetOrigin[0] = changedTargetOrigin[0];
             targetOrigin[1] = changedTargetOrigin[1];
@@ -1088,7 +1088,7 @@ public Action teleportZombieToHuman(Handle timer, any client)
 
 public Action RemoveRadar(Handle timer, any client) 
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
     return Plugin_Continue;
 
     SetEntProp(client, Prop_Send, "m_iHideHUD", GetEntProp(client, Prop_Send, "m_iHideHUD") | HIDEHUD_RADAR);
@@ -1100,21 +1100,21 @@ public Action ghostHint(Handle timer, any client)
 {
     g_hTimerGhostHint[client] = null;
 
-    if ( !IsValidAlive(client) || GetClientTeam(client) != CS_TEAM_T )
+    if ( !UTIL_IsValidAlive(client) || GetClientTeam(client) != CS_TEAM_T )
     return Plugin_Continue;
     
     if (g_bOverrideHint[client]) {
-        showHintMessage(client, g_sOverrideHintText[client]);
+        UTIL_ShowHintMessage(client, g_sOverrideHintText[client]);
     }
     else if (g_bGhost[client]) {
-        showHintMessage(client, "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>");
+        UTIL_ShowHintMessage(client, "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>");
     } else {
         char sHintText[196];
         int temp_checker[g_eZombieClass];
         g_aZombieClass.GetArray(g_iZombieClass[client], temp_checker[0]);
         Format(sHintText, sizeof(sHintText), "<font color='#00FF00'>%s</font><br/><font color='#FFFFFF'>%s</font>", temp_checker[dataName], temp_checker[dataDescription]);
         
-        showHintMessage(client, sHintText);
+        UTIL_ShowHintMessage(client, sHintText);
     }
     
     g_hTimerGhostHint[client] = CreateTimer( g_fHintSpeed[client], ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1124,7 +1124,7 @@ public Action ghostHint(Handle timer, any client)
 
 public Action respawnClientOnConnect( Handle timer, any client )
 {
-    if ( !IsValidClient(client) || IsPlayerAlive(client) )
+    if ( !UTIL_IsValidClient(client) || IsPlayerAlive(client) )
     {
         return Plugin_Continue;
     }
@@ -1137,7 +1137,7 @@ public Action respawnClientOnConnect( Handle timer, any client )
 public Action timerZombieRespawnCallback( Handle timer, any client )
 {    
     g_hTimerZombieRespawn[client] = null;
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
     return Plugin_Continue;
     
     if (IsPlayerAlive(client))
@@ -1149,262 +1149,16 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
 
     if (g_iZombieRespawnLeft[client] == 0) {
         CS_RespawnPlayer( client );
-        showHintMessage(client, "<font color='#FF0000'>Go Go Go!</font>");
+        UTIL_ShowHintMessage(client, "<font color='#FF0000'>Go Go Go!</font>");
     } else {
         char sHintText[196];
         Format(sHintText, sizeof(sHintText), "<font color='#FF0000'>Respawn cooldown! <br/> Wait for %i seconds</font>", g_iZombieRespawnLeft[client]);
-        showHintMessage(client, sHintText);
+        UTIL_ShowHintMessage(client, sHintText);
         g_iZombieRespawnLeft[client]--;
         g_hTimerZombieRespawn[client] = CreateTimer( 1.0, timerZombieRespawnCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     }
     
     return Plugin_Continue;
-}
-
-public bool IsClientInTargetsView(int client)
-{
-    int target;
-    for (target = 1; target <= MaxClients; target++) 
-    {
-        if ( IsValidAlive(target) && IsClientInTargetView(client, target) && g_iTeam[target] == CS_TEAM_CT ) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-/*public bool IsClientInTargetView(int client, int target)
-{
-    float playerOrigin[3];
-
-    bool HitPlayer = false;
-    
-    float targetOrigin[3], distanceBetween;
-
-    GetClientAbsOrigin( client, playerOrigin);
-    GetClientAbsOrigin ( target, targetOrigin );
-    distanceBetween = GetVectorDistance ( targetOrigin, playerOrigin );
-    
-    if ( distanceBetween <= 200.0 )
-    {
-        HitPlayer = true
-        return HitPlayer;
-    }
-    
-    targetOrigin[0] -= 20.0;
-    targetOrigin[2] -= 0.0;
-    
-    playerOrigin[0] -= 20.0
-    playerOrigin[2] -= 0.0
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {
-        targetOrigin[0] += 2.5;
-        targetOrigin[2] += 6.0;
-        
-        playerOrigin[0] += 2.5;
-        playerOrigin[2] += 6.0;
-        
-        Handle trace = TR_TraceRayFilterEx( playerOrigin, targetOrigin, MASK_SOLID, RayType_EndPoint, TraceEntityFilterRay);
-        
-        if ( !TR_DidHit(trace) )
-        {
-            HitPlayer = true;
-        }
-
-        delete trace;
-    }
-
-    return HitPlayer;
-}*/
-
-public int isPlayerStuck(int client)
-{
-    int i_index = -1;
-
-    float vecMin[3], vecMax[3], vecOrigin[3];
-    
-    GetClientMins(client, vecMin);
-    GetClientMaxs(client, vecMax);
-    
-    GetClientAbsOrigin(client, vecOrigin);
-    
-    vecOrigin[0] -= 10.0;
-    vecOrigin[1] -= 10.0;
-    vecOrigin[2] -= 0.0;
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 2.5;
-        vecOrigin[1] += 2.5;
-        vecOrigin[2] += 6.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_SOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = TR_GetEntityIndex( trace );
-        }
-        
-        delete trace;
-    }
-    
-    return i_index;
-}
-
-public int getPlayerStuckVector(int client, float vecOrigin[3])
-{
-    int i_index = -1;
-
-    float vecMin[3], vecMax[3], vecSaved[3];
-    
-    GetClientMins(client, vecMin);
-    GetClientMaxs(client, vecMax);
-    
-    vecSaved[0] = vecOrigin[0]; // x
-    vecSaved[1] = vecOrigin[1]; // y
-    vecSaved[2] = vecOrigin[2];    
-    
-    vecOrigin[0] -= 100.0; // x
-    vecOrigin[1] -= 0.0; // y
-    vecOrigin[2] -= 0.0;
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 10.5;
-        vecOrigin[1] += 10.5;
-        vecOrigin[2] += 10.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = 1;
-        } else {
-            i_index = -1;
-            delete trace;
-            break;
-        }
-        
-        delete trace;
-    }
-    
-    vecOrigin[0] = vecSaved[0]; // x
-    vecOrigin[1] = vecSaved[1]; // y
-    vecOrigin[2] = vecSaved[2];
-
-    vecOrigin[0] -= 100.0; // x
-    vecOrigin[1] -= 100.0; // y
-    vecOrigin[2] -= 0.0;
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 10.5;
-        vecOrigin[1] += 10.5;
-        vecOrigin[2] += 10.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = 1;
-        } else {
-            i_index = -1;
-            delete trace;
-            break;
-        }
-        
-        delete trace;
-    }
-    
-    vecOrigin[0] = vecSaved[0]; // x
-    vecOrigin[1] = vecSaved[1]; // y
-    vecOrigin[2] = vecSaved[2];
-
-    vecOrigin[0] -= 0.0; // x
-    vecOrigin[1] -= 100.0; // y
-    vecOrigin[2] -= 0.0;
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 10.5;
-        vecOrigin[1] += 10.5;
-        vecOrigin[2] += 10.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = 1;
-        } else {
-            i_index = -1;
-            delete trace;
-            break;
-        }
-        
-        delete trace;
-    }
-    
-    vecOrigin[0] = vecSaved[0]; // x
-    vecOrigin[1] = vecSaved[1]; // y
-    vecOrigin[2] = vecSaved[2];
-
-    vecOrigin[0] -= 0.0; // x
-    vecOrigin[1] -= 0.0; // y
-    vecOrigin[2] -= 0.0;
-    
-    for(int pos = 0; pos <= 11; pos++) // Check for position
-    {            
-        vecOrigin[0] += 10.5;
-        vecOrigin[1] += 10.5;
-        vecOrigin[2] += 10.0;
-        
-        Handle trace = TR_TraceHullFilterEx(vecOrigin, vecOrigin, vecMin, vecMax, MASK_PLAYERSOLID, TraceEntityFilterHull, client);
-        
-        if(TR_DidHit(trace))
-        {
-            i_index = 1;
-        } else {
-            i_index = -1;
-            delete trace;
-            break;
-        }
-        
-        delete trace;
-    }
-    
-    return i_index;
-}
-
-public bool TraceEntityFilterHull(int entity, int contentsMask, any client)
-{
-    return entity != client;
-} 
-
-public bool TraceEntityFilterRay(int entity, int contentsMask)
-{
-    return entity > MaxClients;
-}
-
-public int getRandomClient() 
-{ 
-    int[] iClients = new int[MaxClients];
-    int iClientsNum, i;
-    
-    for (i = 1; i <= MaxClients; i++) 
-    { 
-        if (IsValidAlive(i) && GetClientTeam(i) == CS_TEAM_CT)
-        {
-            iClients[iClientsNum++] = i; 
-        }
-    } 
-    
-    if (iClientsNum > 0)
-    {
-        return iClients[GetRandomInt(0, iClientsNum-1)]; 
-    }
-    
-    return 0;
 }
 
 stock int getZombieHealthRate(int client)
@@ -1425,7 +1179,7 @@ stock int getHumans(bool alive = false)
     
     for (i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i) && !IsClientSourceTV(i) && GetClientTeam(i) == CS_TEAM_CT)
+        if (UTIL_IsValidClient(i) && !IsClientSourceTV(i) && GetClientTeam(i) == CS_TEAM_CT)
         {
             if (!alive || (alive && IsPlayerAlive(i)))
             humans++;
@@ -1441,7 +1195,7 @@ stock int getZombies(bool alive = false)
     
     for (i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i) && !IsClientSourceTV(i) && GetClientTeam(i) == CS_TEAM_T)
+        if (UTIL_IsValidClient(i) && !IsClientSourceTV(i) && GetClientTeam(i) == CS_TEAM_T)
         {
             if (!alive || (alive && IsPlayerAlive(i)))
             zombies++;
@@ -1457,7 +1211,7 @@ stock int getTrueCT(bool alive = false)
     
     for (i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i) && !IsClientSourceTV(i) && g_iTeam[i] == CS_TEAM_CT)
+        if (UTIL_IsValidClient(i) && !IsClientSourceTV(i) && g_iTeam[i] == CS_TEAM_CT)
         {
             if (!alive || (alive && IsPlayerAlive(i)))
             humans++;
@@ -1473,7 +1227,7 @@ stock int getTrueT(bool alive = false)
     
     for (i = 1; i <= MaxClients; i++)
     {
-        if (IsValidClient(i) && !IsClientSourceTV(i) && g_iTeam[i] == CS_TEAM_T)
+        if (UTIL_IsValidClient(i) && !IsClientSourceTV(i) && g_iTeam[i] == CS_TEAM_T)
         {
             if (!alive || (alive && IsPlayerAlive(i)))
             zombies++;
@@ -1580,7 +1334,7 @@ public Action CountDown(Handle timer) {
     }
     
     for (int client = 1; client <= MaxClients; client++) {
-        if (!IsValidClient(client))
+        if (!UTIL_IsValidClient(client))
             continue;
         if(GetClientTeam(client) != CS_TEAM_T)
             continue;
