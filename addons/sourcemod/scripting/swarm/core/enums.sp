@@ -27,10 +27,14 @@ enum g_eZombieAbility {
 }
 
 enum g_ePlayerAbility {
-    paAbilityID,
+    paID,
+    paClient,
     paZombieClass,
-    float:paDuration,
-    float:paCooldown,
+    Float:paDuration,
+    Float:paCooldown,
+    Float:paCurrentDuration,
+    Float:paCurrentCooldown,
+    paState,
     paButtons,
     bool:paExcluded,
     String:paName[MAX_ABILITY_NAME_SIZE],

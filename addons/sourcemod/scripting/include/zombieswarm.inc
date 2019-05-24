@@ -79,45 +79,6 @@ methodmap ZMPlayer {
     public native void OverrideHintText(char[] text);
 }
 
-methodmap PlayerAbility {
-    // Constructor
-    public native PlayerAbility(ZMPlayer client, const char[] UniqueName);
-    // Properties
-    property int ID {
-    	public native get();
-    }
-    property bool isCooldown {
-        public native get();
-        public native set(const bool val);
-    }
-    property int Client {
-        public native get();
-    }
-    property int ZombieClass {
-        public native get();
-    }
-    property bool isPassive {
-        public native get();
-    }
-    property bool isActive {
-        public native get();
-    }
-    property float Cooldown {
-        public native get();
-        public native set(const float val);
-    }
-    property int Buttons {
-        public native get();
-        public native set(const int val);
-    }
-    // Methods
-    public native void GetName(char[] text, int size);
-    public native void SetName(const char[] text, int size);
-    public native void GetDesc(char[] text, int size);
-    public native void SetDesc(const char[] text, int size);
-    public native void GetUnique(char[] text, int size);
-}
-
 methodmap ZombieAbility {
     // Constructor
     public native ZombieAbility(ZombieClass zclass, const char[] unique);
@@ -195,6 +156,35 @@ methodmap ZombieClass {
     public native void GetModel(char[] text, int size);
     public native void SetModel(const char[] text, int size);
     public native void GetUnique(char[] text, int size);
+}
+
+// to be used later
+enum abilityState {
+    stateIdle,
+    stateRunning,
+    stateCooldown,
+    stateDisabled
+}
+
+methodmap PlayerAbility < ZombieAbility {
+    // Constructor
+    public native PlayerAbility(client, const char[] unique);
+    // Properties
+    property int Client {
+        public native get();
+    }
+    property int State {
+        public native get();
+        public native set(const int val);
+    }
+    property float CurrentCooldown {
+        public native get();
+        public native set(const float val);
+    }
+    property float CurrentDuration {
+        public native get();
+        public native set(const float val);
+    }
 }
 
 native bool isGhost( int client );

@@ -1,9 +1,10 @@
 // Zombie class variables
 ArrayList g_aZombieClass = null;
 ArrayList g_aZombieAbility = null;
-ArrayList g_aPlayerAbility[MAXPLAYERS + 1] = null;
+ArrayList g_aPlayerAbility = null;
 int g_iNumClasses = 0;
 int g_iNumAbilities = 0;
+int g_iNumPlayerAbilities = 0;
 // Player
 int g_iTeam[MAXPLAYERS + 1];
 int g_iZombieClass[MAXPLAYERS + 1];

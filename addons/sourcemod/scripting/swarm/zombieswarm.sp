@@ -56,10 +56,8 @@ public void OnPluginStart()
     
     g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
     g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
-    for (int i = 1; i <= MaxClients; i++) 
-    { 
-        g_aPlayerAbility[i] = new ArrayList(view_as<int>(g_ePlayerAbility));
-    }
+    g_aPlayerAbility = new ArrayList(view_as<int>(g_ePlayerAbility));
+    
     
     HookConVarChange(g_cFog, OnConVarChange);
     
@@ -465,6 +463,8 @@ public void OnClientPostAdminCheck(int client)
     //SDKHook(client, SDKHook_StartTouch, onTouch);
     //SDKHook(client, SDKHook_Touch, onTouch);
     SDKHook(client, SDKHook_PostThinkPost, onPostThinkPost);
+    ClearPlayerAbilities(client);
+    
 }
 
 public void OnClientDisconnect(int client)
@@ -491,10 +491,24 @@ public void OnClientDisconnect(int client)
         delete g_hTimerCooldown[client];
         g_hTimerCooldown[client] = null;
     }
-    g_aPlayerAbility[client].Clear();
+    ClearPlayerAbilities(client);
     g_iZombieRespawnLeft[client] = 0;
     g_fLastButtons[client] = 0;
     g_bCooldown[client] = false;
+}
+
+public void ClearPlayerAbilities(int client) {
+    if (!IsValidClient(client))
+        return;
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        if (i == g_aPlayerAbility.Length)
+            break;
+        int client_temp = g_aPlayerAbility.Get(i, view_as<int>(paClient));
+        if(client_temp == client) {
+            g_aPlayerAbility.Erase(i--);
+        }
+    }
 }
 
 public void onPostThinkPost(int client)
@@ -707,7 +721,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     if (g_hTimerGhostHint[victim] != null) {
         delete g_hTimerGhostHint[victim];
     }
-    g_aPlayerAbility[victim].Clear();
+    ClearPlayerAbilities(victim);
     if (GetClientTeam(victim) == CS_TEAM_CT && getHumans() > 1) {
         g_bCanIgnore[victim] = true;
         //CS_SwitchTeam( victim, CS_TEAM_T );
@@ -1364,4 +1378,10 @@ public ZombieAbility FindZombieAbilityByID(int id) {
 }
 public int FindZombieAbilityIndex(int id) {
     return view_as<int>(g_aZombieAbility.FindValue(id, view_as<int>(abilityID)));
+}
+public PlayerAbility FindPlayerAbilityByID(int id) {
+    return view_as<PlayerAbility>(g_aPlayerAbility.FindValue(id, view_as<int>(paID)));
+}
+public int FindPlayerAbilityIndex(int id) {
+    return view_as<int>(g_aPlayerAbility.FindValue(id, view_as<int>(paID)));
 }

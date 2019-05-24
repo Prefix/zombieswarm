@@ -81,6 +81,32 @@ public void InitMethodMaps() {
     CreateNative("ZombieAbility.GetDesc", Native_ZombieAbility_DescGet);
     CreateNative("ZombieAbility.SetDesc", Native_ZombieAbility_DescSet);
     CreateNative("ZombieAbility.GetUnique", Native_ZombieAbility_UniqueGet);
+
+    // Our MethodMap -> PlayerAbility
+    CreateNative("PlayerAbility.PlayerAbility", Native_PlayerAbility_Constructor);
+    // Class ID
+    CreateNative("PlayerAbility.ID.get", Native_PlayerAbility_IDGet);
+    // Properties
+    CreateNative("PlayerAbility.Excluded.get", Native_PlayerAbility_ExcludedGet);
+    CreateNative("PlayerAbility.Excluded.set", Native_PlayerAbility_ExcludedSet);
+    CreateNative("PlayerAbility.Duration.get", Native_PlayerAbility_DurationGet);
+    CreateNative("PlayerAbility.Duration.set", Native_PlayerAbility_DurationSet);
+    CreateNative("PlayerAbility.Cooldown.get", Native_PlayerAbility_CooldownGet);
+    CreateNative("PlayerAbility.Cooldown.set", Native_PlayerAbility_CooldownSet);
+    CreateNative("PlayerAbility.Buttons.get", Native_PlayerAbility_ButtonsGet);
+    CreateNative("PlayerAbility.Buttons.set", Native_PlayerAbility_ButtonsSet);
+    CreateNative("PlayerAbility.CurrentDuration.get", Native_PlayerAbility_CurrentDurationGet);
+    CreateNative("PlayerAbility.CurrentDuration.set", Native_PlayerAbility_CurrentDurationSet);
+    CreateNative("PlayerAbility.CurrentCooldown.get", Native_PlayerAbility_CurrentCooldownGet);
+    CreateNative("PlayerAbility.CurrentCooldown.set", Native_PlayerAbility_CurrentCooldownSet);
+    CreateNative("PlayerAbility.State.get", Native_PlayerAbility_StateGet);
+    CreateNative("PlayerAbility.State.set", Native_PlayerAbility_StateSet);
+    // Functions
+    CreateNative("PlayerAbility.GetName", Native_PlayerAbility_NameGet);
+    CreateNative("PlayerAbility.SetName", Native_PlayerAbility_NameSet);
+    CreateNative("PlayerAbility.GetDesc", Native_PlayerAbility_DescGet);
+    CreateNative("PlayerAbility.SetDesc", Native_PlayerAbility_DescSet);
+    CreateNative("PlayerAbility.GetUnique", Native_PlayerAbility_UniqueGet);
 }
 
 public int InitForwards() {
@@ -611,7 +637,7 @@ public int Native_ZombieAbility_CooldownSet(Handle plugin, int numParams)
 {
     int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
     float cooldown = GetNativeCell(2);
-    g_aZombieClass.Set(ability_id, cooldown, abilityCooldown);
+    g_aZombieAbility.Set(ability_id, cooldown, abilityCooldown);
 }
 
 public int Native_ZombieAbility_DurationGet(Handle plugin, int numParams)
@@ -624,7 +650,7 @@ public int Native_ZombieAbility_DurationSet(Handle plugin, int numParams)
 {
     int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
     float duration = GetNativeCell(2);
-    g_aZombieClass.Set(ability_id, duration, abilityDuration);
+    g_aZombieAbility.Set(ability_id, duration, abilityDuration);
 }
 
 public int Native_ZombieAbility_ExcludedGet(Handle plugin, int numParams)
@@ -637,7 +663,7 @@ public int Native_ZombieAbility_ExcludedSet(Handle plugin, int numParams)
 {
     int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
     bool excluded = GetNativeCell(2);
-    g_aZombieClass.Set(ability_id, excluded, abilityExcluded);
+    g_aZombieAbility.Set(ability_id, excluded, abilityExcluded);
 }
 
 public int Native_ZombieAbility_NameGet(Handle plugin, int numParams)
@@ -646,7 +672,7 @@ public int Native_ZombieAbility_NameGet(Handle plugin, int numParams)
     int temp_ability[g_eZombieAbility];
     g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
     int bytes = 0;
-    SetNativeString(2, temp_ability[dataName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_ability[abilityName], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -656,7 +682,7 @@ public int Native_ZombieAbility_NameSet(Handle plugin, int numParams)
     int temp_ability[g_eZombieAbility];
     g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
     int bytes = 0;
-    GetNativeString(2, temp_ability[dataName], GetNativeCell(3), bytes);
+    GetNativeString(2, temp_ability[abilityName], GetNativeCell(3), bytes);
     g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
     return bytes;
 }
@@ -667,7 +693,7 @@ public int Native_ZombieAbility_DescGet(Handle plugin, int numParams)
     int temp_ability[g_eZombieAbility];
     g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
     int bytes = 0;
-    SetNativeString(2, temp_ability[dataDescription], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_ability[abilityDescription], GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -677,7 +703,7 @@ public int Native_ZombieAbility_DescSet(Handle plugin, int numParams)
     int temp_ability[g_eZombieAbility];
     g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
     int bytes = 0;
-    GetNativeString(2, temp_ability[dataDescription], GetNativeCell(3), bytes);
+    GetNativeString(2, temp_ability[abilityDescription], GetNativeCell(3), bytes);
     g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
     return bytes;
 }
@@ -690,4 +716,195 @@ public int Native_ZombieAbility_UniqueGet(Handle plugin, int numParams)
     int bytes = 0;
     SetNativeString(2, temp_ability[abilityUniqueName], GetNativeCell(3), true, bytes);
     return bytes;
+}
+
+//    Natives for MethodMap PlayerAbility
+public int Native_PlayerAbility_Constructor(Handle plugin, int numParams)
+{
+    int client = view_as<int>(GetNativeCell(1));
+    // Check if valid client exists
+    if (!UTIL_IsValidClient(client))
+        return -1;
+    char temp_unique[MAX_ABILITY_UNIQUE_NAME_SIZE];
+    GetNativeString(2, temp_unique, sizeof(temp_unique));
+    int temp_checker[g_ePlayerAbility];
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        g_aPlayerAbility.GetArray(i, temp_checker[0]);
+        if (StrEqual(temp_checker[abilityUniqueName], temp_unique, false) &&
+            temp_checker[paClient] == client)
+        {
+            return -1;
+        }
+    }
+    int temp_ability[g_ePlayerAbility];
+    Format(temp_ability[paName], MAX_ABILITY_NAME_SIZE, "%s", DEFAULT_ABILITY_NAME);
+    Format(temp_ability[paDescription], MAX_ABILITY_DESC_SIZE, "%s", DEFAULT_ABILITY_DESC);
+    Format(temp_ability[paUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
+
+    temp_ability[paButtons] = view_as<int>(DEFAULT_ABILITY_BUTTONS);
+    temp_ability[paCooldown] = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
+    temp_ability[paDuration] = view_as<float>(DEFAULT_ABILITY_DURATION);
+    temp_ability[paCurrentDuration] = 0.0;
+    temp_ability[paCurrentCooldown] = 0.0;
+    // todo forward ZS_PlayerAbilityStateChange
+    temp_ability[paState] = stateIdle; // from <zombieswarm.inc>
+    temp_ability[paExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
+    temp_ability[paZombieClass] = -1;
+    temp_ability[paID] = g_iNumPlayerAbilities;
+    g_aPlayerAbility.PushArray(temp_ability[0]);
+    // TODO on zombie ability register
+    
+    LogMessage("Zombie Ability Register %i [Unique: %s]", temp_ability[paID], temp_unique);
+    g_iNumPlayerAbilities++;
+    return temp_ability[paID];
+}
+
+public int Native_PlayerAbility_IDGet(Handle plugin, int numParams)
+{
+    int temp_ability = view_as<int>(GetNativeCell(1));
+    return view_as<int>(temp_ability);
+}
+
+public int Native_PlayerAbility_ButtonsGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paButtons));
+}
+
+public int Native_PlayerAbility_ButtonsSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int buttons = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, buttons, paButtons);
+}
+
+public int Native_PlayerAbility_CooldownGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCooldown));
+}
+
+public int Native_PlayerAbility_CooldownSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float cooldown = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, cooldown, paCooldown);
+}
+
+public int Native_PlayerAbility_DurationGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paDuration));
+}
+
+public int Native_PlayerAbility_DurationSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float duration = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, duration, paDuration);
+}
+
+public int Native_PlayerAbility_ExcludedGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paExcluded));
+}
+
+public int Native_PlayerAbility_ExcludedSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    bool excluded = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, excluded, paExcluded);
+}
+
+public int Native_PlayerAbility_NameGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_ePlayerAbility];
+    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[paName], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_PlayerAbility_NameSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_ePlayerAbility];
+    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    GetNativeString(2, temp_ability[paName], GetNativeCell(3), bytes);
+    g_aPlayerAbility.SetArray(ability_id, temp_ability[0]);
+    return bytes;
+}
+
+public int Native_PlayerAbility_DescGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_ePlayerAbility];
+    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[paDescription], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_PlayerAbility_DescSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_ePlayerAbility];
+    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    GetNativeString(2, temp_ability[paDescription], GetNativeCell(3), bytes);
+    g_aPlayerAbility.SetArray(ability_id, temp_ability[0]);
+    return bytes;
+}
+
+public int Native_PlayerAbility_UniqueGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_ePlayerAbility];
+    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[paUniqueName], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_PlayerAbility_CurrentCooldownGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCurrentCooldown));
+}
+
+public int Native_PlayerAbility_CurrentCooldownSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float cooldown = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, cooldown, paCurrentCooldown);
+}
+
+public int Native_PlayerAbility_CurrentDurationGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCurrentDuration));
+}
+
+public int Native_PlayerAbility_CurrentDurationSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float duration = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, duration, paCurrentDuration);
+}
+
+public int Native_PlayerAbility_StateGet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aPlayerAbility.Get(ability_id, paState));
+}
+
+public int Native_PlayerAbility_StateSet(Handle plugin, int numParams)
+{
+    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float state = GetNativeCell(2);
+    g_aPlayerAbility.Set(ability_id, state, paState);
 }
