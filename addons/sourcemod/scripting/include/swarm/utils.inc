@@ -5,11 +5,7 @@
 
 #define DISTANCE_BEFORE 3000.0
 
-char g_HumanWinSounds[64][PLATFORM_MAX_PATH];
-char g_ZombieWinSounds[64][PLATFORM_MAX_PATH];
-char g_CountdownSounds[64][PLATFORM_MAX_PATH];
-
-stock UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
+stock void UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
 	Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
 	
 	if(Fade != null) {
@@ -86,15 +82,15 @@ stock bool UTIL_IsClientInTargetView(int client, int target)
                         
     if ( distanceBetween >= DISTANCE_BEFORE )
     {
-        HitPlayer = false
+        HitPlayer = false;
         return HitPlayer;
     }
                         
     targetOrigin[0] -= 20.0;
     targetOrigin[2] -= 0.0;
                         
-    playerOrigin[0] -= 20.0
-    playerOrigin[2] -= 0.0
+    playerOrigin[0] -= 20.0;
+    playerOrigin[2] -= 0.0;
                 
     for(int pos = 0; pos <= 11; pos++) // Check for position
     {
@@ -396,7 +392,7 @@ stock int UTIL_GetRandomHuman()
     
     return 0;
 }
-stock void Util_LoadSounds() {
+stock void UTIL_LoadSounds() {
 	char SoundPath[PLATFORM_MAX_PATH];
 	KeyValues Sounds = new KeyValues("Sounds");
 	BuildPath(Path_SM, SoundPath, sizeof(SoundPath), "configs/swarm/sounds.cfg");
@@ -420,7 +416,7 @@ stock void Util_LoadSounds() {
 				Sounds.GetSectionName(key, sizeof(key));
 				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
 				g_HumanWinSounds[i] = sound;
-				Util_LoadSound(g_HumanWinSounds[i]);
+				UTIL_LoadSound(g_HumanWinSounds[i]);
 				i++;
 				
 			} while (Sounds.GotoNextKey(false));
@@ -437,7 +433,7 @@ stock void Util_LoadSounds() {
 				Sounds.GetSectionName(key, sizeof(key));
 				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
 				g_ZombieWinSounds[i] = sound;
-				Util_LoadSound(g_ZombieWinSounds[i]);
+				UTIL_LoadSound(g_ZombieWinSounds[i]);
 				i++;
 				
 			} while (Sounds.GotoNextKey(false));
@@ -454,7 +450,7 @@ stock void Util_LoadSounds() {
 				Sounds.GetSectionName(key, sizeof(key));
 				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
 				g_CountdownSounds[i] = sound;
-				Util_LoadSound(g_CountdownSounds[i]);
+				UTIL_LoadSound(g_CountdownSounds[i]);
 				i++;
 				
 			} while (Sounds.GotoNextKey(false));
@@ -466,7 +462,7 @@ stock void Util_LoadSounds() {
 	}
 }
 
-stock void Util_LoadSound(char[] sound) {
+stock void UTIL_LoadSound(char[] sound) {
 	char soundsPath[PLATFORM_MAX_PATH];
 	Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
 	if (FileExists(soundsPath)) {

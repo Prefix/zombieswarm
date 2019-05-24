@@ -67,3 +67,8 @@ int g_iFogIndex = -1;
 int g_iSunIndex = -1;
 int g_iSkyCameraIndex = -1;
 int g_iCascadeLightIndex = -1;
+
+// Sounds
+char g_HumanWinSounds[64][PLATFORM_MAX_PATH];
+char g_ZombieWinSounds[64][PLATFORM_MAX_PATH];
+char g_CountdownSounds[64][PLATFORM_MAX_PATH];

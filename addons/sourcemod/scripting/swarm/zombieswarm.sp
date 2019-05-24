@@ -6,7 +6,6 @@
 #include <cstrike>
 #include <colorvariables>
 #include <overlays>
-#include <swarm/utils>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -16,6 +15,8 @@
 #include "swarm/core/enums.sp"
 #include "swarm/core/globals.sp"
 #include "swarm/core/natives.sp"
+
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -257,7 +258,7 @@ public void OnMapStart()
     CreateFog();
     FogEnable(g_cFog.BoolValue);
     
-    Util_LoadSounds();
+    UTIL_LoadSounds();
     
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
