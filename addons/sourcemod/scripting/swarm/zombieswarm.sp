@@ -31,6 +31,8 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {   
+    LoadTranslations("zombieswarm.phrases");
+
     g_cRespawnTimeZ = CreateConVar("zm_respawn_time_t", "3.0", "Vip players respawn time after team join or death");
     g_cRespawnTimeZVip = CreateConVar("zm_respawn_time_t_vip", "3.0", "Vip players respawn time after team join or death");
     g_cRespawnTimeS = CreateConVar("zm_respawn_time_ct", "60.0", "Players respawn time after team join or death");
@@ -404,12 +406,17 @@ void FogEnable(bool status) {
     }
     
     if (status) {
-        AcceptEntityInput(g_iCascadeLightIndex, "Disable");
-        SetLightStyle(0,"a");
+    	if (g_iCascadeLightIndex != -1) {
+    		AcceptEntityInput(g_iCascadeLightIndex, "Disable");
+        	SetLightStyle(0,"a");
+    	}
     }
     else {
-        AcceptEntityInput(g_iCascadeLightIndex, "Enable");
-        SetLightStyle(0,"");
+    	if (g_iCascadeLightIndex != -1) {
+    		AcceptEntityInput(g_iCascadeLightIndex, "Enable");
+        	SetLightStyle(0,"");
+    	}
+        
     }
     
     DispatchKeyValue(0, "skyname", "embassy");
@@ -479,6 +486,7 @@ public void OnClientDisconnect(int client)
     
     if (g_hTimerCooldown[client] != null) {
         delete g_hTimerCooldown[client];
+        g_hTimerCooldown[client] = null;
     }
     g_aPlayerAbility[client].Clear();
     g_iZombieRespawnLeft[client] = 0;
@@ -749,7 +757,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         g_hTimerGhostHint[client] = CreateTimer( 1.0, ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
         
         Menu menu = new Menu(ZombieClassMenuHandler);
-        menu.SetTitle("Select zombie class:");
+        menu.SetTitle("%T","Select zombie class",LANG_SERVER);
         
         char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS_ID];
         int temp_checker[g_eZombieClass];
@@ -783,9 +791,9 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
         setZombieClassParameters(client);
         callZombieSelected(client, temp_checker[dataID]);
         
-        CPrintToChat(client,"You selected: {red}%s",temp_checker[dataName]);
+        CPrintToChat(client,"%t","You selected",temp_checker[dataName]);
         if (strlen(temp_checker[dataDescription])) {
-            CPrintToChat(client,"{red}%s",temp_checker[dataDescription]);
+            CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
         }
     }
     else if (action == MenuAction_Cancel) {
@@ -796,9 +804,9 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
         setZombieClassParameters(client);
         callZombieSelected(client, temp_checker[dataID]);
         
-        CPrintToChat(client,"Random Zombie class: {red}%s",temp_checker[dataName]);
+        CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
         if (strlen(temp_checker[dataDescription])) {
-            CPrintToChat(client,"{red}%s",temp_checker[dataDescription]);
+        	CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
         }
     }
 }
@@ -958,7 +966,7 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
             player.isCooldown = true;
             float left = end - now;
             char hintText[512];
-            Format(hintText, sizeof(hintText), "<font color='#00FF00'>Ability cooldown for %.1fs!</font>",left);
+            Format(hintText, sizeof(hintText), "%t","Hint: Ability cooldown",left);
             player.OverrideHintText(hintText);
         }
     }
@@ -993,6 +1001,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
         if (player.Ghost) {
             if ((buttons & IN_ATTACK)) {
+            	char hintText[512];
                 if (!UTIL_IsClientInTargetsView(client)) {
                     if (g_bGhostCanSpawn) {
                         setZombieGhostMode(client, false);
@@ -1000,12 +1009,15 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                         // Set zombie speed
                         SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
                         
-                        UTIL_ShowHintMessage(client, "<font color='#FFFFFF'>You've been revived! Slash and Smash!</font>");
+                        Format(hintText, sizeof(hintText), "%t","Hint: You have been revived");
+                        UTIL_ShowHintMessage(client, hintText);
                     } else {
-                        UTIL_ShowHintMessage(client, "<font color='#FF0000'>Wait a little bit! <br/> Players are warming up.</font>");
+                        Format(hintText, sizeof(hintText), "%t","Hint: Wait a little bit");
+                        UTIL_ShowHintMessage(client, hintText);
                     }
                 } else {
-                    UTIL_ShowHintMessage(client, "<font color='#FF0000'>Hide from humans to respawn!</font>");
+                    Format(hintText, sizeof(hintText), "%t","Hint: Hide from humans to respawn");
+                    UTIL_ShowHintMessage(client, hintText);
                 }
             }
             if ((buttons & IN_RELOAD)) {
@@ -1017,7 +1029,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                         TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
                 }
                 else {
-                    CPrintToChat(client,"{red}No valid spawns found. Can't teleport");
+                    CPrintToChat(client,"%t","Chat: No valid spawns found");
                 }
             }
         }
@@ -1067,6 +1079,7 @@ public Action RemoveRadar(Handle timer, any client)
 public Action ghostHint(Handle timer, any client)
 {
     g_hTimerGhostHint[client] = null;
+    char hintText[1024];
 
     if ( !UTIL_IsValidAlive(client) || GetClientTeam(client) != CS_TEAM_T )
     return Plugin_Continue;
@@ -1075,12 +1088,13 @@ public Action ghostHint(Handle timer, any client)
         UTIL_ShowHintMessage(client, g_sOverrideHintText[client]);
     }
     else if (g_bGhost[client]) {
-        UTIL_ShowHintMessage(client, "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>");
+    	Format(hintText,sizeof(hintText),"%t","Hint: Currently you are a ghost");
+        UTIL_ShowHintMessage(client, hintText);
     } else {
         char sHintText[196];
         int temp_checker[g_eZombieClass];
         g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
-        Format(sHintText, sizeof(sHintText), "<font color='#00FF00'>%s</font><br/><font color='#FFFFFF'>%s</font>", temp_checker[dataName], temp_checker[dataDescription]);
+        Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker[dataName], temp_checker[dataDescription]);
         
         UTIL_ShowHintMessage(client, sHintText);
     }
@@ -1114,13 +1128,13 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
     if (GetClientTeam(client) == CS_TEAM_SPECTATOR) {
         return Plugin_Continue;
     }
-
+    char sHintText[196];
     if (g_iZombieRespawnLeft[client] == 0) {
         CS_RespawnPlayer( client );
-        UTIL_ShowHintMessage(client, "<font color='#FF0000'>Go Go Go!</font>");
+        Format(sHintText,sizeof(sHintText),"%t","Hint: Go Go Go");
+        UTIL_ShowHintMessage(client, sHintText);
     } else {
-        char sHintText[196];
-        Format(sHintText, sizeof(sHintText), "<font color='#FF0000'>Respawn cooldown! <br/> Wait for %i seconds</font>", g_iZombieRespawnLeft[client]);
+        Format(sHintText, sizeof(sHintText), "%t","Hint: Respawn cooldown", g_iZombieRespawnLeft[client]);
         UTIL_ShowHintMessage(client, sHintText);
         g_iZombieRespawnLeft[client]--;
         g_hTimerZombieRespawn[client] = CreateTimer( 1.0, timerZombieRespawnCallback, client, TIMER_FLAG_NO_MAPCHANGE);

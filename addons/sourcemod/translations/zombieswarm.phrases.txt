@@ -1,0 +1,62 @@
+"Phrases"
+{
+	"Select zombie class"
+	{
+		"en"	"Select zombie class:"
+	}
+	"You selected"
+	{
+		"#format"	"{1:s}"
+		"en"	"You selected: {red}{1}"
+	}
+	"Zombie Selected Description"
+	{
+		"#format"	"{1:s}"
+		"en"	"Description: {red}{1}"
+	}
+	"Random Zombie class"
+	{
+		"#format"	"{1:s}"
+		"en"	"Random Zombie class: {red}%s"
+	}
+	"Hint: Ability cooldown"
+	{
+		"#format"	"{1:.1f}"
+		"en"	"<font color='#00FF00'>Ability cooldown for {1} sec.</font>"
+	}
+	"Hint: You have been revived"
+	{
+		"en"	"<font color='#FFFFFF'>You've been revived! Slash and Smash!</font>"
+	}
+	"Hint: Wait a little bit"
+	{
+		"en"	"<font color='#FF0000'>Wait a little bit! <br/> Players are warming up.</font>"
+	}
+	"Hint: Hide from humans to respawn"
+	{
+		"en"	"Hide from humans to respawn"
+	}
+	"Chat: No valid spawns found"
+	{
+		"en"	"{red}No valid spawns found. Can't teleport"
+	}
+	"Hint: Currently you are a ghost"
+	{
+		"en" "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>"
+	}
+	// {1} - Zombie name, {2} - Zombie description
+	"Hint: Zombie Info Name and Description"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"<font color='#00FF00'>{1}</font><br/><font color='#FFFFFF'>{2}</font>"
+	}
+	"Hint: Go Go Go"
+	{
+		"en"	"<font color='#FF0000'>Go Go Go!</font>"
+	}
+	"Hint: Respawn cooldown"
+	{
+		"#format"	"{1:i}"
+		"en"	"<font color='#FF0000'>Respawn cooldown! <br/> Wait for {1} seconds</font>"
+	}
+}
