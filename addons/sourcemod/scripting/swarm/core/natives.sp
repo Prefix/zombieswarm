@@ -60,7 +60,27 @@ public void InitMethodMaps() {
     CreateNative("ZombieClass.SetModel", Native_ZombieClass_ModelSet);
     CreateNative("ZombieClass.GetArms", Native_ZombieClass_ArmsGet);
     CreateNative("ZombieClass.SetArms", Native_ZombieClass_ArmsSet);
-    CreateNative("ZombieClass.GetUnique", Native_ZombieClass_ArmsGet);
+    CreateNative("ZombieClass.GetUnique", Native_ZombieClass_UniqueGet);
+
+    // Our MethodMap -> ZombieAbility
+    CreateNative("ZombieAbility.ZombieAbility", Native_ZombieAbility_Constructor);
+    // Class ID
+    CreateNative("ZombieAbility.ID.get", Native_ZombieAbility_IDGet);
+    // Properties
+    CreateNative("ZombieAbility.Excluded.get", Native_ZombieAbility_ExcludedGet);
+    CreateNative("ZombieAbility.Excluded.set", Native_ZombieAbility_ExcludedSet);
+    CreateNative("ZombieAbility.Duration.get", Native_ZombieAbility_DurationGet);
+    CreateNative("ZombieAbility.Duration.set", Native_ZombieAbility_DurationSet);
+    CreateNative("ZombieAbility.Cooldown.get", Native_ZombieAbility_CooldownGet);
+    CreateNative("ZombieAbility.Cooldown.set", Native_ZombieAbility_CooldownSet);
+    CreateNative("ZombieAbility.Buttons.get", Native_ZombieAbility_ButtonsGet);
+    CreateNative("ZombieAbility.Buttons.set", Native_ZombieAbility_ButtonsSet);
+    // Functions
+    CreateNative("ZombieAbility.GetName", Native_ZombieAbility_NameGet);
+    CreateNative("ZombieAbility.SetName", Native_ZombieAbility_NameSet);
+    CreateNative("ZombieAbility.GetDesc", Native_ZombieAbility_DescGet);
+    CreateNative("ZombieAbility.SetDesc", Native_ZombieAbility_DescSet);
+    CreateNative("ZombieAbility.GetUnique", Native_ZombieAbility_UniqueGet);
 }
 
 public int InitForwards() {
@@ -313,7 +333,7 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     Format(temp_class[dataDescription], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_DESC);
     Format(temp_class[dataModel], MAX_CLASS_MODEL_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
     Format(temp_class[dataArms], MAX_CLASS_ARMS_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
-    Format(temp_class[dataArms], MAX_CLASS_UNIQUE_NAME_SIZE, "%s", temp_unique);
+    Format(temp_class[dataUniqueName], MAX_CLASS_UNIQUE_NAME_SIZE, "%s", temp_unique);
 
     temp_class[dataHP] = view_as<int>(DEFAULT_ZM_HEALTH);
     temp_class[dataDamage] = view_as<float>(DEFAULT_ZM_DAMAGE);
@@ -334,7 +354,7 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
 {
     int temp_class = view_as<int>(GetNativeCell(1));
-    return view_as<int>(FindZombieClassByID(temp_class));
+    return view_as<int>(temp_class);
 }
 
 public int Native_ZombieClass_HealthGet(Handle plugin, int numParams)
@@ -521,5 +541,153 @@ public int Native_ZombieClass_UniqueGet(Handle plugin, int numParams)
     g_aZombieClass.GetArray(class_id, temp_class[0]);
     int bytes = 0;
     SetNativeString(2, temp_class[dataUniqueName], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+//    Natives for MethodMap ZombieAbility
+public int Native_ZombieAbility_Constructor(Handle plugin, int numParams)
+{
+    int zombie_id = view_as<int>(GetNativeCell(1));
+    // Check if valid zombie class exists
+    int zombie_index = view_as<int>(FindZombieClassByID(zombie_id));
+    if (zombie_index == -1)
+        return -1;
+    char temp_unique[MAX_CLASS_UNIQUE_NAME_SIZE];
+    GetNativeString(2, temp_unique, sizeof(temp_unique));
+    int temp_checker[g_eZombieAbility];
+    for (int i = 0; i < g_aZombieAbility.Length; i++)
+    {
+        g_aZombieAbility.GetArray(i, temp_checker[0]);
+        if (StrEqual(temp_checker[abilityUniqueName], temp_unique, false))
+        {
+            return -1;
+        }
+    }
+    int temp_ability[g_eZombieAbility];
+    Format(temp_ability[abilityName], MAX_ABILITY_NAME_SIZE, "%s", DEFAULT_ABILITY_NAME);
+    Format(temp_ability[abilityDescription], MAX_ABILITY_DESC_SIZE, "%s", DEFAULT_ABILITY_DESC);
+    Format(temp_ability[abilityUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
+
+    temp_ability[abilityButtons] = view_as<int>(DEFAULT_ABILITY_BUTTONS);
+    temp_ability[abilityCooldown] = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
+    temp_ability[abilityDuration] = view_as<float>(DEFAULT_ABILITY_DURATION);
+    temp_ability[abilityExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
+    temp_ability[abilityZombieClass] = zombie_id;
+    temp_ability[abilityID] = g_iNumAbilities;
+    g_aZombieClass.PushArray(temp_ability[0]);
+    // TODO on zombie ability register
+    
+    LogMessage("Zombie Ability Register %i [Unique: %s]", temp_ability[abilityID], temp_unique);
+    g_iNumAbilities++;
+    return temp_ability[abilityID];
+}
+
+public int Native_ZombieAbility_IDGet(Handle plugin, int numParams)
+{
+    int temp_ability = view_as<int>(GetNativeCell(1));
+    return view_as<int>(temp_ability);
+}
+
+public int Native_ZombieAbility_ButtonsGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityButtons));
+}
+
+public int Native_ZombieAbility_ButtonsSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int buttons = GetNativeCell(2);
+    g_aZombieClass.Set(ability_id, buttons, abilityButtons);
+}
+
+public int Native_ZombieAbility_CooldownGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityCooldown));
+}
+
+public int Native_ZombieAbility_CooldownSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float cooldown = GetNativeCell(2);
+    g_aZombieClass.Set(ability_id, cooldown, abilityCooldown);
+}
+
+public int Native_ZombieAbility_DurationGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityDuration));
+}
+
+public int Native_ZombieAbility_DurationSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    float duration = GetNativeCell(2);
+    g_aZombieClass.Set(ability_id, duration, abilityDuration);
+}
+
+public int Native_ZombieAbility_ExcludedGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityExcluded));
+}
+
+public int Native_ZombieAbility_ExcludedSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    bool excluded = GetNativeCell(2);
+    g_aZombieClass.Set(ability_id, excluded, abilityExcluded);
+}
+
+public int Native_ZombieAbility_NameGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_eZombieAbility];
+    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[dataName], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_ZombieAbility_NameSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_eZombieAbility];
+    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    GetNativeString(2, temp_ability[dataName], GetNativeCell(3), bytes);
+    g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
+    return bytes;
+}
+
+public int Native_ZombieAbility_DescGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_eZombieAbility];
+    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[dataDescription], GetNativeCell(3), true, bytes);
+    return bytes;
+}
+
+public int Native_ZombieAbility_DescSet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_eZombieAbility];
+    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    GetNativeString(2, temp_ability[dataDescription], GetNativeCell(3), bytes);
+    g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
+    return bytes;
+}
+
+public int Native_ZombieAbility_UniqueGet(Handle plugin, int numParams)
+{
+    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    int temp_ability[g_eZombieAbility];
+    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int bytes = 0;
+    SetNativeString(2, temp_ability[abilityUniqueName], GetNativeCell(3), true, bytes);
     return bytes;
 }

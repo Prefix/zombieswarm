@@ -81,7 +81,7 @@ methodmap ZMPlayer {
 
 methodmap PlayerAbility {
     // Constructor
-    public native PlayerAbility(ZMPlayer client, ZombieAbility ability);
+    public native PlayerAbility(ZMPlayer client, const char[] UniqueName);
     // Properties
     property int ID {
     	public native get();
@@ -110,26 +110,12 @@ methodmap PlayerAbility {
         public native get();
         public native set(const int val);
     }
-}
-
-enum AbilityTypes {
-    ZM_ABILITY_NONE,
-    ZM_ABILITY_PASSIVE,
-    ZM_ABILITY_ACTIVE,
-    ZM_ABILITY_TRIGGERED
-}
-enum StartType {
-    ZM_ABILITY_START_NONE,
-    ZM_ABILITY_START_PASSIVE,
-    ZM_ABILITY_START_TRIGGERED,
-    ZM_ABILITY_START_PRESSBUTTON,
-    ZM_ABILITY_START_HOLDBUTTON,
-}
-enum EndType {
-    ZM_ABILITY_END_NONE = (1 << 0),
-    ZM_ABILITY_END_RELEASEBUTTON = (1 << 1),
-    ZM_ABILITY_END_TRIGGERED = (1 << 2),
-    ZM_ABILITY_END_DURATION = (1 << 3)
+    // Methods
+    public native void GetName(char[] text, int size);
+    public native void SetName(const char[] text, int size);
+    public native void GetDesc(char[] text, int size);
+    public native void SetDesc(const char[] text, int size);
+    public native void GetUnique(char[] text, int size);
 }
 
 methodmap ZombieAbility {
@@ -146,19 +132,7 @@ methodmap ZombieAbility {
         public native get();
         public native set(const bool val);
     }
-    property int AbilityType {
-        public native get();
-        public native set(const int val);
-    }
-    property int StartType {
-        public native get();
-        public native set(const int val);
-    }
-    property int EndType {
-        public native get();
-        public native set(const int val);
-    }
-    property int MaximumDuration {
+    property int Duration {
         public native get();
         public native set(const int val);
     }
@@ -171,8 +145,6 @@ methodmap ZombieAbility {
         public native set(const int val);
     }
     // Methods
-    public native void GetUniqueName(char[] text, int size);
-    public native void SetUniqueName(const char[] text, int size);
     public native void GetName(char[] text, int size);
     public native void SetName(const char[] text, int size);
     public native void GetDesc(char[] text, int size);
@@ -216,8 +188,6 @@ methodmap ZombieClass {
         public native set(float val);
     }
     // Zombie class related
-    public native void GetUniqueName(char[] text, int size);
-    public native void SetUniqueName(const char[] text, int size);
     public native void GetName(char[] text, int size);
     public native void SetName(const char[] text, int size);
     public native void GetDesc(char[] text, int size);
