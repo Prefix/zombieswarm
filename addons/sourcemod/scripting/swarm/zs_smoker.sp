@@ -4,13 +4,18 @@
 #include <zombieswarm>
 #include <swarm/utils>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Smoker"
+
 public Plugin myinfo =
 {
-    name = "Zombie Smoker",
-    author = "Zombie Swarm Contributors",
-    description = "Has drag and makes smoke after death",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 #define SOUND_TONGUE "zombie_mod/smoker_tongue.mp3"
@@ -76,9 +81,9 @@ public Action eventRoundEnd(Event event, const char[] name, bool dontBroadcast) 
     KillBeamTimer();
 }
 
-public KillBeamTimer() {
+public void KillBeamTimer() {
 
-    for (new i = 1; i <= MaxClients; i++)
+    for (int i = 1; i <= MaxClients; i++)
     {
         if (UTIL_IsValidClient(i))
         {
@@ -95,7 +100,7 @@ public bool IsBeingPulled(int client) {
     
     bool found = false;
     
-    for (new i = 1; i <= MaxClients; i++)
+    for (int i = 1; i <= MaxClients; i++)
     {
         if (UTIL_IsValidClient(i))
         {
@@ -116,7 +121,7 @@ public int WhoPulling(int client) {
     
     int found = 0;
     
-    for (new i = 1; i <= MaxClients; i++)
+    for (int i = 1; i <= MaxClients; i++)
     {
         if (UTIL_IsValidClient(i))
         {
@@ -133,17 +138,18 @@ public int WhoPulling(int client) {
     return found;
 }
 
-public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
     if ( !UTIL_IsValidAlive(client) )
-        return;
+        return Plugin_Continue;
         
     if (SmokerTimer[client] != null) {
         delete SmokerTimer[client];
     }
     pullTarget[client] = 0;
+    return Plugin_Continue;
 }
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
@@ -231,14 +237,14 @@ public Action BeamTimer(Handle timer, any client)
         fl_Velocity[1] = (Origin[1] - targetorigin[1]) / fl_Time;
         fl_Velocity[2] = (Origin[2] - targetorigin[2]) / fl_Time;
     } else {
-        fl_Velocity[0] = 0.0
-        fl_Velocity[1] = 0.0
-        fl_Velocity[2] = 0.0
+        fl_Velocity[0] = 0.0;
+        fl_Velocity[1] = 0.0;
+        fl_Velocity[2] = 0.0;
     }
     
     TeleportEntity( target, NULL_VECTOR, NULL_VECTOR, fl_Velocity);
     
-    int BeamColor[4] = {25, 25, 25, 200}
+    int BeamColor[4] = {25, 25, 25, 200};
     
     TE_SetupBeamPoints( Origin2, targetorigin2, LaserCache, 0, 0, 0, 0.1, 5.0, 5.0, 0, 0.0, BeamColor, 0);
     TE_SendToAll();

@@ -10,6 +10,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+//#define DEBUG 1
+
 // Globals
 #include "swarm/core/defines.sp"
 #include "swarm/core/enums.sp"
@@ -51,6 +53,11 @@ public void OnPluginStart()
     g_cHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
     g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
+    g_aZombieClassAbility = new ArrayList(view_as<int>(g_eZombieAbility));
+    for (int i = 1; i <= MaxClients; i++) 
+    { 
+        g_aPlayerAbility[i] = new ArrayList(view_as<int>(g_ePlayerAbility));
+    }
     
     HookConVarChange(g_cFog, OnConVarChange);
     
@@ -65,6 +72,9 @@ public void OnPluginStart()
     AddCommandListener( blockKill, "kill");
     AddCommandListener( blockKill, "spectate");
     AddCommandListener( blockKill, "explode");
+    AddCommandListener( blockKill, "jointeam");
+    AddCommandListener( blockKill, "explodevector");
+    AddCommandListener( blockKill, "killvector");
     AddCommandListener( joinTeam, "jointeam");
     
     g_iCollisionOffset = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
@@ -74,13 +84,14 @@ public void OnPluginStart()
     if(g_cAlpha != null) SetConVarInt(g_cAlpha, 1);
     
     // Configs
-    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/zm_downloads.txt");
+    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/swarm/zm_downloads.txt");
     AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
     CreateConVar("sm_zombieswarm_version", ZS_PLUGIN_VERSION, ZS_PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
     
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
 public void OnAllPluginsLoaded() {
+    g_aZombieClassAbility.Clear();
     Call_StartForward(g_hForwardZSOnLoaded);
     Call_Finish();
 }
@@ -448,30 +459,31 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
-    if ( IsClientInGame(client) )
-    {
-        g_bCanJoin[client] = false;
-        g_bCanIgnore[client] = false;
-        
-        g_iTeam[client] = CS_TEAM_NONE;
+    if ( !IsClientInGame(client) )
+        return;
+    
+    g_bCanJoin[client] = false;
+    g_bCanIgnore[client] = false;
+    
+    g_iTeam[client] = CS_TEAM_NONE;
 
-        g_bOverrideHint[client] = false;
-        
-        if (g_hTimerGhostHint[client] != null) {
-            delete g_hTimerGhostHint[client];
-        }
-        
-        if (g_hTimerZombieRespawn[client] != null) {
-            delete g_hTimerZombieRespawn[client];
-        }
-        
-        if (g_hTimerCooldown[client] != null) {
-            delete g_hTimerCooldown[client];
-        }
-        g_iZombieRespawnLeft[client] = 0;
-        g_fLastButtons[client] = 0;
-        g_bCooldown[client] = false;
+    g_bOverrideHint[client] = false;
+    
+    if (g_hTimerGhostHint[client] != null) {
+        delete g_hTimerGhostHint[client];
     }
+    
+    if (g_hTimerZombieRespawn[client] != null) {
+        delete g_hTimerZombieRespawn[client];
+    }
+    
+    if (g_hTimerCooldown[client] != null) {
+        delete g_hTimerCooldown[client];
+    }
+    g_aPlayerAbility[client].Clear();
+    g_iZombieRespawnLeft[client] = 0;
+    g_fLastButtons[client] = 0;
+    g_bCooldown[client] = false;
 }
 
 public void onPostThinkPost(int client)
@@ -486,7 +498,7 @@ public void onPostThinkPost(int client)
 public Action onWeaponCanUse(int client, int weapon)
 {
     if ( !UTIL_IsValidAlive(client) )
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     char sWeapon[32];
     GetEdictClassname(weapon, sWeapon, sizeof(sWeapon));
@@ -501,7 +513,7 @@ public Action onWeaponCanUse(int client, int weapon)
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
 {
     if ( !UTIL_IsValidClient(victim) )
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (GetClientTeam(victim) == CS_TEAM_T) {
         if (damagetype & DMG_FALL)
@@ -509,16 +521,16 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     }
     
     if ( !UTIL_IsValidClient(attacker) )
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (victim == attacker)
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (g_bRoundEnded)
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     if (g_bGhost[victim] || g_bGhost[attacker])
-    return Plugin_Handled;
+        return Plugin_Handled;
 
     // If both players in tunnel (ducking), lets give zombie some advantage by making human dmg lower.
     if (GetClientTeam(victim) == CS_TEAM_T && GetClientTeam(attacker) == CS_TEAM_CT && GetEntityFlags(victim) & FL_DUCKING && GetEntityFlags(attacker) & FL_DUCKING) {
@@ -533,19 +545,19 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 public Action onTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
     if ( !UTIL_IsValidClient(victim) )
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if ( !UTIL_IsValidClient(attacker) )
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (victim == attacker)
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (g_bRoundEnded)
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     if (g_bGhost[victim] || g_bGhost[attacker])
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     return Plugin_Continue;
 }
@@ -592,13 +604,13 @@ public bool onShouldCollide(int entity, int collisiongroup, int contentsmask, bo
 public void onTouch(int ent1, int ent2)
 {
     if(ent1 == ent2)
-    return;
+        return;
     
     if(!UTIL_IsValidClient(ent1))
-    return;
+        return;
     
     if(!UTIL_IsValidClient(ent2))
-    return;
+        return;
     
     //if(g_iTeam[ent1] != g_iTeam[ent2] && g_bGhost[ent1])
     if(g_iTeam[ent1] != g_iTeam[ent2])
@@ -620,19 +632,19 @@ public Action blockKill(int client, const char[] command, int argc)
 public Action joinTeam(int client, const char[] command, int argc)
 {
     if (IsFakeClient(client))
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (!UTIL_IsValidClient(client)) 
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     if (IsPlayerAlive(client)) 
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     if (IsClientSourceTV(client)) 
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     if (!g_bCanJoin[client])
-    return Plugin_Handled;
+        return Plugin_Handled;
     
     char sTeam[4];
     GetCmdArg( 1, sTeam, sizeof(sTeam));
@@ -684,6 +696,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     if (g_hTimerGhostHint[victim] != null) {
         delete g_hTimerGhostHint[victim];
     }
+    g_aPlayerAbility[victim].Clear();
     if (GetClientTeam(victim) == CS_TEAM_CT && getHumans() > 1) {
         g_bCanIgnore[victim] = true;
         //CS_SwitchTeam( victim, CS_TEAM_T );
@@ -702,7 +715,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 stock bool IsClientVip(int client)
 {
     if (GetUserFlagBits(client) & ADMFLAG_RESERVATION || GetUserFlagBits(client) & ADMFLAG_ROOT) 
-    return true;
+        return true;
     return false;
 }
 
@@ -711,7 +724,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
     if ( !UTIL_IsValidAlive(client) )
-    return;
+        return;
     
     if (g_hTimerZombieRespawn[client] != null) {
         delete g_hTimerZombieRespawn[client];
@@ -724,9 +737,11 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     
     SetEntData(client, g_iCollisionOffset, 2, 1, true);
     
-    setZombieGhostMode(client, false);
+    if (GetClientTeam(client) == CS_TEAM_CT) {
+        setZombieGhostMode(client, false);
+    }
 
-    if (GetClientTeam(client) == CS_TEAM_T && UTIL_IsValidClient(client)) {
+    if (GetClientTeam(client) == CS_TEAM_T) {
         
         // Set zombie ghost mode
         setZombieGhostMode(client, true);
@@ -764,9 +779,9 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
         int classInt = StringToInt(key);
         g_aZombieClass.GetArray(classInt, temp_checker[0]);
 
-        g_iZombieClass[client] = classInt;
+        g_iZombieClass[client] = temp_checker[dataID];
         setZombieClassParameters(client);
-        callZombieSelected(client, g_iZombieClass[client]);
+        callZombieSelected(client, temp_checker[dataID]);
         
         CPrintToChat(client,"You selected: {red}%s",temp_checker[dataName]);
         if (strlen(temp_checker[dataDescription])) {
@@ -774,11 +789,12 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
         }
     }
     else if (action == MenuAction_Cancel) {
-        int random = getRandomZombieClass();
-        g_iZombieClass[client] = random;
-        setZombieClassParameters(client);
-        callZombieSelected(client, g_iZombieClass[client]);
+        int random = getRandZombieClass();
         g_aZombieClass.GetArray(random, temp_checker[0]);
+        g_iZombieClass[client] = temp_checker[dataID];
+
+        setZombieClassParameters(client);
+        callZombieSelected(client, temp_checker[dataID]);
         
         CPrintToChat(client,"Random Zombie class: {red}%s",temp_checker[dataName]);
         if (strlen(temp_checker[dataDescription])) {
@@ -912,7 +928,7 @@ public int nativeAbilityFinished(Handle plugin, int numParams) {
         return false;
 
     DataPack pack;
-    float time = view_as<float>(g_aZombieClass.Get(g_iZombieClass[client], dataAbilityButton));
+    float time = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), dataAbilityButton));
     g_hTimerCooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
     pack.WriteCell(client);
     pack.WriteFloat(time);
@@ -952,12 +968,12 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !UTIL_IsValidAlive(client) )
-    return Plugin_Continue;
+        return Plugin_Continue;
     
     if (GetClientTeam(client) == CS_TEAM_T) {
         ZMPlayer player = ZMPlayer(client);
         if (UTIL_IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
-            int tButtons = view_as<int>(g_aZombieClass.Get(g_iZombieClass[client], dataAbilityButton));
+            int tButtons = view_as<int>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), dataAbilityButton));
             if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == tButtons) {
                 Call_StartForward(g_hForwardAbilityButtonPressed);
                 Call_PushCell(client);
@@ -965,23 +981,22 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 Call_Finish();
 
                 player.isCooldown = true;
-            }
-            else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == tButtons) {
+            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == tButtons) {
                 Call_StartForward(g_hForwardAbilityButtonReleased);
                 Call_PushCell(client);
                 Call_PushCell(buttons);
                 Call_Finish();
 
                 player.isCooldown = true;
+            }
         }
-    }
 
         if (player.Ghost) {
             if ((buttons & IN_ATTACK)) {
                 if (!UTIL_IsClientInTargetsView(client)) {
                     if (g_bGhostCanSpawn) {
                         setZombieGhostMode(client, false);
-                        float tSpeed = view_as<float>(g_aZombieClass.Get(g_iZombieClass[client], view_as<int>(dataSpeed)));
+                        float tSpeed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataSpeed)));
                         // Set zombie speed
                         SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
                         
@@ -1031,8 +1046,6 @@ public Action teleportZombieToHuman(Handle timer, any client)
             targetOrigin[0] = changedTargetOrigin[0];
             targetOrigin[1] = changedTargetOrigin[1];
             targetOrigin[2] = changedTargetOrigin[2];
-        } else {
-            
         }
         
         TeleportEntity(client, targetOrigin, NULL_VECTOR, NULL_VECTOR);
@@ -1066,7 +1079,7 @@ public Action ghostHint(Handle timer, any client)
     } else {
         char sHintText[196];
         int temp_checker[g_eZombieClass];
-        g_aZombieClass.GetArray(g_iZombieClass[client], temp_checker[0]);
+        g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
         Format(sHintText, sizeof(sHintText), "<font color='#00FF00'>%s</font><br/><font color='#FFFFFF'>%s</font>", temp_checker[dataName], temp_checker[dataDescription]);
         
         UTIL_ShowHintMessage(client, sHintText);
@@ -1118,7 +1131,7 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
 
 stock int getZombieHealthRate(int client)
 {
-    int health = view_as<int>(g_aZombieClass.Get(g_iZombieClass[client], view_as<int>(dataHP)));
+    int health = view_as<int>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataHP)));
     int value = (RoundToCeil(SquareRoot(float(health)/(getZombies()+1)/2.0))+2)*health;
 
     if (getHumans() < getZombies()) {
@@ -1242,10 +1255,31 @@ public int getRandZombieClass()
 
 public void setZombieClassParameters(int client) 
 {
-    if (g_iTeam[client] != CS_TEAM_T) return;
+    if (!UTIL_IsValidAlive(client)) return;
+    if (GetClientTeam(client) != CS_TEAM_T) return;
     // Set zombie class model
     int temp_checker[g_eZombieClass];
-    g_aZombieClass.GetArray(g_iZombieClass[client], temp_checker[0]);
+    g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
+
+    #if defined DEBUG
+    PrintToChatAll("ID: %i, HP: %i: AbilityButton: %i",
+        temp_checker[dataID],
+        temp_checker[dataHP],
+        temp_checker[dataAbilityButton]
+    );
+    PrintToChatAll("CD: %f, Speed: %f: Gravity: %f Damage: %f",
+        temp_checker[dataCooldown],
+        temp_checker[dataSpeed],
+        temp_checker[dataGravity],
+        temp_checker[dataDamage]
+    );
+    PrintToChatAll("Name: %s, Unique: %s Excluded: %s",
+        temp_checker[dataName],
+        temp_checker[dataUniqueName],
+        temp_checker[dataExcluded] ? "Yes" : "No"
+    );
+    #endif
+
     char zBuffer[PLATFORM_MAX_PATH];
     Format(zBuffer, sizeof(zBuffer), "%s.mdl", temp_checker[dataModel]);
     SetEntityModel(client, zBuffer);

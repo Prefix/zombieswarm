@@ -14,19 +14,22 @@ static const char PLUGIN_VERSION[]    = "1.2.0";
 static const char colors[][]        = {"R", "G", "B", "A"};
 
 
+
 Handle HudHintTimers[MAXPLAYERS+1];
 bool g_bEnabled;
 int g_iColor[4];
 float g_fPosX,
     g_fPosY;
 
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - HUD"
+
 public Plugin myinfo =
 {
-    name        = "Zombie Swarm CS:GO Hud",
-    author        = "Prefix (Based from Grey83)",
-    description    = "View statistics about you in zombie swarm",
-    version        = PLUGIN_VERSION,
-    url            = ""
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 public void OnPluginStart()

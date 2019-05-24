@@ -322,16 +322,13 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     temp_class[dataExcluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
     temp_class[dataAbilityButton] = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
     temp_class[dataCooldown] = view_as<float>(DEFAULT_ZM_COOLDOWN);
-    g_iNumClasses++;
-    temp_class[dataID] = g_iNumClasses-1;
-
+    temp_class[dataID] = g_iNumClasses;
     g_aZombieClass.PushArray(temp_class[0]);
     // TODO on zombie class register
     
-    
-    LogMessage("Zombie ID %i",g_iNumClasses-1);
-    
-    return g_iNumClasses-1;
+    LogMessage("Zombie ID %i",g_iNumClasses);
+    g_iNumClasses++;
+    return temp_class[dataID];
 }
 
 public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
@@ -376,7 +373,7 @@ public int Native_ZombieClass_GravitySet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
     float gravity = GetNativeCell(2);
-    return view_as<int>(g_aZombieClass.Set(class_id, gravity, dataSpeed));
+    return view_as<int>(g_aZombieClass.Set(class_id, gravity, dataGravity));
 }
 
 public int Native_ZombieClass_ExcludedGet(Handle plugin, int numParams)
@@ -429,8 +426,8 @@ public int Native_ZombieClass_DamageGet(Handle plugin, int numParams)
 public int Native_ZombieClass_DamageSet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float cooldown = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, cooldown, dataDamage); 
+    float damage = GetNativeCell(2);
+    g_aZombieClass.Set(class_id, damage, dataDamage); 
 }
 
 public int Native_ZombieClass_NameGet(Handle plugin, int numParams)

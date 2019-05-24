@@ -3,10 +3,8 @@
 #include <sdktools>
 #include <zombieswarm>
 
+#pragma semicolon 1
 #pragma newdecls required
-
-#define PLUGIN_VERSION "1.0"
-#define PLUGIN_NAME    "Zombie Mod Team Balance"
 
 // Checks if user connected, without any errors.
 #define IsValidClient(%1)  ( 1 <= %1 <= MaxClients && IsClientInGame(%1) )
@@ -16,19 +14,21 @@
 ConVar cvarTBrounds;
 int rounds = 1;
 
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Team Balance"
+
 public Plugin myinfo =
 {
     name = PLUGIN_NAME,
-    author = "Zombie Swarm contributors",
-    description = "Team Balance plugin for Zombie mod",
-    version = PLUGIN_VERSION,
-    url = "https://github.com/Prefix/zombieswarm"
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 public void OnPluginStart()
 {
     // Register zombie mod team builder convars
-    CreateConVar("zombie_mod_tb", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+    CreateConVar("zombie_mod_tb", ZS_PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
     
     // ConVars
 

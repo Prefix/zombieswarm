@@ -5,13 +5,18 @@
 #include <zombieswarm>
 #include <swarm/utils>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Boomer"
+
 public Plugin myinfo =
 {
-    name = "Zombie Boom",
-    author = "Zombie Swarm Contributors",
-    description = "Explodes on death",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 ZombieClass registeredClass;
@@ -84,7 +89,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     return Plugin_Continue;
 }
 
-stock explodePlayer(int client)
+stock void explodePlayer(int client)
 {
     float location[3];
     GetClientAbsOrigin(client, location);
@@ -112,7 +117,7 @@ stock explodePlayer(int client)
     explode2(location);
 }
 
-public explode1(float vec[3])
+public void explode1(float vec[3])
 {
     int color[4] = {188,220,255,200};
     
@@ -124,7 +129,7 @@ public explode1(float vec[3])
     TE_SendToAll();
 }
 
-public explode2(float vec[3])
+public void explode2(float vec[3])
 {
     vec[2] += 10;
     
@@ -134,7 +139,7 @@ public explode2(float vec[3])
     TE_SendToAll();
 }
 
-public boomSound(const char[] sound, const float origin[3])
+public void boomSound(const char[] sound, const float origin[3])
 {
     char sPathStar[PLATFORM_MAX_PATH];
     Format(sPathStar, sizeof(sPathStar), "*/%s", sound);

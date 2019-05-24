@@ -4,13 +4,18 @@
 #include <zombieswarm>
 #include <swarm/utils>
 
+#pragma semicolon 1
+#pragma newdecls required
+
+#define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Hunter"
+
 public Plugin myinfo =
 {
-    name = "Zombie Hunter",
-    author = "Zombie Swarm Contributors",
-    description = "Has leaping",
-    version = "1.0",
-    url = "https://github.com/Prefix/zombieswarm"
+    name = PLUGIN_NAME,
+    author = ZS_PLUGIN_AUTHOR,
+    description = ZS_PLUGIN_DESCRIPTION,
+    version = ZS_PLUGIN_VERSION,
+    url = ZS_PLUGIN_URL
 };
 
 #define SOUND_LEAP "zombie_mod/hunter_leap.mp3"
@@ -81,10 +86,10 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     float eyePosition[3];
     GetClientEyeAngles(client, eyePosition);
 
-    UTIL_VelocityByAim(client, zLeep.FloatValue, cVelocity)
+    UTIL_VelocityByAim(client, zLeep.FloatValue, cVelocity);
 
     if ( eyePosition[0] > 15.0 ) {
-        cVelocity[2] = 50.0
+        cVelocity[2] = 50.0;
     }
     else {
         float countedVelocity = (eyePosition[0] > -30.0 ? (FloatAbs(eyePosition[0]) + 350.0) : (FloatAbs(eyePosition[0]) * 10.0 + 100.0));
