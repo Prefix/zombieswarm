@@ -53,7 +53,7 @@ public void OnPluginStart()
     g_cHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
     
     g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
-    g_aZombieClassAbility = new ArrayList(view_as<int>(g_eZombieAbility));
+    g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
     for (int i = 1; i <= MaxClients; i++) 
     { 
         g_aPlayerAbility[i] = new ArrayList(view_as<int>(g_ePlayerAbility));
@@ -91,7 +91,10 @@ public void OnPluginStart()
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
 public void OnAllPluginsLoaded() {
-    g_aZombieClassAbility.Clear();
+    g_aZombieClass.Clear();
+    g_aZombieAbility.Clear();
+    g_iNumClasses = 0;
+    g_iNumAbilities = 0;
     Call_StartForward(g_hForwardZSOnLoaded);
     Call_Finish();
 }
@@ -1341,4 +1344,10 @@ public ZombieClass FindZombieClassByID(int id) {
 }
 public int FindZombieIndex(int id) {
     return view_as<int>(g_aZombieClass.FindValue(id, view_as<int>(dataID)));
+}
+public ZombieAbility FindZombieAbilityByID(int id) {
+    return view_as<ZombieAbility>(g_aZombieAbility.FindValue(id, view_as<int>(abilityID)));
+}
+public int FindZombieAbilityIndex(int id) {
+    return view_as<int>(g_aZombieAbility.FindValue(id, view_as<int>(abilityID)));
 }

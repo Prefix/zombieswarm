@@ -5,6 +5,7 @@
 #define EF_NORECEIVESHADOW          (1 << 6)
 #define TIMER_SPEED 1.0
 #define MAX_SOUNDS 64
+// Default for zm class
 #define DEFAULT_ZM_NAME "Unnamed Zombie"
 #define DEFAULT_ZM_DESC "This zombie needs more information"
 #define DEFAULT_ZM_MODEL_PATH "models/player/kuristaja/zombies/classic/classic"
@@ -17,3 +18,10 @@
 #define DEFAULT_ZM_ABILITY_BUTTON IN_ATTACK2
 #define DEFAULT_ZM_COOLDOWN 5.0
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
+// Default for Zombie ability
+#define DEFAULT_ABILITY_NAME "Unnamed Ability"
+#define DEFAULT_ABILITY_DESC "This ability needs a description"
+#define DEFAULT_ABILITY_DURATION 5.0
+#define DEFAULT_ABILITY_COOLDOWN 5.0
+#define DEFAULT_ABILITY_BUTTONS 0
+#define DEFAULT_ABILITY_EXCLUDED false

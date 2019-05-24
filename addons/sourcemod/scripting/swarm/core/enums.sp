@@ -17,10 +17,10 @@ enum g_eZombieClass {
 enum g_eZombieAbility {
     abilityID,
     abilityZombieClass,
-    abilityDuration,
-    float:abilityCooldown,
+    Float:abilityDuration,
+    Float:abilityCooldown,
     abilityButtons,
-    bool:abilityExluded,
+    bool:abilityExcluded,
     String:abilityName[MAX_ABILITY_NAME_SIZE],
     String:abilityDescription[MAX_ABILITY_DESC_SIZE],
     String:abilityUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
@@ -29,10 +29,10 @@ enum g_eZombieAbility {
 enum g_ePlayerAbility {
     paAbilityID,
     paZombieClass,
-    paDuration,
+    float:paDuration,
     float:paCooldown,
     paButtons,
-    bool:paExluded,
+    bool:paExcluded,
     String:paName[MAX_ABILITY_NAME_SIZE],
     String:paDescription[MAX_ABILITY_DESC_SIZE],
     String:paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
