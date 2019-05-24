@@ -21,6 +21,7 @@ public Plugin myinfo =
 #define SOUND_LEAP "zombie_mod/hunter_leap.mp3"
 
 ZombieClass registeredClass;
+ZombieAbility abilityLeap;
 
 int hunterNumLeapSounds[MAXPLAYERS + 1];
 
@@ -51,6 +52,12 @@ public void ZS_OnLoaded() {
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
     registeredClass.Cooldown = zCooldown.FloatValue;
+    // Abilities
+    abilityLeap = ZombieAbility(registeredClass, "hunter_leap");
+    abilityLeap.Duration = -1.0; // This is for classes who has no durations on skills
+    abilityLeap.Cooldown = zCooldown.FloatValue;
+    abilityLeap.Buttons &= IN_DUCK;
+    abilityLeap.Buttons &= IN_ATTACK2;
 }
 
 public void OnMapStart() {

@@ -21,13 +21,14 @@ public Plugin myinfo =
 #define SOUND_TONGUE "zombie_mod/smoker_tongue.mp3"
 
 ZombieClass registeredClass;
+ZombieAbility abilityPull;
 
 int LaserCache;
 
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration;
 
 public void OnPluginStart() {                   
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -41,6 +42,7 @@ public void OnPluginStart() {
     zGravity = CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
     zExcluded = CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = CreateConVar("zs_smoker_duration","30.0","Time in seconds for maximum pulling duration",_,true,1.0);
     
     AutoExecConfig(true, "zombie.smoker", "sourcemod/zombieswarm");
 }
@@ -56,6 +58,10 @@ public void ZS_OnLoaded() {
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
     registeredClass.Cooldown = zCooldown.FloatValue;
+    //ability
+    abilityPull.Duration = zDuration.FloatValue;
+    abilityPull.Cooldown = zCooldown.FloatValue;
+    abilityPull.Buttons &= IN_USE;
 }
 
 public void OnClientPutInServer(int client)

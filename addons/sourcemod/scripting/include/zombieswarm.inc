@@ -132,9 +132,9 @@ methodmap ZombieAbility {
         public native get();
         public native set(const bool val);
     }
-    property int Duration {
+    property float Duration {
         public native get();
-        public native set(const int val);
+        public native set(const float val);
     }
     property float Cooldown {
         public native get();

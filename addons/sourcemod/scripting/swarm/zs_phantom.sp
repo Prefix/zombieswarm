@@ -22,7 +22,7 @@ public Plugin myinfo =
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
 
 ZombieClass Zombie;
-//ZombieAbility Ability;
+ZombieAbility abilityInvisibility;
 
 float lastPressedButtons[MAXPLAYERS + 1];
 
@@ -61,6 +61,11 @@ public void ZS_OnLoaded() {
     Zombie.Speed = zSpeed.FloatValue;
     Zombie.Gravity = zGravity.FloatValue;
     Zombie.Excluded = zExcluded.BoolValue;
+    // Abilities
+    abilityInvisibility = ZombieAbility(Zombie, "phantom_invisibility");
+    abilityInvisibility.Duration = zInvisibility.FloatValue;
+    abilityInvisibility.Cooldown = zCooldown.FloatValue;
+    abilityInvisibility.Buttons &= IN_ATTACK2;
 }
 
 public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)

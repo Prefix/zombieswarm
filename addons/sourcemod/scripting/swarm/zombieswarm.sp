@@ -327,7 +327,7 @@ public void OnMapStart()
     {    
         // If end of file, stop
         if (IsEndOfFile(iDocument))
-        break;
+            break;
 
         // If char long, make sure that it will be split
         int iLength = strlen(szBuffer);
@@ -342,7 +342,7 @@ public void OnMapStart()
         
         // If char have commentaries, skip
         if(StrContains(szBuffer, "//", false) != -1 || StrContains(szBuffer, "/*", false) != -1 || StrContains(szBuffer, ";", false) != -1)
-        continue;
+            continue;
         
         // Read not empty char
         if(!StrEqual(szBuffer, "", false))
