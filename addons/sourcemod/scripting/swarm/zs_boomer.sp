@@ -52,6 +52,10 @@ public void ZS_OnLoaded() {
     registeredClass.Speed = zSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
+    char testing[256];
+    registeredClass.GetArms(testing, sizeof(testing));
+    registeredClass.GetName(testing, sizeof(testing));
+    registeredClass.GetDesc(testing, sizeof(testing));
 }
 
 public void OnMapStart()

@@ -155,6 +155,8 @@ methodmap ZombieClass {
     public native void SetDesc(const char[] text, int size);
     public native void GetModel(char[] text, int size);
     public native void SetModel(const char[] text, int size);
+    public native void GetArms(char[] text, int size);
+    public native void SetArms(const char[] text, int size);
     public native void GetUnique(char[] text, int size);
 }
 
