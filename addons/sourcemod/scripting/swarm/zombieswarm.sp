@@ -1342,6 +1342,40 @@ public void setZombieClassParameters(int client)
     
     // Set zombie gravity
     SetEntityGravity(client, temp_checker[dataGravity]);
+    AssignPlayerAbilities(client);
+}
+
+public void AssignPlayerAbilities(int client) {
+    if (!IsValidAlive(client))
+        return;
+    // Give player abilities
+    int temp_checkability[g_eZombieAbility];
+    ClearPlayerAbilities(client);
+    for (int i = 0; i < g_aZombieAbility.Length; i++)
+    {
+        g_aZombieAbility.GetArray(i, temp_checkability[0]);
+        if(g_iZombieClass[client] != temp_checkability[abilityZombieClass] || !temp_checkability[abilityExcluded])
+            continue;
+        
+        int temp_ability[g_ePlayerAbility];
+        Format(temp_ability[paName], MAX_ABILITY_NAME_SIZE, "%s", temp_checkability[abilityName]);
+        Format(temp_ability[paDescription], MAX_ABILITY_DESC_SIZE, "%s", temp_checkability[abilityDescription]);
+        Format(temp_ability[paUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_ability[abilityUniqueName]);
+
+        temp_ability[paButtons] = temp_checkability[abilityButtons];
+        temp_ability[paCooldown] = temp_checkability[abilityCooldown];
+        temp_ability[paDuration] = temp_checkability[abilityDuration];
+        temp_ability[paCurrentDuration] = 0.0;
+        temp_ability[paCurrentCooldown] = 0.0;
+        // todo forward ZS_PlayerAbilityStateChange
+        temp_ability[paState] = stateIdle; // from <zombieswarm.inc>
+        temp_ability[paExcluded] = false;
+        temp_ability[paZombieClass] = temp_checkability[abilityZombieClass];
+        temp_ability[paID] = g_iNumPlayerAbilities;
+        g_aPlayerAbility.PushArray(temp_ability[0]);
+        // TODO on player ability register
+        g_iNumPlayerAbilities++;
+    }
 }
 
 public Action CountDown(Handle timer) {
