@@ -798,7 +798,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 }
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
     int temp_checker[g_eZombieClass];
-    if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && !g_bGhost[client]) {
+    if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && g_bGhost[client]) {
         char key[MAX_CLASS_ID];
         menu.GetItem(param2, key, sizeof(key));
         int classInt = StringToInt(key);
