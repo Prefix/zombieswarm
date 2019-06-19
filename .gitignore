@@ -76,3 +76,4 @@ addons/sourcemod/scripting/.vscode/settings.json
 *.exe
 addons/sourcemod/scripting/include/sdktools_variant_t.inc
 *.bat
+addons/sourcemod/scripting/debug.sp

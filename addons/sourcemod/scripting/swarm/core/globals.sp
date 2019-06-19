@@ -36,10 +36,10 @@ Handle g_hForwardZSOnLoaded = null;
 Handle g_hForwardAbilityButtonPressed = null;
 Handle g_hForwardAbilityButtonReleased = null;
 // TODO: When we start implenting abilities
-//Handle g_hForwardOnAbilityStarted = null;
+Handle g_hForwardOnAbilityStarted = null;
 //Handle g_hForwardOnAbilityFinished = null;
-//Handle g_hForwardOnAbilityCDStarted = null;
-//Handle g_hForwardOnAbilityCDEnded = null;
+Handle g_hForwardOnAbilityCDStarted = null;
+Handle g_hForwardOnAbilityCDEnded = null;
 // Plugin ConVars
 ConVar g_cRespawnTimeZ;
 ConVar g_cRespawnTimeZVip;

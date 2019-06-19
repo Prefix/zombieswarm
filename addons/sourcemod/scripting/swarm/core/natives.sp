@@ -3,7 +3,6 @@ public void InitNatives() {
     CreateNative("getTeam", nativeGetTeam);
     CreateNative("setTeam", nativeSetTeam);
     CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
-    CreateNative("ZS_AbilityFinished", nativeAbilityFinished); 
 }
 
 public void InitMethodMaps() {
@@ -31,6 +30,8 @@ public void InitMethodMaps() {
     CreateNative("ZMPlayer.isCooldown.set", Native_ZMPlayer_isCooldownSet);
     // Functions
     CreateNative("ZMPlayer.OverrideHintText", Native_ZMPlayer_OverrideHintText);
+    CreateNative("ZMPlayer.GetAbilityByUnique", Native_ZMPlayer_GetPlayerAbilityUnique); 
+    CreateNative("ZMPlayer.GetAbilityByID", Native_ZMPlayer_GetPlayerAbilityID); 
 
     // Our MethodMap -> ZombieClass
     CreateNative("ZombieClass.ZombieClass", Native_ZombieClass_Constructor);
@@ -107,6 +108,9 @@ public void InitMethodMaps() {
     CreateNative("PlayerAbility.GetDesc", Native_PlayerAbility_DescGet);
     CreateNative("PlayerAbility.SetDesc", Native_PlayerAbility_DescSet);
     CreateNative("PlayerAbility.GetUnique", Native_PlayerAbility_UniqueGet);
+    CreateNative("PlayerAbility.AbilityFinished", Native_PlayerAbility_AbilityFinished);
+    CreateNative("PlayerAbility.AbilityStarted", Native_PlayerAbility_AbilityStarted);
+    CreateNative("PlayerAbility.ForceCooldownEnd", Native_PlayerAbility_ForceCooldownEnd);
 }
 
 public int InitForwards() {
@@ -117,10 +121,10 @@ public int InitForwards() {
     g_hForwardAbilityButtonPressed = CreateGlobalForward("ZS_OnAbilityButtonPressed", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardAbilityButtonReleased = CreateGlobalForward("ZS_OnAbilityButtonReleased", ET_Ignore, Param_Cell, Param_Cell);
     // TODO: When we start implenting abilities
-    //g_hForwardOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardOnAbilityStarted = CreateGlobalForward("ZS_OnAbilityStarted", ET_Ignore, Param_Cell, Param_Cell);
     //g_hForwardOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
-    //g_hForwardOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
-    //g_hForwardOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 
@@ -340,6 +344,54 @@ public int Native_ZMPlayer_isCooldownGet(Handle plugin, int numParams) {
     return g_bCooldown[client];
 }
 
+public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)
+{
+    int found = -1;
+    ZMPlayer player = GetNativeCell(1);
+    int client = player.Client;
+    char lookupfor[MAX_ABILITY_UNIQUE_NAME_SIZE];
+    int bytes = 0;
+    GetNativeString(2, lookupfor, sizeof(lookupfor), bytes);
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        if (i == g_aPlayerAbility.Length)
+            break;
+        int temp_ability[g_ePlayerAbility];
+        g_aPlayerAbility.GetArray(i, temp_ability[0]);
+        if (temp_ability[paClient] != client)
+            continue;
+        if (StrEqual(temp_ability[paUniqueName], lookupfor, false)) {
+            found = i;
+            break;
+        }
+    }
+    return found;
+}
+
+public int Native_ZMPlayer_GetPlayerAbilityID(Handle plugin, int numParams)
+{
+    int found = -1;
+    ZMPlayer player = GetNativeCell(1);
+    int client = player.Client;
+    int uniqueid = GetNativeCell(2);
+    if (uniqueid < 0 )
+        return -1;
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        if (i == g_aPlayerAbility.Length)
+            break;
+        int temp_ability[g_ePlayerAbility];
+        g_aPlayerAbility.GetArray(i, temp_ability[0]);
+        if (temp_ability[paClient] != client)
+            continue;
+        if (temp_ability[paID] == uniqueid) {
+            found = i;
+            break;
+        }
+    }
+    return found;
+}
+
 //    Natives for MethodMap ZombieClass
 public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 {
@@ -407,6 +459,7 @@ public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
     float speed = GetNativeCell(2);
     g_aZombieClass.Set(class_id, speed, dataSpeed);  
+    LogMessage("Setting Speed (%f) for class %i ", speed, class_id);
 }
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
@@ -600,7 +653,7 @@ public int Native_ZombieAbility_Constructor(Handle plugin, int numParams)
     temp_ability[abilityExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
     temp_ability[abilityZombieClass] = zombie_id;
     temp_ability[abilityID] = g_iNumAbilities;
-    g_aZombieClass.PushArray(temp_ability[0]);
+    g_aZombieAbility.PushArray(temp_ability[0]);
     // TODO on zombie ability register
     
     LogMessage("Zombie Ability Register %i [Unique: %s]", temp_ability[abilityID], temp_unique);
@@ -624,7 +677,7 @@ public int Native_ZombieAbility_ButtonsSet(Handle plugin, int numParams)
 {
     int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
     int buttons = GetNativeCell(2);
-    g_aZombieClass.Set(ability_id, buttons, abilityButtons);
+    g_aZombieAbility.Set(ability_id, buttons, abilityButtons);
 }
 
 public int Native_ZombieAbility_CooldownGet(Handle plugin, int numParams)
@@ -907,4 +960,101 @@ public int Native_PlayerAbility_StateSet(Handle plugin, int numParams)
     int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
     float state = GetNativeCell(2);
     g_aPlayerAbility.Set(ability_id, state, paState);
+}
+
+public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
+{
+    int ability_id = view_as<int>(GetNativeCell(1));
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
+    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
+
+    g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+
+    DataPack pack;
+    pack.WriteCell(client);
+    pack.WriteCell(ability_id);
+    CreateDataTimer(cooldown, Timer_SetOnIdle, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
+
+    Call_StartForward(g_hForwardOnAbilityCDStarted);
+    Call_PushCell(client);
+    Call_PushCell(ability_id);
+    Call_Finish();
+
+}
+
+public Action Timer_SetOnIdle(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int client = pack.ReadCell();
+    int ability_id = pack.ReadCell();
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    if (ability_index == -1) {
+        return Plugin_Continue;
+    }
+    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
+    if (state == stateCooldown) {
+        g_aPlayerAbility.Set(ability_index, stateIdle, paState);
+        Call_StartForward(g_hForwardOnAbilityCDEnded);
+        Call_PushCell(client);
+        Call_PushCell(ability_id);
+        Call_Finish();
+    }
+    return Plugin_Continue;
+    // TODO: set timer to null, delete timers on disconnect, deaths.
+}
+
+public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
+{
+    int ability_id = view_as<int>(GetNativeCell(1));
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
+    float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
+
+    g_aPlayerAbility.Set(ability_index, stateRunning, paState);
+
+    DataPack pack;
+    pack.WriteCell(client);
+    pack.WriteCell(ability_id);
+    CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
+
+    Call_StartForward(g_hForwardOnAbilityStarted);
+    Call_PushCell(client);
+    Call_PushCell(ability_id);
+    Call_Finish();
+}
+
+public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int client = pack.ReadCell();
+    int ability_id = pack.ReadCell();
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    if (ability_index == -1) {
+        return Plugin_Continue;
+    }
+    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
+    if (state == stateRunning) {
+        g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+        Call_StartForward(g_hForwardOnAbilityCDStarted);
+        Call_PushCell(client);
+        Call_PushCell(ability_id);
+        Call_Finish();
+    }
+    return Plugin_Continue;
+    // TODO: set timer to null, delete timers on disconnect, deaths.
+}
+
+public int Native_PlayerAbility_ForceCooldownEnd(Handle plugin, int numParams)
+{
+    int ability_id = view_as<int>(GetNativeCell(1));
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
+
+    g_aPlayerAbility.Set(ability_index, stateIdle, paState);
+
+    Call_StartForward(g_hForwardOnAbilityCDEnded);
+    Call_PushCell(client);
+    Call_PushCell(ability_id);
+    Call_Finish();
 }

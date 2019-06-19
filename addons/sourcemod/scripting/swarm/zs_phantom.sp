@@ -20,18 +20,10 @@ public Plugin myinfo =
 };
 
 #define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
+#define ABILITY_UNIQUE_INVIS "phantom_invisibility"
 
 ZombieClass Zombie;
 ZombieAbility abilityInvisibility;
-
-float lastPressedButtons[MAXPLAYERS + 1];
-
-float timeleft_countdown[MAXPLAYERS + 1];
-float timeleft_cooldown[MAXPLAYERS + 1];
-
-// Timers
-Handle timerInvisibility[MAXPLAYERS + 1];
-Handle timerCountdown[MAXPLAYERS + 1];
 
 bool hasInvisibility[MAXPLAYERS + 1];
 
@@ -49,7 +41,39 @@ public void OnPluginStart() {
     zInvisibility = CreateConVar("zs_phantom_invisibility","3.0","Time in second until Phantom invisible");
     
     AutoExecConfig(true, "zombie.phantom", "sourcemod/zombieswarm");
+    RegConsoleCmd("sm_getstats", Command_Test);
 }
+
+public Action Command_Test(int client, int args)
+{
+	char arg[128];
+	char full[256];
+ 
+	GetCmdArgString(full, sizeof(full));
+ 
+	if (client)
+	{
+        PrintToChatAll("ID: %i, Health: %i: Speed: %f Gravity %f",
+            Zombie.ID,
+            Zombie.Health,
+            Zombie.Speed,
+            Zombie.Gravity
+        );
+        PrintToChatAll("Damage: %f, Button: %f: Cooldown: %f",
+            Zombie.Damage,
+            Zombie.Button,
+            Zombie.Cooldown
+        );
+        PrintToChatAll("Excluded: %s",
+            Zombie.Excluded ? "Yes" : "No"
+        );
+	} else {
+		PrintToServer("Command from server.");
+	}
+ 
+	return Plugin_Handled;
+}
+
 public void ZS_OnLoaded() {
     // We are registering zombie
     Zombie = ZombieClass("phantom");
@@ -62,7 +86,7 @@ public void ZS_OnLoaded() {
     Zombie.Gravity = zGravity.FloatValue;
     Zombie.Excluded = zExcluded.BoolValue;
     // Abilities
-    abilityInvisibility = ZombieAbility(Zombie, "phantom_invisibility");
+    abilityInvisibility = ZombieAbility(Zombie, ABILITY_UNIQUE_INVIS);
     abilityInvisibility.Duration = zInvisibility.FloatValue;
     abilityInvisibility.Cooldown = zCooldown.FloatValue;
     abilityInvisibility.Buttons &= IN_ATTACK2;
@@ -74,14 +98,6 @@ public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcas
 
     if ( !UTIL_IsValidAlive(client) )
         return;
-        
-    if (timerInvisibility[client] != null) {
-        delete timerInvisibility[client];
-    }
-    if (timerCountdown[client] != null) {
-        delete timerCountdown[client];
-    }
-    
         
     // Back to first state
     hasInvisibility[client] = false;
@@ -100,13 +116,11 @@ public void OnMapStart()
 
 public void OnClientPostAdminCheck(int client)
 {
-    lastPressedButtons[client] = 0.0;
-    
     SDKHook(client, SDKHook_SetTransmit, onSetTransmit);
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
 }
 
-public void OnClientDisconnect(int client)
+/*public void OnClientDisconnect(int client)
 {
     if ( IsClientInGame(client) )
     {
@@ -117,7 +131,7 @@ public void OnClientDisconnect(int client)
             delete timerCountdown[client];
         }
     }
-}
+}*/
 
 public Action onSetTransmit(int entity, int client) 
 {
@@ -151,20 +165,17 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     if ( victimplayer.Team != CS_TEAM_CT)
         return Plugin_Continue;
 
+    // TODO force ability stop
     if ( !hasInvisibility[attacker] )
         return Plugin_Continue;
     
     hasInvisibility[attacker] = false;
-
-    if (timerCountdown[attacker] != null) {
-        delete timerCountdown[attacker];
-    }
         
     return Plugin_Continue;
 }
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
-public void ZS_OnAbilityButtonPressed(int client, int buttons) { 
+public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
 
     if ( !UTIL_IsValidAlive(client) )
         return;
@@ -179,15 +190,49 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
         
     if ( player.ZombieClass != Zombie.ID )
         return;
-            
-    float currentTime = GetGameTime();
+
+    if ( ability_id < 0)
+        return;
         
-    if (timerInvisibility[client] != null) {
-        delete timerInvisibility[client];
-    }
-    if (timerCountdown[client] != null) {
-        delete timerCountdown[client];
-    }
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateIdle)
+        return;
+
+    ability.AbilityStarted();
+}
+
+public void ZS_OnAbilityStarted(int client, int ability_id) {
+    PrintToChatAll("ZS_OnAbilityStarted");
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != Zombie.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;
     
     UTIL_Fade(client, 1, 1, {255, 255, 255, 150});
     
@@ -199,54 +244,34 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     FormatEx(sPath, sizeof(sPath), "*/%s", SOUND_INVISIBILITY);
     
     EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-
-    timeleft_countdown[client] = zInvisibility.FloatValue;
-    timerCountdown[client] = CreateTimer(0.1, countdownCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-    timerInvisibility[client] = CreateTimer(zInvisibility.FloatValue, invisibilityCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-    
-    lastPressedButtons[client] = currentTime;
 }
-public Action countdownCallback(Handle timer, any client)
-{
-    timerCountdown[client] = null;
-    
-    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-        timerCountdown[client] = null;
-        return Plugin_Continue;
-    } 
+
+public void ZS_OnCooldownStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
 
     ZMPlayer player = ZMPlayer(client);
-    if (timeleft_countdown[client] <= 0.1 || !hasInvisibility[client]) {
-    	
-        player.OverrideHint = false;
-        timerCountdown[client] = null;   
-        
-        ZS_AbilityFinished(client);
-        
-        return Plugin_Continue;
-    }
-    timeleft_countdown[client] -= 0.1;
-    player.OverrideHint = true;
-    char hinttext[512];
-    Format(hinttext, sizeof(hinttext), "<font color='#00FF00'>Invisible for %.1fs!</font>", timeleft_countdown[client]);
-    player.OverrideHintText(hinttext);
-
-    timerCountdown[client] = CreateTimer(0.1, countdownCallback, client, TIMER_FLAG_NO_MAPCHANGE);
-
-    return Plugin_Continue;
-}
-
-public Action invisibilityCallback(Handle timer, any client)
-{
-    timerInvisibility[client] = null;
     
-    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-        return Plugin_Continue;
-    }
-    
-    // Back to first state
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != Zombie.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateCooldown)
+        return;
+        
     hasInvisibility[client] = false;
-    timeleft_cooldown[client] = zCooldown.FloatValue - zInvisibility.FloatValue;
-
-    return Plugin_Continue;
 }

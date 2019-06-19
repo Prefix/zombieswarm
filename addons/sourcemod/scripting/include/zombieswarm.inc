@@ -26,16 +26,13 @@
 
 // Fowards
 forward void ZS_OnLoaded();
-forward void ZS_OnAbilityButtonPressed(int client, int buttons);
-forward void ZS_OnAbilityButtonReleased(int client, int buttons);
-forward void ZS_OnCooldownEnded(int client);
-forward void ZS_OnCooldownStarted(int client);
 forward void ZS_OnZombieSelected(int client);
-
-// natives
-
-native void ZS_AbilityFinished(int client);
-native void ZS_AbilityStarted(int client);
+forward void ZS_OnAbilityButtonPressed(int client, int playerability_id);
+forward void ZS_OnAbilityButtonReleased(int client, int playerability_id);
+// Ability Start, Ability Finish/Interrupted, Cooldown ended
+forward void ZS_OnAbilityStarted(int client, int playerability_id);
+forward void ZS_OnCooldownStarted(int client, int playerability_id);
+forward void ZS_OnCooldownEnded(int client, int playerability_id);
 
 methodmap ZMPlayer {
     // Constructor
@@ -76,7 +73,9 @@ methodmap ZMPlayer {
         public native set(const bool val);
     }
     // Methods
-    public native void OverrideHintText(char[] text);
+    public native void OverrideHintText(const char[] text);
+    public native int GetAbilityByUnique(const char[] ability_unique_id);
+    public native int GetAbilityByID(const int uniqueid);
 }
 
 methodmap ZombieAbility {
@@ -175,9 +174,9 @@ methodmap PlayerAbility < ZombieAbility {
     property int Client {
         public native get();
     }
-    property int State {
+    property abilityState State {
         public native get();
-        public native set(const int val);
+        public native set(const abilityState val);
     }
     property float CurrentCooldown {
         public native get();
@@ -187,6 +186,10 @@ methodmap PlayerAbility < ZombieAbility {
         public native get();
         public native set(const float val);
     }
+    // Methods
+    public native void AbilityFinished();
+    public native void AbilityStarted();
+    public native void ForceCooldownEnd();
 }
 
 native bool isGhost( int client );

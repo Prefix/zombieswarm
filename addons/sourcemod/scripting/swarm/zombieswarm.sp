@@ -798,7 +798,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 }
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
     int temp_checker[g_eZombieClass];
-    if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T) {
+    if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && !g_bGhost[client]) {
         char key[MAX_CLASS_ID];
         menu.GetItem(param2, key, sizeof(key));
         int classInt = StringToInt(key);
@@ -995,59 +995,73 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     if ( !UTIL_IsValidAlive(client) )
         return Plugin_Continue;
     
-    if (GetClientTeam(client) == CS_TEAM_T) {
-        ZMPlayer player = ZMPlayer(client);
-        if (UTIL_IsValidAlive(client) && !player.Ghost && !player.isCooldown) {
-            int tButtons = view_as<int>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), dataAbilityButton));
-            if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == tButtons) {
+    if (GetClientTeam(client) != CS_TEAM_T) 
+        return Plugin_Continue;
+
+    if (!g_bGhost[client]) {
+
+        for (int i = 0; i < g_aPlayerAbility.Length; i++)
+        {
+            if (i != 0 && i == g_aPlayerAbility.Length)
+                break;
+            int temp_checker[g_ePlayerAbility];
+            g_aZombieClass.GetArray(i, temp_checker[0]);
+            if(temp_checker[paClient] != client) {
+                continue;
+            }
+            if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == temp_checker[paButtons]) {
+                PrintToChatAll("m_afButtonPressed %N", client);
+                if (temp_checker[paState] != stateIdle)
+                    continue;
+                PrintToChatAll("m_afButtonPressed %N idle", client);
                 Call_StartForward(g_hForwardAbilityButtonPressed);
                 Call_PushCell(client);
-                Call_PushCell(buttons);
+                Call_PushCell(temp_checker[paID]);
                 Call_Finish();
-
-                player.isCooldown = true;
-            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == tButtons) {
+            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == temp_checker[paButtons]) {
+                PrintToChatAll("m_afButtonReleased %N ", client);
+                if (temp_checker[paState] != stateRunning)
+                    continue;
+                PrintToChatAll("m_afButtonReleased %N running", client);
                 Call_StartForward(g_hForwardAbilityButtonReleased);
                 Call_PushCell(client);
-                Call_PushCell(buttons);
+                Call_PushCell(temp_checker[paID]);
                 Call_Finish();
-
-                player.isCooldown = true;
             }
         }
 
-        if (player.Ghost) {
-            if ((buttons & IN_ATTACK)) {
-            	char hintText[512];
-                if (!UTIL_IsClientInTargetsView(client)) {
-                    if (g_bGhostCanSpawn) {
-                        setZombieGhostMode(client, false);
-                        float tSpeed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataSpeed)));
-                        // Set zombie speed
-                        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
-                        
-                        Format(hintText, sizeof(hintText), "%t","Hint: You have been revived");
-                        UTIL_ShowHintMessage(client, hintText);
-                    } else {
-                        Format(hintText, sizeof(hintText), "%t","Hint: Wait a little bit");
-                        UTIL_ShowHintMessage(client, hintText);
-                    }
+    } else {
+        if ((buttons & IN_ATTACK)) {
+            char hintText[512];
+            if (!UTIL_IsClientInTargetsView(client)) {
+                if (g_bGhostCanSpawn) {
+                    setZombieGhostMode(client, false);
+                    AssignPlayerAbilities(client);
+                    float tSpeed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataSpeed)));
+                    // Set zombie speed
+                    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
+                    
+                    Format(hintText, sizeof(hintText), "%t","Hint: You have been revived");
+                    UTIL_ShowHintMessage(client, hintText);
                 } else {
-                    Format(hintText, sizeof(hintText), "%t","Hint: Hide from humans to respawn");
+                    Format(hintText, sizeof(hintText), "%t","Hint: Wait a little bit");
                     UTIL_ShowHintMessage(client, hintText);
                 }
+            } else {
+                Format(hintText, sizeof(hintText), "%t","Hint: Hide from humans to respawn");
+                UTIL_ShowHintMessage(client, hintText);
             }
-            if ((buttons & IN_RELOAD)) {
-                if (g_iTSpawns > 0) {
-                    int random = GetRandomInt(0,g_iTSpawns);
-                    float spawn[3];
-                    spawn = g_fSpawns[CS_TEAM_T][random];
-                    if (UTIL_IsValidClient(client) && g_bGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
-                        TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
-                }
-                else {
-                    CPrintToChat(client,"%t","Chat: No valid spawns found");
-                }
+        }
+        if ((buttons & IN_RELOAD)) {
+            if (g_iTSpawns > 0) {
+                int random = GetRandomInt(0,g_iTSpawns);
+                float spawn[3];
+                spawn = g_fSpawns[CS_TEAM_T][random];
+                if (UTIL_IsValidClient(client) && g_bGhost[client] && (spawn[0] != 0.0 && spawn[1] != 0.0 && spawn[2] != 0.0))
+                    TeleportEntity(client, spawn, NULL_VECTOR, NULL_VECTOR);
+            }
+            else {
+                CPrintToChat(client,"%t","Chat: No valid spawns found");
             }
         }
     }
@@ -1239,7 +1253,8 @@ stock int getTrueT(bool alive = false)
 public void setZombieGhostMode(int client, bool mode) 
 {
     g_bGhost[client] = mode;
-    setZombieClassParameters(client);
+    if (GetClientTeam(client) == CS_TEAM_T)
+        setZombieClassParameters(client);
 }
 
 public void removeMapEventEntity(const char[] objects)
@@ -1293,7 +1308,8 @@ public void setZombieClassParameters(int client)
     g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
 
     #if defined DEBUG
-    PrintToChatAll("ID: %i, HP: %i: AbilityButton: %i",
+    PrintToChatAll("Index: %i, ID: %i, HP: %i: AbilityButton: %i",
+        FindZombieIndex(g_iZombieClass[client]),
         temp_checker[dataID],
         temp_checker[dataHP],
         temp_checker[dataAbilityButton]
@@ -1336,27 +1352,25 @@ public void setZombieClassParameters(int client)
     
     // Set zombie speed
     if(g_bGhost[client])
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.4);
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.4);
     else
-    SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker[dataSpeed]);
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker[dataSpeed]);
     
     // Set zombie gravity
     SetEntityGravity(client, temp_checker[dataGravity]);
-    AssignPlayerAbilities(client);
 }
 
 public void AssignPlayerAbilities(int client) {
-    if (!IsValidAlive(client))
+    if (!UTIL_IsValidAlive(client))
         return;
-    // Give player abilities
-    int temp_checkability[g_eZombieAbility];
     ClearPlayerAbilities(client);
+    // Give player abilities
     for (int i = 0; i < g_aZombieAbility.Length; i++)
     {
+        int temp_checkability[g_eZombieAbility];
         g_aZombieAbility.GetArray(i, temp_checkability[0]);
-        if(g_iZombieClass[client] != temp_checkability[abilityZombieClass] || !temp_checkability[abilityExcluded])
+        if(g_iZombieClass[client] != temp_checkability[abilityZombieClass] || temp_checkability[abilityExcluded])
             continue;
-        
         int temp_ability[g_ePlayerAbility];
         Format(temp_ability[paName], MAX_ABILITY_NAME_SIZE, "%s", temp_checkability[abilityName]);
         Format(temp_ability[paDescription], MAX_ABILITY_DESC_SIZE, "%s", temp_checkability[abilityDescription]);
@@ -1375,6 +1389,7 @@ public void AssignPlayerAbilities(int client) {
         g_aPlayerAbility.PushArray(temp_ability[0]);
         // TODO on player ability register
         g_iNumPlayerAbilities++;
+        PrintToChatAll("Gave %N ability %s", client, temp_ability[abilityUniqueName]);
     }
 }
 

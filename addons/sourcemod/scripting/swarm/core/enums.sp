@@ -34,7 +34,7 @@ enum g_ePlayerAbility {
     Float:paCooldown,
     Float:paCurrentDuration,
     Float:paCurrentCooldown,
-    paState,
+    abilityState:paState,
     paButtons,
     bool:paExcluded,
     String:paName[MAX_ABILITY_NAME_SIZE],
