@@ -1002,8 +1002,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
         for (int i = 0; i < g_aPlayerAbility.Length; i++)
         {
-            if (i != 0 && i == g_aPlayerAbility.Length)
-                break;
             int temp_checker[g_ePlayerAbility];
             g_aZombieClass.GetArray(i, temp_checker[0]);
             if(temp_checker[paClient] != client) {
