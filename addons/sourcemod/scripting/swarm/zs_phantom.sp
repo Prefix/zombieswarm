@@ -89,7 +89,9 @@ public void ZS_OnLoaded() {
     abilityInvisibility = ZombieAbility(Zombie, ABILITY_UNIQUE_INVIS);
     abilityInvisibility.Duration = zInvisibility.FloatValue;
     abilityInvisibility.Cooldown = zCooldown.FloatValue;
-    abilityInvisibility.Buttons &= IN_ATTACK2;
+    abilityInvisibility.Buttons = IN_ATTACK2;
+    abilityInvisibility.SetName("Invisibility", MAX_ABILITY_NAME_SIZE);
+    abilityInvisibility.SetDesc("Becomes invisible for few seconds.", MAX_ABILITY_DESC_SIZE);
 }
 
 public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -176,7 +178,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
-
+    PrintToChatAll("ZS_OnAbilityButtonPressed");
     if ( !UTIL_IsValidAlive(client) )
         return;
 

@@ -990,6 +990,63 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
 
     return Plugin_Continue;
 }
+
+stock void DEBUG_PrintButtons(int buttons, const char[] message) {
+    char button_text[128];
+    Format(button_text, sizeof(button_text), "|");
+    if (buttons & IN_ATTACK)
+        Format(button_text, sizeof(button_text), "%sIN_ATTACK|", button_text);
+    if (buttons & IN_JUMP)
+        Format(button_text, sizeof(button_text), "%sIN_JUMP|", button_text);
+    if (buttons & IN_DUCK)
+        Format(button_text, sizeof(button_text), "%sIN_DUCK|", button_text);
+    if (buttons & IN_FORWARD)
+        Format(button_text, sizeof(button_text), "%sIN_FORWARD|", button_text);
+    if (buttons & IN_BACK)
+        Format(button_text, sizeof(button_text), "%sIN_BACK|", button_text);
+    if (buttons & IN_USE)
+        Format(button_text, sizeof(button_text), "%sIN_USE|", button_text);
+    if (buttons & IN_CANCEL)
+        Format(button_text, sizeof(button_text), "%sIN_CANCEL|", button_text);
+    if (buttons & IN_LEFT)
+        Format(button_text, sizeof(button_text), "%sIN_LEFT|", button_text);
+    if (buttons & IN_RIGHT)
+        Format(button_text, sizeof(button_text), "%sIN_RIGHT|", button_text);
+    if (buttons & IN_MOVELEFT)
+        Format(button_text, sizeof(button_text), "%sIN_MOVELEFT|", button_text);
+    if (buttons & IN_MOVERIGHT)
+        Format(button_text, sizeof(button_text), "%sIN_MOVERIGHT|", button_text);
+    if (buttons & IN_ATTACK2)
+        Format(button_text, sizeof(button_text), "%sIN_ATTACK2|", button_text);
+    if (buttons & IN_RUN)
+        Format(button_text, sizeof(button_text), "%sIN_RUN|", button_text);
+    if (buttons & IN_RELOAD)
+        Format(button_text, sizeof(button_text), "%sIN_RELOAD|", button_text);
+    if (buttons & IN_ALT1)
+        Format(button_text, sizeof(button_text), "%sIN_ALT1|", button_text);
+    if (buttons & IN_ALT2)
+        Format(button_text, sizeof(button_text), "%sIN_ALT2|", button_text);
+    if (buttons & IN_SCORE)
+        Format(button_text, sizeof(button_text), "%sIN_SCORE|", button_text);
+    if (buttons & IN_SPEED)
+        Format(button_text, sizeof(button_text), "%sIN_SPEED|", button_text);
+    if (buttons & IN_ZOOM)
+        Format(button_text, sizeof(button_text), "%sIN_ZOOM|", button_text);
+    if (buttons & IN_WEAPON1)
+        Format(button_text, sizeof(button_text), "%sIN_WEAPON1|", button_text);
+    if (buttons & IN_WEAPON2)
+        Format(button_text, sizeof(button_text), "%sIN_WEAPON2|", button_text);
+    if (buttons & IN_BULLRUSH)
+        Format(button_text, sizeof(button_text), "%sIN_BULLRUSH|", button_text);
+    if (buttons & IN_GRENADE1)
+        Format(button_text, sizeof(button_text), "%sIN_GRENADE1|", button_text);
+    if (buttons & IN_GRENADE2)
+        Format(button_text, sizeof(button_text), "%sIN_GRENADE2|", button_text);
+    if (buttons & IN_ATTACK3)
+        Format(button_text, sizeof(button_text), "%sIN_ATTACK3", button_text);
+    PrintToChatAll("%s: %s", message, button_text);
+}
+
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !UTIL_IsValidAlive(client) )
@@ -999,15 +1056,19 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
         return Plugin_Continue;
 
     if (!g_bGhost[client]) {
-
+        //PrintToChatAll("g_aPlayerAbility.Length = %i", g_aPlayerAbility.Length);
         for (int i = 0; i < g_aPlayerAbility.Length; i++)
         {
+            //PrintToChatAll("i = %i, g_aPlayerAbility.Length = %i", i, g_aPlayerAbility.Length);
             int temp_checker[g_ePlayerAbility];
             g_aPlayerAbility.GetArray(i, temp_checker[0]);
             if(temp_checker[paClient] != client) {
                 continue;
             }
-            if (GetEntProp(client, Prop_Data, "m_afButtonPressed") & temp_checker[paButtons]) {
+            int pressed = GetEntProp(client, Prop_Data, "m_afButtonPressed");
+            int released = GetEntProp(client, Prop_Data, "m_afButtonReleased");
+            
+            if (pressed & temp_checker[paButtons]) {
                 PrintToChatAll("m_afButtonPressed %N", client);
                 if (temp_checker[paState] != stateIdle)
                     continue;
@@ -1016,7 +1077,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 Call_PushCell(client);
                 Call_PushCell(temp_checker[paID]);
                 Call_Finish();
-            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") & temp_checker[paButtons]) {
+            } else if (released & temp_checker[paButtons]) {
                 PrintToChatAll("m_afButtonReleased %N ", client);
                 if (temp_checker[paState] != stateRunning)
                     continue;
@@ -1384,6 +1445,7 @@ public void AssignPlayerAbilities(int client) {
         temp_ability[paExcluded] = false;
         temp_ability[paZombieClass] = temp_checkability[abilityZombieClass];
         temp_ability[paID] = g_iNumPlayerAbilities;
+        temp_ability[paClient] = client;
         g_aPlayerAbility.PushArray(temp_ability[0]);
         // TODO on player ability register
         g_iNumPlayerAbilities++;

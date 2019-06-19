@@ -804,6 +804,7 @@ public int Native_PlayerAbility_Constructor(Handle plugin, int numParams)
     temp_ability[paState] = stateIdle; // from <zombieswarm.inc>
     temp_ability[paExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
     temp_ability[paZombieClass] = -1;
+    temp_ability[paClient] = client;
     temp_ability[paID] = g_iNumPlayerAbilities;
     g_aPlayerAbility.PushArray(temp_ability[0]);
     // TODO on zombie ability register
@@ -971,10 +972,10 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 
     g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
 
-    DataPack pack;
+    DataPack pack = new DataPack();
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
-    CreateDataTimer(cooldown, Timer_SetOnIdle, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
+    CreateDataTimer(cooldown, Timer_SetOnCooldown, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
     Call_StartForward(g_hForwardOnAbilityCDStarted);
     Call_PushCell(client);
@@ -1013,7 +1014,8 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
 
     g_aPlayerAbility.Set(ability_index, stateRunning, paState);
 
-    DataPack pack;
+    PrintToChatAll("client: %i ability_id %i", client, ability_id);
+    DataPack pack = new DataPack();
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
     CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
@@ -1036,7 +1038,14 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     abilityState state = g_aPlayerAbility.Get(ability_id, paState);
     if (state == stateRunning) {
         g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
-        // Make timer to reset ability
+
+        float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
+        PrintToChatAll("client: %i ability_id %i", client, ability_id);
+        DataPack otherpack = new DataPack();
+        otherpack.WriteCell(client);
+        otherpack.WriteCell(ability_id);
+        CreateDataTimer(duration, Timer_SetOnIdle, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
+
         Call_StartForward(g_hForwardOnAbilityCDStarted);
         Call_PushCell(client);
         Call_PushCell(ability_id);

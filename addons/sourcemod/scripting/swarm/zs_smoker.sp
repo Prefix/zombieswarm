@@ -61,7 +61,7 @@ public void ZS_OnLoaded() {
     //ability
     abilityPull.Duration = zDuration.FloatValue;
     abilityPull.Cooldown = zCooldown.FloatValue;
-    abilityPull.Buttons &= IN_USE;
+    abilityPull.Buttons = IN_USE;
 }
 
 public void OnClientPutInServer(int client)
