@@ -1036,6 +1036,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     abilityState state = g_aPlayerAbility.Get(ability_id, paState);
     if (state == stateRunning) {
         g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+        // Make timer to reset ability
         Call_StartForward(g_hForwardOnAbilityCDStarted);
         Call_PushCell(client);
         Call_PushCell(ability_id);

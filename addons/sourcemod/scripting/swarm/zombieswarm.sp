@@ -1007,7 +1007,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
             if(temp_checker[paClient] != client) {
                 continue;
             }
-            if (GetEntProp(client, Prop_Data, "m_afButtonPressed") == temp_checker[paButtons]) {
+            if (GetEntProp(client, Prop_Data, "m_afButtonPressed") & temp_checker[paButtons]) {
                 PrintToChatAll("m_afButtonPressed %N", client);
                 if (temp_checker[paState] != stateIdle)
                     continue;
@@ -1016,7 +1016,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 Call_PushCell(client);
                 Call_PushCell(temp_checker[paID]);
                 Call_Finish();
-            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") == temp_checker[paButtons]) {
+            } else if (GetEntProp(client, Prop_Data, "m_afButtonReleased") & temp_checker[paButtons]) {
                 PrintToChatAll("m_afButtonReleased %N ", client);
                 if (temp_checker[paState] != stateRunning)
                     continue;
