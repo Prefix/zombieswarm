@@ -424,7 +424,6 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     g_aZombieClass.PushArray(temp_class[0]);
     // TODO on zombie class register
     
-    LogMessage("Zombie ID %i",g_iNumClasses);
     g_iNumClasses++;
     return temp_class[dataID];
 }
@@ -459,7 +458,6 @@ public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
     float speed = GetNativeCell(2);
     g_aZombieClass.Set(class_id, speed, dataSpeed);  
-    LogMessage("Setting Speed (%f) for class %i ", speed, class_id);
 }
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
@@ -656,7 +654,6 @@ public int Native_ZombieAbility_Constructor(Handle plugin, int numParams)
     g_aZombieAbility.PushArray(temp_ability[0]);
     // TODO on zombie ability register
     
-    LogMessage("Zombie Ability Register %i [Unique: %s]", temp_ability[abilityID], temp_unique);
     g_iNumAbilities++;
     return temp_ability[abilityID];
 }
@@ -809,7 +806,6 @@ public int Native_PlayerAbility_Constructor(Handle plugin, int numParams)
     g_aPlayerAbility.PushArray(temp_ability[0]);
     // TODO on zombie ability register
     
-    LogMessage("Zombie Ability Register %i [Unique: %s]", temp_ability[paID], temp_unique);
     g_iNumPlayerAbilities++;
     return temp_ability[paID];
 }
