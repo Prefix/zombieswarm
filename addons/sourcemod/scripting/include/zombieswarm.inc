@@ -191,6 +191,7 @@ methodmap PlayerAbility < ZombieAbility {
     // Methods
     public native void AbilityFinished();
     public native void AbilityStarted();
+    public native void AbilityStartedNoDuration();
     public native void ForceCooldownEnd();
 }
 

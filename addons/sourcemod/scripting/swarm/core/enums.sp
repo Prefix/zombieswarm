@@ -39,5 +39,7 @@ enum g_ePlayerAbility {
     bool:paExcluded,
     String:paName[MAX_ABILITY_NAME_SIZE],
     String:paDescription[MAX_ABILITY_DESC_SIZE],
-    String:paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
+    String:paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE],
+    Handle:paTimerDuration,
+    Handle:paTimerCooldown
 }

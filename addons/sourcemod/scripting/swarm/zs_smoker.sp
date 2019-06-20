@@ -298,7 +298,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     if (ability_index < 0)
         return;
 
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateIdle)
         return;
 
@@ -327,7 +327,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     if (ability_index < 0)
         return;
 
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
         return;
     
@@ -380,7 +380,7 @@ public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
     if (ability_index < 0)
         return;
 
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
         return;
     ability.AbilityFinished();
@@ -420,8 +420,6 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
     return Plugin_Continue;
 }
-
-
 
 public bool TraceRayNoPlayers( int entity, int mask, any data ) {
 

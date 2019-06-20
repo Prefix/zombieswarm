@@ -504,8 +504,17 @@ public void ClearPlayerAbilities(int client) {
     {
         if (i == g_aPlayerAbility.Length)
             break;
-        int client_temp = g_aPlayerAbility.Get(i, view_as<int>(paClient));
-        if(client_temp == client) {
+        int temp_checker[g_ePlayerAbility];
+        g_aPlayerAbility.GetArray(i, temp_checker[0]);
+        if(temp_checker[paClient] == client) {
+            if (temp_checker[paTimerDuration] != null) {
+                delete temp_checker[paTimerDuration];
+                temp_checker[paTimerDuration] = null;
+            }
+            if (temp_checker[paTimerCooldown] != null) {
+                delete temp_checker[paTimerCooldown];
+                temp_checker[paTimerCooldown] = null;
+            }
             g_aPlayerAbility.Erase(i--);
         }
     }
@@ -1387,6 +1396,8 @@ public void AssignPlayerAbilities(int client) {
         temp_ability[paZombieClass] = temp_checkability[abilityZombieClass];
         temp_ability[paID] = g_iNumPlayerAbilities;
         temp_ability[paClient] = client;
+        temp_ability[paTimerDuration] = null;
+        temp_ability[paTimerCooldown] = null;
         g_aPlayerAbility.PushArray(temp_ability[0]);
         // TODO on player ability register
         g_iNumPlayerAbilities++;

@@ -94,11 +94,11 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     if (ability_index < 0)
         return;
 
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateIdle)
         return;
 
-    ability.AbilityStarted();
+    ability.AbilityStartedNoDuration();
 }
 
 public void ZS_OnAbilityStarted(int client, int ability_id) {
@@ -124,7 +124,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     if (ability_index < 0)
         return;
 
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
         return;
         
@@ -159,33 +159,5 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
         
         hunterNumLeapSounds[client] = 0;
     }
-}
-public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
-    if ( !UTIL_IsValidAlive(client) )
-        return;
-
-    ZMPlayer player = ZMPlayer(client);
-    
-    if ( player.Ghost )
-        return;
-        
-    if ( player.Team != CS_TEAM_T)
-        return;
-        
-    if ( player.ZombieClass != Zombie.ID )
-        return;
-
-    if ( ability_id < 0)
-        return;
-        
-    int ability_index = player.GetAbilityByID(ability_id);
-
-    if (ability_index < 0)
-        return;
-
-    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
-    if (ability.State != stateRunning)
-        return;
-    ability.AbilityFinished();
 }
 

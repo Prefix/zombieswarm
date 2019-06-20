@@ -110,6 +110,7 @@ public void InitMethodMaps() {
     CreateNative("PlayerAbility.GetUnique", Native_PlayerAbility_UniqueGet);
     CreateNative("PlayerAbility.AbilityFinished", Native_PlayerAbility_AbilityFinished);
     CreateNative("PlayerAbility.AbilityStarted", Native_PlayerAbility_AbilityStarted);
+    CreateNative("PlayerAbility.AbilityStartedNoDuration", Native_PlayerAbility_AbilityStartedNoDuration);
     CreateNative("PlayerAbility.ForceCooldownEnd", Native_PlayerAbility_ForceCooldownEnd);
 }
 
@@ -803,6 +804,8 @@ public int Native_PlayerAbility_Constructor(Handle plugin, int numParams)
     temp_ability[paZombieClass] = -1;
     temp_ability[paClient] = client;
     temp_ability[paID] = g_iNumPlayerAbilities;
+    temp_ability[paTimerDuration] = null;
+    temp_ability[paTimerCooldown] = null;
     g_aPlayerAbility.PushArray(temp_ability[0]);
     // TODO on zombie ability register
     
@@ -967,9 +970,10 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
     float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
 
     g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+    g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
 
     DataPack pack;
-    CreateDataTimer(cooldown, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
+    CreateDataTimer(0.1, Timer_SetOnIdle, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
 
@@ -978,27 +982,6 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
     Call_PushCell(ability_id);
     Call_Finish();
 
-}
-
-public Action Timer_SetOnIdle(Handle timer, DataPack pack)
-{
-    pack.Reset();
-    int client = pack.ReadCell();
-    int ability_id = pack.ReadCell();
-    int ability_index = FindPlayerAbilityIndex(ability_id);
-    if (ability_index == -1) {
-        return Plugin_Continue;
-    }
-    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
-    if (state == stateCooldown) {
-        g_aPlayerAbility.Set(ability_index, stateIdle, paState);
-        Call_StartForward(g_hForwardOnAbilityCDEnded);
-        Call_PushCell(client);
-        Call_PushCell(ability_id);
-        Call_Finish();
-    }
-    return Plugin_Continue;
-    // TODO: set timer to null, delete timers on disconnect, deaths.
 }
 
 public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
@@ -1010,8 +993,9 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
 
     g_aPlayerAbility.Set(ability_index, stateRunning, paState);
     if (duration != ABILITY_NO_DURATION) {
+        g_aPlayerAbility.Set(ability_index, duration, paCurrentDuration);
         DataPack pack;
-        CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
+        CreateDataTimer(0.1, Timer_SetOnCooldown, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
         pack.WriteCell(client);
         pack.WriteCell(ability_id);
     }
@@ -1021,22 +1005,90 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
     Call_Finish();
 }
 
+public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numParams)
+{
+    int ability_id = view_as<int>(GetNativeCell(1));
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
+    g_aPlayerAbility.Set(ability_index, stateRunning, paState);
+    g_aPlayerAbility.Set(ability_index, ABILITY_NO_DURATION, paCurrentDuration);
+
+    Call_StartForward(g_hForwardOnAbilityStarted);
+    Call_PushCell(client);
+    Call_PushCell(ability_id);
+    Call_Finish();
+    
+
+    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
+    g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
+    g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+
+    DataPack pack;
+    
+    CreateDataTimer(0.1, Timer_SetOnIdle, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+    pack.WriteCell(client);
+    pack.WriteCell(ability_id);
+
+    Call_StartForward(g_hForwardOnAbilityCDStarted);
+    Call_PushCell(client);
+    Call_PushCell(ability_id);
+    Call_Finish();
+}
+
+public Action Timer_SetOnIdle(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int client = pack.ReadCell();
+    int ability_id = pack.ReadCell();
+    int ability_index = FindPlayerAbilityIndex(ability_id);
+    if (UTIL_IsValidAlive(client)) {
+        return Plugin_Stop;
+    }
+    if (ability_index < 0) {
+        return Plugin_Stop;
+    }
+    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
+    if (state != stateCooldown) {
+        return Plugin_Stop;
+    }
+    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentDuration));
+    if (cooldown <= 0.1) {
+        g_aPlayerAbility.Set(ability_index, stateIdle, paState);
+        Call_StartForward(g_hForwardOnAbilityCDEnded);
+        Call_PushCell(client);
+        Call_PushCell(ability_id);
+        Call_Finish();
+        return Plugin_Stop;
+    }
+    g_aPlayerAbility.Set(ability_index, cooldown-0.1, paCurrentCooldown);
+    return Plugin_Continue;
+    // TODO: set timer to null, delete timers on disconnect, deaths.
+}
 public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
 {
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
     int ability_index = FindPlayerAbilityIndex(ability_id);
-    if (ability_index == -1) {
-        return Plugin_Continue;
+    if (UTIL_IsValidAlive(client)) {
+        return Plugin_Stop;
+    }
+    if (ability_index < 0) {
+        return Plugin_Stop;
     }
     abilityState state = g_aPlayerAbility.Get(ability_id, paState);
-    if (state == stateRunning) {
+    if (state != stateRunning) {
+        return Plugin_Stop;
+    }
+    float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentDuration));
+    
+    if (duration <= 0.1) {
+        float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
+        g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
         g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
 
-        float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
         DataPack otherpack;
-        CreateDataTimer(duration, Timer_SetOnIdle, otherpack, TIMER_FLAG_NO_MAPCHANGE);
+        CreateDataTimer(0.1, Timer_SetOnIdle, otherpack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
         otherpack.WriteCell(client);
         otherpack.WriteCell(ability_id);
 
@@ -1044,7 +1096,9 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
         Call_PushCell(client);
         Call_PushCell(ability_id);
         Call_Finish();
+        return Plugin_Stop;
     }
+    g_aPlayerAbility.Set(ability_index, duration-0.1, paCurrentDuration);
     return Plugin_Continue;
     // TODO: set timer to null, delete timers on disconnect, deaths.
 }
