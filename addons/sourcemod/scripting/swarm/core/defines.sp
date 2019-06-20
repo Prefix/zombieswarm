@@ -15,7 +15,7 @@
 #define DEFAULT_ZM_SPEED 1.0
 #define DEFAULT_ZM_GRAVITY 1.0
 #define DEFAULT_ZM_EXCLUDED false
-#define DEFAULT_ZM_ABILITY_BUTTON IN_ATTACK2
+#define DEFAULT_ZM_ABILITY_BUTTON IN_BULLRUSH // use unused one
 #define DEFAULT_ZM_COOLDOWN 5.0
 #define DEFAULT_ARMS "models/weapons/ct_arms_gign.mdl"
 // Default for Zombie ability

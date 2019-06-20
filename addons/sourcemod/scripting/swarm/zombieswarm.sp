@@ -1060,12 +1060,15 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
         {
             int temp_checker[g_ePlayerAbility];
             g_aPlayerAbility.GetArray(i, temp_checker[0]);
+            // Skip those undefined ones
+            if (temp_checker[paButtons] & IN_BULLRUSH) {
+                continue;
+            }
             if(temp_checker[paClient] != client) {
                 continue;
             }
             int pressed = GetEntProp(client, Prop_Data, "m_afButtonPressed");
             int released = GetEntProp(client, Prop_Data, "m_afButtonReleased");
-            
             if (pressed & temp_checker[paButtons]) {
                 if (temp_checker[paState] != stateIdle)
                     continue;
