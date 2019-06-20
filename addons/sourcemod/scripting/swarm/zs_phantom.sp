@@ -41,37 +41,6 @@ public void OnPluginStart() {
     zInvisibility = CreateConVar("zs_phantom_invisibility","3.0","Time in second until Phantom invisible");
     
     AutoExecConfig(true, "zombie.phantom", "sourcemod/zombieswarm");
-    RegConsoleCmd("sm_getstats", Command_Test);
-}
-
-public Action Command_Test(int client, int args)
-{
-	char arg[128];
-	char full[256];
- 
-	GetCmdArgString(full, sizeof(full));
- 
-	if (client)
-	{
-        PrintToChatAll("ID: %i, Health: %i: Speed: %f Gravity %f",
-            Zombie.ID,
-            Zombie.Health,
-            Zombie.Speed,
-            Zombie.Gravity
-        );
-        PrintToChatAll("Damage: %f, Button: %f: Cooldown: %f",
-            Zombie.Damage,
-            Zombie.Button,
-            Zombie.Cooldown
-        );
-        PrintToChatAll("Excluded: %s",
-            Zombie.Excluded ? "Yes" : "No"
-        );
-	} else {
-		PrintToServer("Command from server.");
-	}
- 
-	return Plugin_Handled;
 }
 
 public void ZS_OnLoaded() {
