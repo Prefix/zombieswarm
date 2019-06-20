@@ -57,6 +57,8 @@ public void ZS_OnLoaded() {
     abilityLeap.Duration = ABILITY_NO_DURATION; // This is for classes who has no durations on skills
     abilityLeap.Cooldown = zCooldown.FloatValue;
     abilityLeap.Buttons = IN_DUCK|IN_ATTACK2;
+    abilityLeap.SetName("Leap", MAX_ABILITY_NAME_SIZE);
+    abilityLeap.SetDesc("Can make leap where hunter looks to", MAX_ABILITY_DESC_SIZE);
 }
 
 public void OnMapStart() {
