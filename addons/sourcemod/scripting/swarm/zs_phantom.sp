@@ -145,9 +145,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     return Plugin_Continue;
 }
 
-//public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
-    PrintToChatAll("ZS_OnAbilityButtonPressed");
     if ( !UTIL_IsValidAlive(client) )
         return;
 
@@ -178,7 +176,6 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
 }
 
 public void ZS_OnAbilityStarted(int client, int ability_id) {
-    PrintToChatAll("ZS_OnAbilityStarted");
     if ( !UTIL_IsValidAlive(client) )
         return;
 

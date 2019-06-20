@@ -407,16 +407,16 @@ void FogEnable(bool status) {
     }
     
     if (status) {
-    	if (g_iCascadeLightIndex != -1) {
-    		AcceptEntityInput(g_iCascadeLightIndex, "Disable");
-        	SetLightStyle(0,"a");
-    	}
+        if (g_iCascadeLightIndex != -1) {
+            AcceptEntityInput(g_iCascadeLightIndex, "Disable");
+            SetLightStyle(0,"a");
+        }
     }
     else {
-    	if (g_iCascadeLightIndex != -1) {
-    		AcceptEntityInput(g_iCascadeLightIndex, "Enable");
-        	SetLightStyle(0,"");
-    	}
+        if (g_iCascadeLightIndex != -1) {
+            AcceptEntityInput(g_iCascadeLightIndex, "Enable");
+            SetLightStyle(0,"");
+        }
         
     }
     
@@ -823,7 +823,7 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
         
         CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
         if (strlen(temp_checker[dataDescription])) {
-        	CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
         }
     }
 }
@@ -991,62 +991,6 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
     return Plugin_Continue;
 }
 
-stock void DEBUG_PrintButtons(int buttons, const char[] message) {
-    char button_text[128];
-    Format(button_text, sizeof(button_text), "|");
-    if (buttons & IN_ATTACK)
-        Format(button_text, sizeof(button_text), "%sIN_ATTACK|", button_text);
-    if (buttons & IN_JUMP)
-        Format(button_text, sizeof(button_text), "%sIN_JUMP|", button_text);
-    if (buttons & IN_DUCK)
-        Format(button_text, sizeof(button_text), "%sIN_DUCK|", button_text);
-    if (buttons & IN_FORWARD)
-        Format(button_text, sizeof(button_text), "%sIN_FORWARD|", button_text);
-    if (buttons & IN_BACK)
-        Format(button_text, sizeof(button_text), "%sIN_BACK|", button_text);
-    if (buttons & IN_USE)
-        Format(button_text, sizeof(button_text), "%sIN_USE|", button_text);
-    if (buttons & IN_CANCEL)
-        Format(button_text, sizeof(button_text), "%sIN_CANCEL|", button_text);
-    if (buttons & IN_LEFT)
-        Format(button_text, sizeof(button_text), "%sIN_LEFT|", button_text);
-    if (buttons & IN_RIGHT)
-        Format(button_text, sizeof(button_text), "%sIN_RIGHT|", button_text);
-    if (buttons & IN_MOVELEFT)
-        Format(button_text, sizeof(button_text), "%sIN_MOVELEFT|", button_text);
-    if (buttons & IN_MOVERIGHT)
-        Format(button_text, sizeof(button_text), "%sIN_MOVERIGHT|", button_text);
-    if (buttons & IN_ATTACK2)
-        Format(button_text, sizeof(button_text), "%sIN_ATTACK2|", button_text);
-    if (buttons & IN_RUN)
-        Format(button_text, sizeof(button_text), "%sIN_RUN|", button_text);
-    if (buttons & IN_RELOAD)
-        Format(button_text, sizeof(button_text), "%sIN_RELOAD|", button_text);
-    if (buttons & IN_ALT1)
-        Format(button_text, sizeof(button_text), "%sIN_ALT1|", button_text);
-    if (buttons & IN_ALT2)
-        Format(button_text, sizeof(button_text), "%sIN_ALT2|", button_text);
-    if (buttons & IN_SCORE)
-        Format(button_text, sizeof(button_text), "%sIN_SCORE|", button_text);
-    if (buttons & IN_SPEED)
-        Format(button_text, sizeof(button_text), "%sIN_SPEED|", button_text);
-    if (buttons & IN_ZOOM)
-        Format(button_text, sizeof(button_text), "%sIN_ZOOM|", button_text);
-    if (buttons & IN_WEAPON1)
-        Format(button_text, sizeof(button_text), "%sIN_WEAPON1|", button_text);
-    if (buttons & IN_WEAPON2)
-        Format(button_text, sizeof(button_text), "%sIN_WEAPON2|", button_text);
-    if (buttons & IN_BULLRUSH)
-        Format(button_text, sizeof(button_text), "%sIN_BULLRUSH|", button_text);
-    if (buttons & IN_GRENADE1)
-        Format(button_text, sizeof(button_text), "%sIN_GRENADE1|", button_text);
-    if (buttons & IN_GRENADE2)
-        Format(button_text, sizeof(button_text), "%sIN_GRENADE2|", button_text);
-    if (buttons & IN_ATTACK3)
-        Format(button_text, sizeof(button_text), "%sIN_ATTACK3", button_text);
-    PrintToChatAll("%s: %s", message, button_text);
-}
-
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !UTIL_IsValidAlive(client) )
@@ -1175,7 +1119,7 @@ public Action ghostHint(Handle timer, any client)
         UTIL_ShowHintMessage(client, g_sOverrideHintText[client]);
     }
     else if (g_bGhost[client]) {
-    	Format(hintText,sizeof(hintText),"%t","Hint: Currently you are a ghost");
+        Format(hintText,sizeof(hintText),"%t","Hint: Currently you are a ghost");
         UTIL_ShowHintMessage(client, hintText);
     } else {
         char sHintText[196];

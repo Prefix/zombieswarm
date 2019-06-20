@@ -20,10 +20,15 @@ public Plugin myinfo =
 };
 
 ZombieClass registeredClass;
+ZombieAbility abilityExplode;
 
 int fireSprite;
 int haloSprite;
 int explosionSprite;
+
+#define ABILITY_UNIQUE_EXPLODE "boomer_explosion"
+#define ABILITY_NAME "Explosion"
+#define ABILITY_DESCRIPTION "Explodes on death"
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius;
 
@@ -45,13 +50,18 @@ public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("boomer");
     registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Explodes on death", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetDesc(ABILITY_DESCRIPTION, MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
     registeredClass.Speed = zSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
+
+    abilityExplode = ZombieAbility(registeredClass, ABILITY_UNIQUE_EXPLODE);
+    abilityExplode.SetName(ABILITY_NAME, MAX_ABILITY_NAME_SIZE);
+    abilityExplode.SetDesc(ABILITY_DESCRIPTION, MAX_ABILITY_DESC_SIZE);
+    // TODO ADD properties for explosion. Range, Damage etc.
 }
 
 public void OnMapStart()

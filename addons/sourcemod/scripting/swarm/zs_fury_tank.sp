@@ -22,6 +22,7 @@ public Plugin myinfo =
 #define SOUND_FURY "zombie_mod/fury.mp3"
 
 ZombieClass registeredClass;
+ZombieAbility abilityRage;
 
 Handle timerFury[MAXPLAYERS + 1];
 Handle timerFuryEffect[MAXPLAYERS + 1];
@@ -64,8 +65,13 @@ public void ZS_OnLoaded() {
     registeredClass.Speed = zSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
-    registeredClass.Cooldown = zCooldown.FloatValue;
-    registeredClass.Button = IN_USE;
+    // Abilities
+    abilityRage = ZombieAbility(registeredClass, "tank_rage");
+    abilityRage.Duration = zDuration.FloatValue;
+    abilityRage.Cooldown = zCooldown.FloatValue;
+    abilityRage.Buttons = IN_USE;
+    abilityRage.SetName("Fury", MAX_ABILITY_NAME_SIZE);
+    abilityRage.SetDesc("Can rage with Iron skin.", MAX_ABILITY_DESC_SIZE);
 }
 public void onZCSelected(int client, int classId)
 {
@@ -256,12 +262,13 @@ public void OnClientDisconnect(int client)
 }
 
 //public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
-public void ZS_OnAbilityButtonPressed(int client, int buttons) {
+public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
+
     if ( !UTIL_IsValidAlive(client) )
         return;
-        
-    ZMPlayer player = ZMPlayer(client);
 
+    ZMPlayer player = ZMPlayer(client);
+    
     if ( player.Ghost )
         return;
         
@@ -269,8 +276,49 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
         return;
         
     if ( player.ZombieClass != registeredClass.ID )
-        return;            
+        return;
+
+    if ( ability_id < 0)
+        return;
         
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateIdle)
+        return;
+
+    ability.AbilityStarted();  
+}
+
+ public void ZS_OnAbilityStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;     
     if (timerFury[client] != null)
         delete timerFury[client];
     
@@ -307,17 +355,36 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
     
     timerFuryEffect[client] = CreateTimer(0.5, furyEffectCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     
-    timerFury[client] = CreateTimer(zDuration.FloatValue, furyCallback, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action furyCallback(Handle timer, any client)
-{
-    timerFury[client] = null;
+public void ZS_OnCooldownStarted(int client, int ability_id) {
     
-    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-    //if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
-        return Plugin_Continue;
-    }
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateCooldown)
+        return;
+        
     
     // Back to first state
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
@@ -328,8 +395,6 @@ public Action furyCallback(Handle timer, any client)
     if (timerFuryEffect[client] != null) {
         delete timerFuryEffect[client];
     }
-
-    return Plugin_Continue;
 }
 
 public Action furyEffectCallback(Handle timer, any client)

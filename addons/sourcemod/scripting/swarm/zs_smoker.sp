@@ -50,18 +50,20 @@ public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("smoker");
     registeredClass.SetName("Zombie Smoker", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Can drag other people (ATTACK2 button)", MAX_CLASS_DESC_SIZE);
+    registeredClass.SetDesc("Can drag other people (E button)", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/smoker", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
     registeredClass.Speed = zSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
-    registeredClass.Cooldown = zCooldown.FloatValue;
-    //ability
+    //
+    abilityPull = ZombieAbility(registeredClass, "smoker_pull");
     abilityPull.Duration = zDuration.FloatValue;
     abilityPull.Cooldown = zCooldown.FloatValue;
     abilityPull.Buttons = IN_USE;
+    abilityPull.SetName("Pull", MAX_ABILITY_NAME_SIZE);
+    abilityPull.SetDesc("Can pull humans with tongue.", MAX_ABILITY_DESC_SIZE);
 }
 
 public void OnClientPutInServer(int client)
@@ -273,51 +275,119 @@ public void OnMapStart()
     AddFileToDownloadsTable( sPath );
     
 }
-public void ZS_OnAbilityButtonPressed(int client, int buttons) {
-	if (!UTIL_IsValidAlive(client))
-		return;
+public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
+    if ( !UTIL_IsValidAlive(client) )
+        return;
 
-	ZMPlayer player = ZMPlayer(client);
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
         
-	if (player.Ghost)
-		return;
-	if (player.Team != CS_TEAM_T)
-		return;
-	if ( player.ZombieClass != registeredClass.ID )
-		return;
-	
-	int target = WhoPulling(client);
-	if(UTIL_IsValidClient(target) && target != client) {
-		return;
-	}
+    if ( player.Team != CS_TEAM_T)
+        return;
         
-	target = GetClientAimTarget(client, true);
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
 
-	if ( !UTIL_IsValidAlive(target) ) 
-		return;
-	if (!UTIL_IsClientInTargetView(client, target))
-		return;
-	if (IsBeingPulled(target) && WhoPulling(target) != client)
-		return;
+    if ( ability_id < 0)
+        return;
         
-	ZMPlayer TargetPlayer = ZMPlayer(target);
-	if (target == client || TargetPlayer.Team == player.Team)
-		return;
-        
-	SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
+    int ability_index = player.GetAbilityByID(ability_id);
 
-	char sPath[PLATFORM_MAX_PATH];
-	EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-        
-	pullTarget[client] = target; 
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateIdle)
+        return;
+
+    ability.AbilityStarted();
 }
-public void ZS_OnAbilityButtonReleased(int client, int buttons) {
-	
-	ZS_AbilityFinished(client);
-	
-	if (SmokerTimer[client] != null) {
-		delete SmokerTimer[client];
-	}
+public void ZS_OnAbilityStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;
+    
+    int target = WhoPulling(client);
+    if(UTIL_IsValidClient(target) && target != client) {
+        return;
+    }
+        
+    target = GetClientAimTarget(client, true);
+
+    if ( !UTIL_IsValidAlive(target) ) 
+        return;
+    if (!UTIL_IsClientInTargetView(client, target))
+        return;
+    if (IsBeingPulled(target) && WhoPulling(target) != client)
+        return;
+        
+    ZMPlayer TargetPlayer = ZMPlayer(target);
+    if (target == client || TargetPlayer.Team == player.Team)
+        return;
+        
+    SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
+
+    char sPath[PLATFORM_MAX_PATH];
+    EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+        
+    pullTarget[client] = target; 
+}
+
+public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;
+    ability.AbilityFinished();
+    
+    if (SmokerTimer[client] != null) {
+        delete SmokerTimer[client];
+    }
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {

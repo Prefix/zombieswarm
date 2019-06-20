@@ -24,6 +24,8 @@
 
 #define MAX_CLASS_ID 10
 
+#define ABILITY_NO_DURATION -1.0
+
 // Fowards
 forward void ZS_OnLoaded();
 forward void ZS_OnZombieSelected(int client);
@@ -86,7 +88,7 @@ methodmap ZombieAbility {
         public native get();
     }
     property int ID {
-    	public native get();
+        public native get();
     }
     property bool Excluded {
         public native get();

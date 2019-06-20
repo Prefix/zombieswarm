@@ -1009,12 +1009,12 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
     float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
 
     g_aPlayerAbility.Set(ability_index, stateRunning, paState);
-
-    DataPack pack;
-    CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
-    pack.WriteCell(client);
-    pack.WriteCell(ability_id);
-
+    if (duration != ABILITY_NO_DURATION) {
+        DataPack pack;
+        CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
+        pack.WriteCell(client);
+        pack.WriteCell(ability_id);
+    }
     Call_StartForward(g_hForwardOnAbilityStarted);
     Call_PushCell(client);
     Call_PushCell(ability_id);

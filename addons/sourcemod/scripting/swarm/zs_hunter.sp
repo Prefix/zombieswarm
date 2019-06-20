@@ -20,7 +20,7 @@ public Plugin myinfo =
 
 #define SOUND_LEAP "zombie_mod/hunter_leap.mp3"
 
-ZombieClass registeredClass;
+ZombieClass Zombie;
 ZombieAbility abilityLeap;
 
 int hunterNumLeapSounds[MAXPLAYERS + 1];
@@ -42,22 +42,21 @@ public void OnPluginStart() {
 
 public void ZS_OnLoaded() {
     // We are registering zombie
-    registeredClass = ZombieClass("hunter");
-    registeredClass.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Has leaping (CTRL + ATTACK2 button)", MAX_CLASS_DESC_SIZE);
-    registeredClass.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
-    registeredClass.Health = zHP.IntValue;
-    registeredClass.Damage = zDamage.FloatValue;
-    registeredClass.Speed = zSpeed.FloatValue;
-    registeredClass.Gravity = zGravity.FloatValue;
-    registeredClass.Excluded = zExcluded.BoolValue;
-    registeredClass.Cooldown = zCooldown.FloatValue;
+    Zombie = ZombieClass("hunter");
+    Zombie.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
+    Zombie.SetDesc("Has leaping (CTRL + ATTACK2 button)", MAX_CLASS_DESC_SIZE);
+    Zombie.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
+    Zombie.Health = zHP.IntValue;
+    Zombie.Damage = zDamage.FloatValue;
+    Zombie.Speed = zSpeed.FloatValue;
+    Zombie.Gravity = zGravity.FloatValue;
+    Zombie.Excluded = zExcluded.BoolValue;
+    Zombie.Cooldown = zCooldown.FloatValue;
     // Abilities
-    abilityLeap = ZombieAbility(registeredClass, "hunter_leap");
-    abilityLeap.Duration = -1.0; // This is for classes who has no durations on skills
+    abilityLeap = ZombieAbility(Zombie, "hunter_leap");
+    abilityLeap.Duration = ABILITY_NO_DURATION; // This is for classes who has no durations on skills
     abilityLeap.Cooldown = zCooldown.FloatValue;
-    abilityLeap.Buttons &= IN_DUCK;
-    abilityLeap.Buttons &= IN_ATTACK2;
+    abilityLeap.Buttons = IN_DUCK|IN_ATTACK2;
 }
 
 public void OnMapStart() {
@@ -70,22 +69,64 @@ public void OnMapStart() {
     AddFileToDownloadsTable( sPath );
 }
 
-public void ZS_OnAbilityButtonPressed(int client, int buttons) {
+public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
     if ( !UTIL_IsValidAlive(client) )
         return;
 
     ZMPlayer player = ZMPlayer(client);
-        
+    
     if ( player.Ghost )
         return;
         
     if ( player.Team != CS_TEAM_T)
         return;
         
-    if ( player.ZombieClass != registeredClass.ID )
+    if ( player.ZombieClass != Zombie.ID )
+        return;
+
+    if ( ability_id < 0)
         return;
         
-    if (!((buttons & IN_DUCK) && (GetEntityFlags(client) & FL_ONGROUND)))
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateIdle)
+        return;
+
+    ability.AbilityStarted();
+}
+
+public void ZS_OnAbilityStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != Zombie.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;
+        
+    if (!(GetEntityFlags(client) & FL_ONGROUND))
         return;
 
     float cVelocity[3];
@@ -117,7 +158,32 @@ public void ZS_OnAbilityButtonPressed(int client, int buttons) {
         hunterNumLeapSounds[client] = 0;
     }
 }
-public void ZS_OnAbilityButtonReleased(int client, int buttons) {
-	ZS_AbilityFinished(client);
+public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != Zombie.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_index);
+    if (ability.State != stateRunning)
+        return;
+    ability.AbilityFinished();
 }
 
