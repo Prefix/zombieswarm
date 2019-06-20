@@ -1056,10 +1056,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
         return Plugin_Continue;
 
     if (!g_bGhost[client]) {
-        //PrintToChatAll("g_aPlayerAbility.Length = %i", g_aPlayerAbility.Length);
         for (int i = 0; i < g_aPlayerAbility.Length; i++)
         {
-            //PrintToChatAll("i = %i, g_aPlayerAbility.Length = %i", i, g_aPlayerAbility.Length);
             int temp_checker[g_ePlayerAbility];
             g_aPlayerAbility.GetArray(i, temp_checker[0]);
             if(temp_checker[paClient] != client) {
@@ -1069,19 +1067,15 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
             int released = GetEntProp(client, Prop_Data, "m_afButtonReleased");
             
             if (pressed & temp_checker[paButtons]) {
-                PrintToChatAll("m_afButtonPressed %N", client);
                 if (temp_checker[paState] != stateIdle)
                     continue;
-                PrintToChatAll("m_afButtonPressed %N idle", client);
                 Call_StartForward(g_hForwardAbilityButtonPressed);
                 Call_PushCell(client);
                 Call_PushCell(temp_checker[paID]);
                 Call_Finish();
             } else if (released & temp_checker[paButtons]) {
-                PrintToChatAll("m_afButtonReleased %N ", client);
                 if (temp_checker[paState] != stateRunning)
                     continue;
-                PrintToChatAll("m_afButtonReleased %N running", client);
                 Call_StartForward(g_hForwardAbilityButtonReleased);
                 Call_PushCell(client);
                 Call_PushCell(temp_checker[paID]);
@@ -1449,7 +1443,6 @@ public void AssignPlayerAbilities(int client) {
         g_aPlayerAbility.PushArray(temp_ability[0]);
         // TODO on player ability register
         g_iNumPlayerAbilities++;
-        PrintToChatAll("Gave %N ability %s", client, temp_ability[abilityUniqueName]);
     }
 }
 

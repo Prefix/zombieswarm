@@ -972,10 +972,10 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 
     g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
 
-    DataPack pack = new DataPack();
+    DataPack pack;
+    CreateDataTimer(cooldown, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
-    CreateDataTimer(cooldown, Timer_SetOnCooldown, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
     Call_StartForward(g_hForwardOnAbilityCDStarted);
     Call_PushCell(client);
@@ -1014,11 +1014,10 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
 
     g_aPlayerAbility.Set(ability_index, stateRunning, paState);
 
-    PrintToChatAll("client: %i ability_id %i", client, ability_id);
-    DataPack pack = new DataPack();
+    DataPack pack;
+    CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_FLAG_NO_MAPCHANGE);
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
-    CreateDataTimer(duration, Timer_SetOnCooldown, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
     Call_StartForward(g_hForwardOnAbilityStarted);
     Call_PushCell(client);
@@ -1040,11 +1039,10 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
         g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
 
         float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
-        PrintToChatAll("client: %i ability_id %i", client, ability_id);
-        DataPack otherpack = new DataPack();
+        DataPack otherpack;
+        CreateDataTimer(duration, Timer_SetOnIdle, otherpack, TIMER_FLAG_NO_MAPCHANGE);
         otherpack.WriteCell(client);
         otherpack.WriteCell(ability_id);
-        CreateDataTimer(duration, Timer_SetOnIdle, pack, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
         Call_StartForward(g_hForwardOnAbilityCDStarted);
         Call_PushCell(client);
