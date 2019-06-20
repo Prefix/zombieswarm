@@ -806,33 +806,35 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     CreateTimer(0.0, RemoveRadar, client);
 }
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
-    int temp_checker[g_eZombieClass];
-    if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && g_bGhost[client]) {
-        char key[MAX_CLASS_ID];
-        menu.GetItem(param2, key, sizeof(key));
-        int classInt = StringToInt(key);
-        g_aZombieClass.GetArray(classInt, temp_checker[0]);
+    if (UTIL_IsValidClient(client)) {
+        int temp_checker[g_eZombieClass];
+        if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && g_bGhost[client]) {
+            char key[MAX_CLASS_ID];
+            menu.GetItem(param2, key, sizeof(key));
+            int classInt = StringToInt(key);
+            g_aZombieClass.GetArray(classInt, temp_checker[0]);
 
-        g_iZombieClass[client] = temp_checker[dataID];
-        setZombieClassParameters(client);
-        callZombieSelected(client, temp_checker[dataID]);
-        
-        CPrintToChat(client,"%t","You selected",temp_checker[dataName]);
-        if (strlen(temp_checker[dataDescription])) {
-            CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            g_iZombieClass[client] = temp_checker[dataID];
+            setZombieClassParameters(client);
+            callZombieSelected(client, temp_checker[dataID]);
+            
+            CPrintToChat(client,"%t","You selected",temp_checker[dataName]);
+            if (strlen(temp_checker[dataDescription])) {
+                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            }
         }
-    }
-    else if (action == MenuAction_Cancel) {
-        int random = getRandZombieClass();
-        g_aZombieClass.GetArray(random, temp_checker[0]);
-        g_iZombieClass[client] = temp_checker[dataID];
+        else if (action == MenuAction_Cancel) {
+            int random = getRandZombieClass();
+            g_aZombieClass.GetArray(random, temp_checker[0]);
+            g_iZombieClass[client] = temp_checker[dataID];
 
-        setZombieClassParameters(client);
-        callZombieSelected(client, temp_checker[dataID]);
-        
-        CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
-        if (strlen(temp_checker[dataDescription])) {
-            CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            setZombieClassParameters(client);
+            callZombieSelected(client, temp_checker[dataID]);
+            
+            CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
+            if (strlen(temp_checker[dataDescription])) {
+                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            }
         }
     }
 }
