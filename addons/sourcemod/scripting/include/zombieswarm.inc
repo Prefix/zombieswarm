@@ -26,6 +26,8 @@
 
 #define ABILITY_NO_DURATION -1.0
 
+#define API_MAX_PLAYER_ABILITIES 20
+
 // Fowards
 forward void ZS_OnLoaded();
 forward void ZS_OnZombieSelected(int client);
@@ -78,40 +80,7 @@ methodmap ZMPlayer {
     public native void OverrideHintText(const char[] text);
     public native int GetAbilityByUnique(const char[] ability_unique_id);
     public native int GetAbilityByID(const int uniqueid);
-}
-
-methodmap ZombieAbility {
-    // Constructor
-    public native ZombieAbility(ZombieClass zclass, const char[] unique);
-    // Properties
-    property int ZombieClass {
-        public native get();
-    }
-    property int ID {
-        public native get();
-    }
-    property bool Excluded {
-        public native get();
-        public native set(const bool val);
-    }
-    property float Duration {
-        public native get();
-        public native set(const float val);
-    }
-    property float Cooldown {
-        public native get();
-        public native set(const float val);
-    }
-    property int Buttons {
-        public native get();
-        public native set(const int val);
-    }
-    // Methods
-    public native void GetName(char[] text, int size);
-    public native void SetName(const char[] text, int size);
-    public native void GetDesc(char[] text, int size);
-    public native void SetDesc(const char[] text, int size);
-    public native void GetUnique(char[] text, int size);
+    public native bool GetPlayerAbilities(int[] abilities, int &found_abilities);
 }
 
 methodmap ZombieClass {
@@ -158,6 +127,40 @@ methodmap ZombieClass {
     public native void SetModel(const char[] text, int size);
     public native void GetArms(char[] text, int size);
     public native void SetArms(const char[] text, int size);
+    public native void GetUnique(char[] text, int size);
+}
+
+methodmap ZombieAbility {
+    // Constructor
+    public native ZombieAbility(ZombieClass zclass, const char[] unique);
+    // Properties
+    property int ZombieClass {
+        public native get();
+    }
+    property int ID {
+        public native get();
+    }
+    property bool Excluded {
+        public native get();
+        public native set(const bool val);
+    }
+    property float Duration {
+        public native get();
+        public native set(const float val);
+    }
+    property float Cooldown {
+        public native get();
+        public native set(const float val);
+    }
+    property int Buttons {
+        public native get();
+        public native set(const int val);
+    }
+    // Methods
+    public native void GetName(char[] text, int size);
+    public native void SetName(const char[] text, int size);
+    public native void GetDesc(char[] text, int size);
+    public native void SetDesc(const char[] text, int size);
     public native void GetUnique(char[] text, int size);
 }
 

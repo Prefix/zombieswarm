@@ -9,7 +9,7 @@
 static const int SPECMODE_FIRSTPERSON    = 4,
                 SPECMODE_3RDPERSON        = 5;
 
-static const float UPDATE_INTERVAL    = 1.5;
+static const float UPDATE_INTERVAL    = 0.1;
 static const char PLUGIN_VERSION[]    = "1.2.0";
 static const char colors[][]        = {"R", "G", "B", "A"};
 
@@ -20,6 +20,8 @@ bool g_bEnabled;
 int g_iColor[4];
 float g_fPosX,
     g_fPosY;
+
+Handle g_hHudSync[MAXPLAYERS+1] = null;
 
 #define PLUGIN_NAME ZS_PLUGIN_NAME ... " - HUD"
 
@@ -164,9 +166,13 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
             GetInformationAboutPlayer(iTargetUser, szText, sizeof(szText));
         }
     }
-
-    SetHudTextParams(g_fPosX, g_fPosY, UPDATE_INTERVAL + 0.1, g_iColor[0], g_iColor[1], g_iColor[2], g_iColor[3], 0, 0.0, 0.0, 0.0);
-    ShowHudText(client, -1, szText);
+    if (g_hHudSync[client] == null)
+    {
+        g_hHudSync[client] = CreateHudSynchronizer();
+    }
+    SetHudTextParams(g_fPosX, g_fPosY, UPDATE_INTERVAL+0.1, g_iColor[0], g_iColor[1], g_iColor[2], g_iColor[3], 0, 0.0, 0.0, 0.0);
+    //ShowHudText(client, -1, szText);
+    ShowSyncHudText(client, g_hHudSync[client], szText);
 
     return Plugin_Continue;
 }
@@ -178,6 +184,31 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     FormatEx(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
     FormatEx(temp_string, sizeof(temp_string), "%s  Level: %d\n", temp_string, player.Level);
     FormatEx(temp_string, sizeof(temp_string), "%s  XP: %d\n", temp_string, player.XP);
+    int abilities[API_MAX_PLAYER_ABILITIES];
+    int found = 0;
+    bool havefound = player.GetPlayerAbilities(abilities, found);
+    FormatEx(temp_string, sizeof(temp_string), "%s\nAbilities\n",temp_string);
+    if (havefound) {
+        for (int i = 0; i < found; i++) {
+            if (abilities[i] < 0) {
+                continue;
+            }
+            PlayerAbility ability = view_as<PlayerAbility>(abilities[i]);
+            char sState[32];
+            if (ability.State == stateIdle) {
+                Format(sState, sizeof(sState), "Ready to use");
+            } else if (ability.State == stateRunning) {
+                Format(sState, sizeof(sState), "Activated");
+            } else if (ability.State == stateCooldown) {
+                Format(sState, sizeof(sState), "On cooldown");
+            } else if (ability.State == stateDisabled) {
+                Format(sState, sizeof(sState), "Disabled");
+            }
+            char name[MAX_ABILITY_NAME_SIZE];
+            ability.GetName(name, sizeof(name));
+            FormatEx(temp_string, sizeof(temp_string), "%sName: %s\nState:%s\nCur CD:%f Duration: %f\n\n",temp_string, name, sState, ability.CurrentCooldown, ability.CurrentDuration);
+        }
+    }
     strcopy(str, maxlength, temp_string);
 }
 
@@ -190,7 +221,12 @@ void KillHudHintTimer(int client)
 {
     if(HudHintTimers[client] != null)
     {
-        KillTimer(HudHintTimers[client]);
+        delete HudHintTimers[client];
         HudHintTimers[client] = null;
+    }
+    if(g_hHudSync[client] != null)
+    {
+        delete g_hHudSync[client];
+        g_hHudSync[client] = null;
     }
 }

@@ -32,6 +32,7 @@ public void InitMethodMaps() {
     CreateNative("ZMPlayer.OverrideHintText", Native_ZMPlayer_OverrideHintText);
     CreateNative("ZMPlayer.GetAbilityByUnique", Native_ZMPlayer_GetPlayerAbilityUnique); 
     CreateNative("ZMPlayer.GetAbilityByID", Native_ZMPlayer_GetPlayerAbilityID); 
+    CreateNative("ZMPlayer.GetPlayerAbilities", Native_ZMPlayer_GetPlayerAbilities);
 
     // Our MethodMap -> ZombieClass
     CreateNative("ZombieClass.ZombieClass", Native_ZombieClass_Constructor);
@@ -391,6 +392,31 @@ public int Native_ZMPlayer_GetPlayerAbilityID(Handle plugin, int numParams)
         }
     }
     return found;
+}
+
+public int Native_ZMPlayer_GetPlayerAbilities(Handle plugin, int numParams)
+{
+    ZMPlayer player = GetNativeCell(1);
+    int client = player.Client;
+    /*if (!UTIL_IsValidClient(client)) {
+        return false;
+    }*/
+    int abilities[API_MAX_PLAYER_ABILITIES] = -1;
+    GetNativeArray(2, abilities, sizeof(abilities));
+    int found_ab = 0;
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        int temp_ability[g_ePlayerAbility];
+        g_aPlayerAbility.GetArray(i, temp_ability[0]);
+        if (temp_ability[paClient] != client)
+            continue;
+        abilities[found_ab] = temp_ability[paID];
+        found_ab++;
+    }
+    SetNativeArray(2, abilities, API_MAX_PLAYER_ABILITIES);
+    SetNativeCellRef(3, found_ab);
+
+    return found_ab > 0 ? true : false;
 }
 
 //    Natives for MethodMap ZombieClass
@@ -1041,7 +1067,7 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
     int ability_index = FindPlayerAbilityIndex(ability_id);
-    if (UTIL_IsValidAlive(client)) {
+    if (!UTIL_IsValidAlive(client)) {
         return Plugin_Stop;
     }
     if (ability_index < 0) {
@@ -1051,7 +1077,7 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
     if (state != stateCooldown) {
         return Plugin_Stop;
     }
-    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentDuration));
+    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentCooldown));
     if (cooldown <= 0.1) {
         g_aPlayerAbility.Set(ability_index, stateIdle, paState);
         Call_StartForward(g_hForwardOnAbilityCDEnded);
@@ -1070,7 +1096,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
     int ability_index = FindPlayerAbilityIndex(ability_id);
-    if (UTIL_IsValidAlive(client)) {
+    if (!UTIL_IsValidAlive(client)) {
         return Plugin_Stop;
     }
     if (ability_index < 0) {
