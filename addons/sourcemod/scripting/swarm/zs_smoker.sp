@@ -18,7 +18,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_TONGUE "zombie_mod/smoker_tongue.mp3"
+#define SOUND_TONGUE "swarm/smoker_tongue.mp3"
 
 ZombieClass registeredClass;
 ZombieAbility abilityPull;
@@ -182,8 +182,10 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     if ( VictimPlayer.ZombieClass != registeredClass.ID )
         return Plugin_Continue;
     
-    if (SmokerTimer[victim] != null)
+    if (SmokerTimer[victim] != null) {
         delete SmokerTimer[victim];
+        SmokerTimer[victim] = null;
+    }
     
     pullTarget[victim] = 0;
     
@@ -265,7 +267,7 @@ public Action BeamTimer(Handle timer, any client)
 
 public void OnMapStart()
 {
-    UTIL_FakePrecacheSoundEx( SOUND_TONGUE );
+    PrecacheSound( SOUND_TONGUE );
     LaserCache = PrecacheModel("materials/sprites/laserbeam.vmt");
     
     // Format sound
@@ -405,8 +407,45 @@ public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
     
     if (SmokerTimer[client] != null) {
         delete SmokerTimer[client];
+        SmokerTimer[client] = null;
     }
+    pullTarget[client] = 0;
 }
+
+public void ZS_OnCooldownStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
+    if (ability.State != stateCooldown)
+        return;
+        
+    if (SmokerTimer[client] != null) {
+        delete SmokerTimer[client];
+        SmokerTimer[client] = null;
+    }
+    pullTarget[client] = 0;
+}
+
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
     if ( !UTIL_IsValidAlive(client) )

@@ -75,7 +75,7 @@ public void OnMapStart()
     explosionSprite = PrecacheModel( "sprites/sprite_fire01.vmt" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vtf" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
-    UTIL_FakePrecacheSoundEx( "ambient/explosions/explode_8.mp3" );
+    PrecacheSound( "ambient/explosions/explode_8.mp3" );
     AddFileToDownloadsTable( "sound/ambient/explosions/explode_8.mp3" );
 }
 

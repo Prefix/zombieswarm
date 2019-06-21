@@ -19,7 +19,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_FURY "zombie_mod/fury.mp3"
+#define SOUND_FURY "swarm/fury.mp3"
 
 ZombieClass registeredClass;
 ZombieAbility abilityRage;
@@ -99,7 +99,7 @@ public void OnMapStart()
     tankAlive = false;
     tankReady = true;
 
-    UTIL_FakePrecacheSoundEx( SOUND_FURY );
+    PrecacheSound( SOUND_FURY );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -404,7 +404,7 @@ public Action furyEffectCallback(Handle timer, any client)
     if ( !UTIL_IsValidAlive(client) || !ZS_IsClientZombie(client) ) {
         return Plugin_Continue;
     }
-    
+
     ZMPlayer player = ZMPlayer(client);
 
     if (player.Ghost) {

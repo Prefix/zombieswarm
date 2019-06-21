@@ -19,7 +19,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_INVISIBILITY "zombie_mod/invisibility.mp3"
+#define SOUND_INVISIBILITY "swarm/invisibility.mp3"
 #define ABILITY_UNIQUE_INVIS "phantom_invisibility"
 
 ZombieClass Zombie;
@@ -76,7 +76,7 @@ public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcas
 
 public void OnMapStart()
 {
-    UTIL_FakePrecacheSoundEx( SOUND_INVISIBILITY );
+    PrecacheSound( SOUND_INVISIBILITY );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];

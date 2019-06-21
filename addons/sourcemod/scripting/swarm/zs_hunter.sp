@@ -18,7 +18,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_LEAP "zombie_mod/hunter_leap.mp3"
+#define SOUND_LEAP "swarm/hunter_leap.mp3"
 
 ZombieClass Zombie;
 ZombieAbility abilityLeap;
@@ -62,7 +62,7 @@ public void ZS_OnLoaded() {
 }
 
 public void OnMapStart() {
-    UTIL_FakePrecacheSoundEx( SOUND_LEAP );
+    PrecacheSound( SOUND_LEAP );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];

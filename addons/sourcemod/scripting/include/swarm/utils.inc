@@ -36,15 +36,6 @@ stock void UTIL_ShakeScreen(int client, float duration = 3.0, float amplitude = 
     }
 }
 
-stock bool UTIL_FakePrecacheSoundEx( const char[] szPath )
-{
-    char sPathStar[PLATFORM_MAX_PATH];
-    Format(sPathStar, sizeof(sPathStar), "*/%s", szPath);
-    
-    AddToStringTable( FindStringTable( "soundprecache" ), sPathStar );
-    return true;
-}
-
 stock void UTIL_VelocityByAim(int client, float distance, float velocity[3])
 {
     float vAngles[3];
@@ -65,8 +56,7 @@ stock bool UTIL_IsValidAlive(int client)
 }
 stock void Util_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
 	ClientCommand(client, "playgamesound Music.StopAllMusic");
-	ClientCommand(client, "play */%s", sound);
-	EmitSoundToClient(client, sound, -2, SOUND_FROM_PLAYER, SNDCHAN_AUTO, SND_NOFLAGS, volume);
+	EmitSoundToClient(client, sound, _, _, _, _, volume);
 }
 stock bool UTIL_IsClientInTargetView(int client, int target)
 {
@@ -392,89 +382,6 @@ stock int UTIL_GetRandomHuman()
     
     return 0;
 }
-stock void UTIL_LoadSounds() {
-	char SoundPath[PLATFORM_MAX_PATH];
-	KeyValues Sounds = new KeyValues("Sounds");
-	BuildPath(Path_SM, SoundPath, sizeof(SoundPath), "configs/swarm/sounds.cfg");
-	
-	if (!Sounds.ImportFromFile(SoundPath)) {
-		LogError("Couldn't import: \"%s\"", SoundPath);
-		return;
-	}
-
-	if (!Sounds.GotoFirstSubKey(false)) {
-		LogError("No sounds in: \"%s\"", SoundPath);
-		return;
-	}
-	Sounds.Rewind();
-	char key[64], sound[PLATFORM_MAX_PATH];
-	
-	if (Sounds.JumpToKey("human_win")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_HumanWinSounds[i] = sound;
-				UTIL_LoadSound(g_HumanWinSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Human win sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
-	if (Sounds.JumpToKey("zombie_win")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_ZombieWinSounds[i] = sound;
-				UTIL_LoadSound(g_ZombieWinSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Zombie win sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
-	if (Sounds.JumpToKey("countdown")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_CountdownSounds[i] = sound;
-				UTIL_LoadSound(g_CountdownSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Countdown sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
-}
-
-stock void UTIL_LoadSound(char[] sound) {
-	char soundsPath[PLATFORM_MAX_PATH];
-	Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
-	if (FileExists(soundsPath)) {
-		UTIL_FakePrecacheSoundEx(sound);
-		AddFileToDownloadsTable(soundsPath);
-	}
-	else {
-		LogError("Cannot locate sounds file: '%s'", soundsPath);
-	}
-
-}
-
 stock void UTIL_DEBUG_PrintButtons(int buttons, const char[] message) {
     char button_text[128];
     Format(button_text, sizeof(button_text), "|");
