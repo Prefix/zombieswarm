@@ -1063,6 +1063,9 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
 
 public Action Timer_SetOnIdle(Handle timer, DataPack pack)
 {
+    if (g_bRoundEnded) {
+        return Plugin_Stop;
+    }
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
@@ -1073,13 +1076,14 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
     if (ability_index < 0) {
         return Plugin_Stop;
     }
-    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
+    abilityState state = g_aPlayerAbility.Get(ability_index, paState);
     if (state != stateCooldown) {
         return Plugin_Stop;
     }
     float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentCooldown));
     if (cooldown <= 0.1) {
         g_aPlayerAbility.Set(ability_index, stateIdle, paState);
+        g_aPlayerAbility.Set(ability_index, 0.0, paCurrentCooldown);
         Call_StartForward(g_hForwardOnAbilityCDEnded);
         Call_PushCell(client);
         Call_PushCell(ability_id);
@@ -1092,6 +1096,9 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
 }
 public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
 {
+    if (g_bRoundEnded) {
+        return Plugin_Stop;
+    }
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
@@ -1111,6 +1118,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     if (duration <= 0.1) {
         float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
         g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
+        g_aPlayerAbility.Set(ability_index, 0.0, paCurrentDuration);
         g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
 
         DataPack otherpack;

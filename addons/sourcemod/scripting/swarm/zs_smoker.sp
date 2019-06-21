@@ -301,6 +301,24 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateIdle)
         return;
+    
+    int target = WhoPulling(client);
+    if(UTIL_IsValidClient(target) && target != client) {
+        return;
+    }
+        
+    target = GetClientAimTarget(client, true);
+
+    if ( !UTIL_IsValidAlive(target) ) 
+        return;
+    if (!UTIL_IsClientInTargetView(client, target))
+        return;
+    if (IsBeingPulled(target) && WhoPulling(target) != client)
+        return;
+        
+    ZMPlayer TargetPlayer = ZMPlayer(target);
+    if (target == client || TargetPlayer.Team == player.Team)
+        return;
 
     ability.AbilityStarted();
 }

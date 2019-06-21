@@ -498,7 +498,7 @@ public void OnClientDisconnect(int client)
 }
 
 public void ClearPlayerAbilities(int client) {
-    if (!IsValidClient(client))
+    if (!UTIL_IsValidClient(client))
         return;
     for (int i = 0; i < g_aPlayerAbility.Length; i++)
     {
@@ -926,6 +926,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             if (g_hTimerCooldown[client] != null) {
                 delete g_hTimerCooldown[client];
             }
+            ClearPlayerAbilities(client);
         }
     }
 

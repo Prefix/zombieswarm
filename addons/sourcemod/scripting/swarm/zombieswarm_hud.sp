@@ -206,7 +206,7 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
             }
             char name[MAX_ABILITY_NAME_SIZE];
             ability.GetName(name, sizeof(name));
-            FormatEx(temp_string, sizeof(temp_string), "%sName: %s\nState:%s\nCur CD:%f Duration: %f\n\n",temp_string, name, sState, ability.CurrentCooldown, ability.CurrentDuration);
+            FormatEx(temp_string, sizeof(temp_string), "%sName: %s\nState:%s\nCur CD:%.1f Duration: %.1f\n\n",temp_string, name, sState, ability.CurrentCooldown, ability.CurrentDuration);
         }
     }
     strcopy(str, maxlength, temp_string);
