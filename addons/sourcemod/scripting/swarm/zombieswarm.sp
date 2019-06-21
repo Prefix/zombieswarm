@@ -93,8 +93,10 @@ public void OnPluginStart()
 public void OnAllPluginsLoaded() {
     g_aZombieClass.Clear();
     g_aZombieAbility.Clear();
+    g_aPlayerAbility.Clear();
     g_iNumClasses = 0;
     g_iNumAbilities = 0;
+    g_iNumPlayerAbilities = 0;
     Call_StartForward(g_hForwardZSOnLoaded);
     Call_Finish();
 }
