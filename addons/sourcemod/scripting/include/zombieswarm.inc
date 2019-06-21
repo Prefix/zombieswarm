@@ -174,7 +174,7 @@ enum abilityState {
 
 methodmap PlayerAbility < ZombieAbility {
     // Constructor
-    public native PlayerAbility(client, const char[] unique);
+    public native PlayerAbility(int client, const char[] unique);
     // Properties
     property int Client {
         public native get();
@@ -198,12 +198,5 @@ methodmap PlayerAbility < ZombieAbility {
     public native void ForceCooldownEnd();
 }
 
-native bool isGhost( int client );
-
-native int getTeam( int client, bool trueform = false );
-
-native void setTeam( int client, int team );
-
-native int getRandomZombieClass();
-
-native int getLastButtons( int client );
+native int ZS_GetRandomZombieClass();
+native bool ZS_IsClientZombie(int client);

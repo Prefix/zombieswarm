@@ -1,8 +1,6 @@
 public void InitNatives() {
-    CreateNative("isGhost", nativeIsGhost);
-    CreateNative("getTeam", nativeGetTeam);
-    CreateNative("setTeam", nativeSetTeam);
-    CreateNative("getRandomZombieClass", nativeGetRandomZombieClass);
+    CreateNative("ZS_GetRandomZombieClass", nativeGetRandomZombieClass);
+    CreateNative("ZS_IsClientZombie", nativeIsClientZombie);
 }
 
 public void InitMethodMaps() {
@@ -129,44 +127,11 @@ public int InitForwards() {
     g_hForwardOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
 }
 
-
-public int nativeIsGhost(Handle plugin, int numParams)
+public int nativeIsClientZombie(Handle plugin, int numParams)
 {
     int client = GetNativeCell( 1 );
-
-    return g_bGhost[client];
-}
-
-public int nativeGetTeam(Handle plugin, int numParams)
-{
-    int client = GetNativeCell( 1 );
-    bool trueform = GetNativeCell( 2 );
-    if (trueform == true)
-        return g_iTeam[client];
-
-    return GetClientTeam(client);
-}
-
-public int nativeSetTeam(Handle plugin, int numParams)
-{
-    int client = GetNativeCell( 1 );
-    int team = GetNativeCell( 2 );
-
-    g_iTeam[client] = team;
-    if (!IsValidClient(client))
-        return;
-
-    if (!IsPlayerAlive(client)) 
-        ChangeClientTeam(client, team);
-    else 
-        CS_SwitchTeam(client, team);
-}
-
-public int nativeGetZombieClass(Handle plugin, int numParams)
-{
-    int client = GetNativeCell( 1 );
-
-    return g_iZombieClass[client];
+    int iszombie = GetClientTeam(client) == CS_TEAM_T && IsPlayerAlive(client);
+    return iszombie;
 }
 
 public int nativeGetRandomZombieClass(Handle plugin, int numParams)
@@ -204,7 +169,7 @@ public void callZombieRightClick(int client, int zClass, int buttons)
 public int Native_ZMPlayer_Constructor(Handle plugin, int numParams)
 {
     int client = view_as<int>(GetNativeCell(1));
-    if ( IsValidClient( client ) ) {
+    if ( UTIL_IsValidClient( client ) ) {
         return view_as< int >( GetClientUserId( client ) );
     }
     return view_as< int >(-1);
@@ -259,7 +224,7 @@ public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)
     int team = GetNativeCell( 2 );
 
     g_iTeam[client] = team;
-    if (!IsValidClient(client))
+    if (!UTIL_IsValidClient(client))
         return;
     if (GetClientTeam(client) == team)
         return;
@@ -747,6 +712,10 @@ public int Native_ZombieAbility_NameGet(Handle plugin, int numParams)
 {
     int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
     int temp_ability[g_eZombieAbility];
+    if (ability_id < 0)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Bad ability index (%i)", ability_id);
+    }
     g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
     int bytes = 0;
     SetNativeString(2, temp_ability[abilityName], GetNativeCell(3), true, bytes);

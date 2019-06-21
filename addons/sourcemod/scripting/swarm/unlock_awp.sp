@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <gum>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -51,7 +52,7 @@ public void gumItemUnSetCallback(client)
 // Take the item/unlock from the player
 public void OnClientDisconnect(client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
@@ -64,7 +65,7 @@ public void eventWeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if (!IsValidAlive(client))
+    if (!UTIL_IsValidAlive(client))
         return;
         
     if (!itemEnabled[client])
@@ -102,10 +103,10 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     if (victim == attacker)
         return;
 
-    if (!IsValidAlive(attacker))
+    if (!UTIL_IsValidAlive(attacker))
         return;
         
-    if (!IsValidClient(victim))
+    if (!UTIL_IsValidClient(victim))
         return;
         
     if (GetClientTeam(victim) == GetClientTeam(attacker))
@@ -130,7 +131,7 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     
     targets[0] = victim;
 
-    if (IsValidAlive(target)) {
+    if (UTIL_IsValidAlive(target)) {
         GetClientAbsOrigin(target, targetLocation);
 
         float distanceBetween = GetVectorDistance ( victimLocation, targetLocation );
@@ -166,7 +167,7 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
                     targets[i+1] = lastTarget;
                 }
                 
-                if (IsValidAlive(nextTarget)) {
+                if (UTIL_IsValidAlive(nextTarget)) {
                     GetClientAbsOrigin(nextTarget, targetLocation);
                     
                     distanceBetween = GetVectorDistance ( victimLocation, targetLocation );
@@ -234,7 +235,7 @@ public int GetRandomClient(int client, int targets[CHAIN_LIGHTNING_JUMPS])
             }
         }
         
-        if (IsValidAlive(i) && GetClientTeam(i) == GetClientTeam(client) && i != client && i != inJump)
+        if (UTIL_IsValidAlive(i) && GetClientTeam(i) == GetClientTeam(client) && i != client && i != inJump)
         {
             GetClientAbsOrigin( i, targetOrigin );
             distanceBetween = GetVectorDistance ( targetOrigin, location );

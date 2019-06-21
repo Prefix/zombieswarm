@@ -109,8 +109,9 @@ public Action onSetTransmit(int entity, int client)
     if ( !UTIL_IsValidAlive(entity) || !UTIL_IsValidAlive(client) ) return Plugin_Continue;
     
     if (entity == client) return Plugin_Continue;
-    
-    if ( getTeam(entity) != getTeam(client) && getTeam(entity) == CS_TEAM_T && hasInvisibility[entity] )
+    int entityteam = GetClientTeam(entity);
+    int clientteam = GetClientTeam(client);
+    if ( entityteam != clientteam && ZS_IsClientZombie(client) && hasInvisibility[entity] )
         return Plugin_Handled; 
     
     return Plugin_Continue;

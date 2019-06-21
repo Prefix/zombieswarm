@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -76,14 +78,14 @@ public void OnPluginStart()
     cvarMenuReOpen = CreateConVar("gum_menu_reopen", "1", "Enable menu re-open ? 1 - Yes, 0 - No.");
     cvarMenuAutoReOpenTime = CreateConVar("gum_menu_reopen_auto", "120.0", ">0 - Amount of time that menu shall open, 0 - Don't reopen.");
     
-    cvarEnableTop10 = CreateConVar("gum_enable_top10", "1", "Enable !top10 ? 1 - Yes, 0 - No.")
+    cvarEnableTop10 = CreateConVar("gum_enable_top10", "1", "Enable !top10 ? 1 - Yes, 0 - No.");
     
     cvarMaxSecondary = CreateConVar("gum_max_secondary", "9", "Max pistols level we have.");
     
     ClientPrimaryCookie = RegClientCookie("GunXPClientPrimary", "Cookie to store client selections from GunXP Primary menu", CookieAccess_Private);
     ClientSecondaryCookie = RegClientCookie("GunXPSecondaryPrimary", "Cookie to store client selections from GunXP Secondary menu", CookieAccess_Private);
     
-    for (new i = MaxClients; i > 0; --i) {
+    for (int i = MaxClients; i > 0; --i) {
         if (!AreClientCookiesCached(i)) {
             continue;
         }
@@ -183,7 +185,7 @@ public void OnLibraryAdded(const char[] name)
         zmLoaded = true;
     #endif
 }
-public OnClientCookiesCached(client) {
+public void OnClientCookiesCached(int client) {
     char primaryValue[5], secondaryValue[5];
     
     GetClientCookie(client, ClientPrimaryCookie, primaryValue, sizeof(primaryValue));
@@ -281,7 +283,7 @@ public void OnClientDisconnect(int client)
     }
 }
 
-public SaveClientData(client) {
+public void SaveClientData(int client) {
     if ( IsClientInGame(client) )
     {
         if (!IsFakeClient(client)) {
@@ -329,7 +331,7 @@ public Action onWeaponCanUse(int client, int weapon)
     #endif
     
     #if defined _zombieswarm_included
-    if (zmLoaded && getTeam(client) == CS_TEAM_T) return Plugin_Continue;
+    if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Continue;
     #endif
 
     char sWeapon[32], arrWeaponString[32];
@@ -417,7 +419,7 @@ public Action sayCommand(int client, int args)
         CPrintToChat(client, "{blue}LEVEL {default}[{green}%d{default}]", playerLevel[client]);
         CPrintToChat(client, "{blue}UNLOCKS {default}[{green}%d {default}/ {green}%d{default}]", pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
         
-        return Plugin_Handled
+        return Plugin_Handled;
     }
     else if (( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
     {
@@ -440,7 +442,7 @@ public Action sayCommand(int client, int args)
         #endif
         
         #if defined _zombieswarm_included
-        if (zmLoaded && getTeam(client) == CS_TEAM_T) return Plugin_Handled;
+        if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Handled;
         #endif
         
         if (!GetConVarInt(cvarWeaponMenu))
@@ -458,7 +460,7 @@ public Action sayCommand(int client, int args)
     return Plugin_Continue;
 }
 
-public eventPlayerChangename(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerChangename(Event event, const char[] name, bool dontBroadcast)
 {
     char sNewName[32], sOldName[32];
     int client = GetClientOfUserId( GetEventInt(event,"userid") );
@@ -477,7 +479,7 @@ public eventPlayerChangename(Event event, const char[] name, bool dontBroadcast)
     }
 }
 
-public eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
     int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
     int victim   = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -508,7 +510,7 @@ stock bool IsClientVip(int client)
     return false;
 }
 
-public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     /* Reserved */
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -516,12 +518,12 @@ public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
         SaveClientData(client);
 }
 
-public eventRoundStart(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     restrictBuyzone();
 }
 
-public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -563,7 +565,7 @@ public Action mainMenu(Handle timer, any client)
     #endif
     
     #if defined _zombieswarm_included
-    if (zmLoaded && getTeam(client) == CS_TEAM_T) return Plugin_Stop;
+    if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Stop;
     #endif
     
     weaponSelected[client] = false;
@@ -605,7 +607,7 @@ public int WeaponMenuHandler(Menu menu, MenuAction action, int client, int item)
         #endif
         
         #if defined _zombieswarm_included
-        if (zmLoaded && getTeam(client) == CS_TEAM_T) return;
+        if (zmLoaded && ZS_IsClientZombie(client)) return;
         #endif
     
         switch (item)
@@ -635,12 +637,12 @@ public int WeaponMenuHandler(Menu menu, MenuAction action, int client, int item)
         delete menu;
     }
 }
-public secondaryWeaponMenu(client)
+public void secondaryWeaponMenu(int client)
 {
     Menu menu = new Menu(secondaryWeaponMenuHandler);
 
     char szMsg[60], szItems[60], arrWeaponString[32];
-    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]))
+    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
     
     menu.SetTitle(szMsg);
 
@@ -651,13 +653,13 @@ public secondaryWeaponMenu(client)
         {
             Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
 
-            menu.AddItem("selectionId", szItems)
+            menu.AddItem("selectionId", szItems);
         }
         else
         {
             Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
             
-            menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED)
+            menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED);
         }
     }
 
@@ -678,7 +680,7 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
         #endif
         
         #if defined _zombieswarm_included
-        if (zmLoaded && getTeam(client) == CS_TEAM_T) return;
+        if (zmLoaded && ZS_IsClientZombie(client)) return;
         #endif
     
         weaponSelected[client] = true;
@@ -701,12 +703,12 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
         delete menu;
     }
 }
-public primaryWeaponMenu(client)
+public void primaryWeaponMenu(int client)
 {
     Menu menu = new Menu(primaryWeaponMenuHandler);
 
     char szMsg[60], szItems[60], arrWeaponString[32];
-    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]))
+    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
     
     menu.SetTitle(szMsg);
 
@@ -717,13 +719,13 @@ public primaryWeaponMenu(client)
         {
             Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
 
-            menu.AddItem("selectionId", szItems)
+            menu.AddItem("selectionId", szItems);
         }
         else
         {
             Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
             
-            menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED)
+            menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED);
         }
     }
 
@@ -744,7 +746,7 @@ public int primaryWeaponMenuHandler(Menu menu, MenuAction action, int client, in
         #endif
         
         #if defined _zombieswarm_included
-        if (zmLoaded && getTeam(client) == CS_TEAM_T) return;
+        if (zmLoaded && ZS_IsClientZombie(client)) return;
         #endif
     
         rememberPrimary[client] = item + GetConVarInt(cvarMaxSecondary);
@@ -961,9 +963,9 @@ public void loadData(int client)
 
     Format( sQuery, sizeof( sQuery ), "SELECT `player_unlocks` FROM `gum` WHERE ( `player_id` = '%s' );", szKey );
     
-    conDatabase.Query( querySelectDataCallback, sQuery, client)
+    conDatabase.Query( querySelectDataCallback, sQuery, client);
 }
-public databaseConnectionCallback(Database db, const char[] error, any data)
+public void databaseConnectionCallback(Database db, const char[] error, any data)
 {
     if ( db == null )
     {
@@ -1001,7 +1003,7 @@ public databaseConnectionCallback(Database db, const char[] error, any data)
     
     conDatabase.Query( QueryCreateTable, sQuery);
 }
-public QueryCreateTable(Database db, DBResultSet results, const char[] error, any data)
+public void QueryCreateTable(Database db, DBResultSet results, const char[] error, any data)
 { 
     if ( db == null )
     {
@@ -1010,7 +1012,7 @@ public QueryCreateTable(Database db, DBResultSet results, const char[] error, an
         return;
     } 
 }
-public querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
+public void querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
 { 
     if ( db == null )
     {
@@ -1019,7 +1021,7 @@ public querySetDataCallback(Database db, DBResultSet results, const char[] error
         return;
     } 
 } 
-public querySelectSavedDataCallback(Database db, DBResultSet results, const char[] error, DataPack pack)
+public void querySelectSavedDataCallback(Database db, DBResultSet results, const char[] error, DataPack pack)
 { 
     if ( db != null )
     {
@@ -1054,7 +1056,7 @@ public querySelectSavedDataCallback(Database db, DBResultSet results, const char
         return;
     }
 }
-public querySelectDataCallback(Database db, DBResultSet results, const char[] error, any client)
+public void querySelectDataCallback(Database db, DBResultSet results, const char[] error, any client)
 { 
     if (error[0] != EOS) {
         LogError( "Server misfunctioning come back later: %s", error );
@@ -1085,7 +1087,7 @@ public querySelectDataCallback(Database db, DBResultSet results, const char[] er
         return;
     }
 }
-public queryShowTopTableCallback(Database db, DBResultSet results, const char[] error, any client)
+public void queryShowTopTableCallback(Database db, DBResultSet results, const char[] error, any client)
 { 
     if ( db != null )
     {

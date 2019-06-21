@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <cstrike>
 #include <gum>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -31,7 +32,7 @@ public void gumItemSetCallback(client)
 {
     itemEnabled[client] = true;
     
-    if (!IsValidAlive(client))
+    if (!UTIL_IsValidAlive(client))
         return;
     if (GetClientTeam(client) == CS_TEAM_T)
         return;
@@ -51,7 +52,7 @@ public void gumItemUnSetCallback(client)
 // Take the item/unlock from the player
 public void OnClientDisconnect(client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
@@ -59,7 +60,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
         
     if ( !itemEnabled[client] )
@@ -75,7 +76,7 @@ public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 public Action TGiveGrenades(Handle timer, any client)
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return Plugin_Stop;
         
     if ( !itemEnabled[client] )

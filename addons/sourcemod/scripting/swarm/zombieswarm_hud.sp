@@ -2,6 +2,7 @@
 #include <gum>
 #include <sdktools>
 #include <zombieswarm>
+#include <swarm/utils>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -178,7 +179,7 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
 }
 
 void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
-    if(!IsValidClient(client)) return;
+    if(!UTIL_IsValidClient(client)) return;
     char temp_string[256];
     ZMPlayer player = ZMPlayer(client);
     FormatEx(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
@@ -193,6 +194,10 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
             if (abilities[i] < 0) {
                 continue;
             }
+            int ability_index = player.GetAbilityByID(abilities[i]);
+            if (ability_index < 0)
+                continue;
+
             PlayerAbility ability = view_as<PlayerAbility>(abilities[i]);
             char sState[32];
             if (ability.State == stateIdle) {

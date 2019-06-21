@@ -401,8 +401,13 @@ public Action furyEffectCallback(Handle timer, any client)
 {
     timerFuryEffect[client] = null;
     
-    if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client) ) {
-    //if ( !UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T ) {
+    if ( !UTIL_IsValidAlive(client) || !ZS_IsClientZombie(client) ) {
+        return Plugin_Continue;
+    }
+    
+    ZMPlayer player = ZMPlayer(client);
+
+    if (player.Ghost) {
         return Plugin_Continue;
     }
     

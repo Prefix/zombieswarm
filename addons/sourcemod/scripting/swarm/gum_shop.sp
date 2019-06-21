@@ -1,8 +1,10 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <gum>
 #include <colorvariables>
-
+#include <swarm/utils>
 #define PLUGIN_VERSION "1.0"
 
 #define MENU_DISPLAY_TIME 30
@@ -45,9 +47,9 @@ public void OnPluginStart()
     RegConsoleCmd("say", sayCommand);
 }
 
-public void OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
     {
         for(int i = 0; i < MAX_UNLOCKS; i++) 
         {
@@ -59,7 +61,7 @@ public void OnClientPutInServer(client)
 
 public Action sayCommand(int client, int args)
 {
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
         return Plugin_Continue;
     
     char text[192];
@@ -81,7 +83,7 @@ public Action sayCommand(int client, int args)
     return Plugin_Continue;
 }
 
-public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
     int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
@@ -92,7 +94,7 @@ public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     if (victim == attacker)
         return;
     
-    if ( !IsValidAlive(attacker) )
+    if ( !UTIL_IsValidAlive(attacker) )
         return;
         
     if (GetRandomInt(0, GetConVarInt(cvarItemDropMaxRate)) > GetConVarInt(cvarItemDropRate))
@@ -106,25 +108,24 @@ public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     hookItemSet(attacker, itemId, true);
 }
 
-public eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     for (int client = 1; client <= MaxClients; client++) 
     { 
-        if (IsValidClient(client) )
+        if (!UTIL_IsValidClient(client) )
+            continue;
+        for (int itemId = 0; itemId < numItems; itemId++)
         {
-            for (int itemId = 0; itemId < numItems; itemId++)
-            {
-                if (uItemRebuy[itemId] == 2) {
-                    playerItems[client][itemId] = false;
-                    
-                    hookItemUnSetCallback(client, itemId);
-                }
+            if (uItemRebuy[itemId] == 2) {
+                playerItems[client][itemId] = false;
+                
+                hookItemUnSetCallback(client, itemId);
             }
         }
     } 
 }
 
-public mainUnlocksMenu(int client)
+public void mainUnlocksMenu(int client)
 {
     char sMsg[64];
     char sItems[64];
@@ -201,7 +202,7 @@ public int unlocksMenuCallback(Handle menu, MenuAction action, int client, int i
     }
 }
 
-public hookItemSet(int client, int itemId, bool itemDrop)
+public void hookItemSet(int client, int itemId, bool itemDrop)
 {
     hookItemSetCallback(client, itemId);
     
@@ -229,7 +230,7 @@ public hookItemSet(int client, int itemId, bool itemDrop)
     }
 }
 
-public hookItemSetCallback(int client, int itemId)
+public void hookItemSetCallback(int client, int itemId)
 {
     Handle pluginId = uItemId[itemId];
     if (pluginId == INVALID_HANDLE) {
@@ -247,7 +248,7 @@ public hookItemSetCallback(int client, int itemId)
     Call_PushCell( client );
     Call_Finish();
 }
-public hookItemUnSetCallback(int client, int itemId)
+public void hookItemUnSetCallback(int client, int itemId)
 {
     Handle pluginId = uItemId[itemId];
     if (pluginId == INVALID_HANDLE) {

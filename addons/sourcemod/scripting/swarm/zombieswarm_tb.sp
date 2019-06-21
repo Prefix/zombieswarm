@@ -260,7 +260,7 @@ void SwapTeam()
         int team = ZClient.Team;
         if (team == CS_TEAM_CT || team == CS_TEAM_T) {
             int rteam = GetOppositeTeam(client, team);
-            setTeam(client, rteam);
+            ZClient.Team = rteam;
         } else {
             if(GetCountOfCustom() > GetCountOfCustom(true)) {
                 ZClient.Team = CS_TEAM_T;
@@ -279,7 +279,7 @@ void ReturnEveryone()
             continue;
 
         ZMPlayer ZClient = ZMPlayer(client);
-        int team = getTeam(client, true);
+        int team = ZClient.Team;
         ZClient.Team = team;
     }
 }

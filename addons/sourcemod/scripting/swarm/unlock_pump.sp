@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <gum>
+#include <swarm/utils>
 
 #define AirMultiplier 0.5
 #define KnockBack 4.0
@@ -49,7 +50,7 @@ public void gumItemUnSetCallback(client)
 // Take the item/unlock from the player
 public void OnClientDisconnect(client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
@@ -61,10 +62,10 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     if (victim == attacker)
         return;
 
-    if (!IsValidAlive(attacker))
+    if (!UTIL_IsValidAlive(attacker))
         return;
         
-    if (!IsValidAlive(victim))
+    if (!UTIL_IsValidAlive(victim))
         return;
         
     if (GetClientTeam(victim) == GetClientTeam(attacker))

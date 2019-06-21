@@ -979,7 +979,7 @@ public Action cooldownCallback(Handle timer, DataPack pack) {
     int client = pack.ReadCell();
     float end = pack.ReadFloat();
         
-    if (!UTIL_IsValidAlive(client) || getTeam(client) != CS_TEAM_T || isGhost(client)) {
+    if (!UTIL_IsValidAlive(client) || GetClientTeam(client) != CS_TEAM_T || g_bGhost[client]) {
         return Plugin_Stop;
     }
     else {

@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <cstrike>
 #include <gum>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -29,7 +30,7 @@ public void gumItemSetCallback(client)
 {
     itemEnabled[client] = true;
     
-    if (!IsValidAlive(client))
+    if (!UTIL_IsValidAlive(client))
         return;
         
     setReserveAmmo(client, 100);
@@ -44,7 +45,7 @@ public void gumItemUnSetCallback(client)
 // Take the item/unlock from the player
 public void OnClientDisconnect(client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 

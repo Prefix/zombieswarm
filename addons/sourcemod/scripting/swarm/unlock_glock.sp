@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <gum>
+#include <swarm/utils>
 
 public Plugin myinfo =
 {
@@ -44,13 +45,13 @@ public void gumItemUnSetCallback(client)
 // Take the item/unlock from the player
 public void OnClientDisconnect(client)
 {
-    if ( IsValidClient(client) )
+    if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
 public OnClientPutInServer(client)
 {
-    if ( IsValidClient(client) && !IsFakeClient(client) )
+    if ( UTIL_IsValidClient(client) && !IsFakeClient(client) )
         SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 }
 
@@ -59,10 +60,10 @@ public Action OnTraceAttack(int victim, int &attacker, int &inflictor, float &da
     if (victim == attacker)
         return Plugin_Continue;
 
-    if (!IsValidAlive(attacker))
+    if (!UTIL_IsValidAlive(attacker))
         return Plugin_Continue;
         
-    if (!IsValidClient(victim))
+    if (!UTIL_IsValidClient(victim))
         return Plugin_Continue;
         
     if (GetClientTeam(victim) == GetClientTeam(attacker))
