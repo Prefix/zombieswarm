@@ -1109,7 +1109,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     if (ability_index < 0) {
         return Plugin_Stop;
     }
-    abilityState state = g_aPlayerAbility.Get(ability_id, paState);
+    abilityState state = g_aPlayerAbility.Get(ability_index, paState);
     if (state != stateRunning) {
         return Plugin_Stop;
     }
