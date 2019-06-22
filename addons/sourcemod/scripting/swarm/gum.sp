@@ -1018,6 +1018,7 @@ public void databaseConnectionCallback(Database db, const char[] error, any data
     }
     
     conDatabase = db;
+    conDatabase.SetCharset("utf8mb4");
     
     char sQuery[512], driverName[16];
     conDatabase.Driver.GetIdentifier(driverName, sizeof(driverName));
@@ -1030,7 +1031,7 @@ public void databaseConnectionCallback(Database db, const char[] error, any data
         `player_level` int default NULL, \
         `player_unlocks` int default NULL, \
         `purchased` int NOT NULL default 0, \
-        PRIMARY KEY (`id`), UNIQUE KEY `player_id` (`player_id`) );" );
+        PRIMARY KEY (`id`), UNIQUE KEY `player_id` (`player_id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;" );
     }
     else
     {
