@@ -20,17 +20,17 @@ public Plugin myinfo =
 };
 
 ZombieClass registeredClass;
-ZombieAbility abilityExplode;
+ZombieAbility abilityVomit;
 
 int fireSprite;
 int haloSprite;
 int explosionSprite;
 
 #define ABILITY_UNIQUE_EXPLODE "boomer_explosion"
-#define ABILITY_NAME "Explosion"
-#define ABILITY_DESCRIPTION "Explodes on death"
+#define ABILITY_NAME "Vomit"
+#define ABILITY_DESCRIPTION "Vomit humans"
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration;
 
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
@@ -42,6 +42,8 @@ public void OnPluginStart() {
     zExcluded = CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
     zExplodeDamage = CreateConVar("zs_boomer_explode_damage","30.0","Zombie Boomer damage done then he explode");
     zRadius = CreateConVar("zs_boomer_radius","250.0","Explosion radius");
+    zCooldown = CreateConVar("zs_boomer_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = CreateConVar("zs_boomer_duration","2.0","How long in second Boomer using his ability");
     
     AutoExecConfig(true, "zombie.boomer", "sourcemod/zombieswarm");
 }
@@ -58,9 +60,12 @@ public void ZS_OnLoaded() {
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
 
-    abilityExplode = ZombieAbility(registeredClass, ABILITY_UNIQUE_EXPLODE);
-    abilityExplode.SetName(ABILITY_NAME, MAX_ABILITY_NAME_SIZE);
-    abilityExplode.SetDesc(ABILITY_DESCRIPTION, MAX_ABILITY_DESC_SIZE);
+    abilityVomit = ZombieAbility(registeredClass, ABILITY_UNIQUE_EXPLODE);
+    abilityVomit.SetName(ABILITY_NAME, MAX_ABILITY_NAME_SIZE);
+    abilityVomit.SetDesc(ABILITY_DESCRIPTION, MAX_ABILITY_DESC_SIZE);
+    abilityVomit.Duration = zDuration.FloatValue;
+    abilityVomit.Cooldown = zCooldown.FloatValue;
+    abilityVomit.Buttons = IN_USE;
     // TODO ADD properties for explosion. Range, Damage etc.
 }
 
@@ -77,6 +82,8 @@ public void OnMapStart()
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
     PrecacheSound( "ambient/explosions/explode_8.mp3" );
     AddFileToDownloadsTable( "sound/ambient/explosions/explode_8.mp3" );
+    PrecacheSound( "swarm/vomiting.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/vomiting.mp3" );
 }
 
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -152,4 +159,85 @@ public void explode2(float vec[3])
 public void boomSound(const char[] sound, const float origin[3])
 {
     EmitSoundToAll(sound, SOUND_FROM_WORLD,SNDCHAN_AUTO,SNDLEVEL_NORMAL,SND_NOFLAGS,SNDVOL_NORMAL,SNDPITCH_NORMAL,-1,origin,NULL_VECTOR,true,0.0);
+}
+
+public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
+
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
+    if (ability.State != stateIdle)
+        return;
+
+    ability.AbilityStarted();  
+}
+
+ public void ZS_OnAbilityStarted(int client, int ability_id) {
+    if ( !UTIL_IsValidAlive(client) )
+        return;
+
+    ZMPlayer player = ZMPlayer(client);
+    
+    if ( player.Ghost )
+        return;
+        
+    if ( player.Team != CS_TEAM_T)
+        return;
+        
+    if ( player.ZombieClass != registeredClass.ID )
+        return;
+
+    if ( ability_id < 0)
+        return;
+        
+    int ability_index = player.GetAbilityByID(ability_id);
+
+    if (ability_index < 0)
+        return;
+
+    PlayerAbility ability = view_as<PlayerAbility>(ability_id);
+    if (ability.State != stateRunning)
+        return;     
+    
+    float location[3];
+    GetClientAbsOrigin(client, location);
+    
+    float targetOrigin[3], distanceBetween;
+    for(int enemy = 1; enemy <= MaxClients; enemy++) 
+    {
+        ZMPlayer enemyplayer = ZMPlayer(client);
+        if (!UTIL_IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
+            continue;
+
+        GetClientAbsOrigin ( enemy, targetOrigin );
+        distanceBetween = GetVectorDistance ( targetOrigin, location );
+        
+        if (( distanceBetween <= zRadius.FloatValue)) {
+            
+            UTIL_Fade(enemy, zDuration.IntValue, 10, {0, 133, 33, 210});
+            UTIL_ShakeScreen(enemy);
+        }
+    }
+    GetClientAbsOrigin(client, location);
+    boomSound("swarm/vomiting.mp3", location);
 }
