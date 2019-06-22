@@ -316,7 +316,7 @@ public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)
         if (temp_ability[paClient] != client)
             continue;
         if (StrEqual(temp_ability[paUniqueName], lookupfor, false)) {
-            found = i;
+            found = temp_ability[paID];
             break;
         }
     }

@@ -545,7 +545,7 @@ public void ClearPlayerAbilities(int client) {
 
 public void onPostThinkPost(int client)
 {
-    if(g_bGhost[client]) {
+    if(g_bGhost[client] && GetClientTeam(client) == CS_TEAM_T) {
         SetEntData(client, g_iCollisionOffset, 2, 1, true);
     } else {
         SetEntData(client, g_iCollisionOffset, 5, 4, true);
@@ -791,12 +791,6 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     g_bOverrideHint[client] = false;
 
     g_iZombieRespawnLeft[client] = 0;
-    
-    SetEntData(client, g_iCollisionOffset, 2, 1, true);
-    
-    if (GetClientTeam(client) == CS_TEAM_CT) {
-        setZombieGhostMode(client, false);
-    }
 
     if (GetClientTeam(client) == CS_TEAM_T) {
         
@@ -824,6 +818,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         
     } else if (GetClientTeam(client) == CS_TEAM_CT) {
         SetEntityGravity(client, g_cHumanGravity.FloatValue); 
+        g_bGhost[client] = false;
     }
     // Hide RADAR
     CreateTimer(0.0, RemoveRadar, client);

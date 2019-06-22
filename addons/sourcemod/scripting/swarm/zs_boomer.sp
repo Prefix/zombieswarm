@@ -37,7 +37,7 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCool
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
     
-    zHP = CreateConVar("zs_boomer_hp", "105", "Zombie Boomer HP");
+    zHP = CreateConVar("zs_boomer_hp", "125", "Zombie Boomer HP");
     zDamage = CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
     zSpeed = CreateConVar("zs_boomer_speed","1.1","Zombie Boomer speed");
     zGravity = CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");

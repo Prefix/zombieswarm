@@ -44,7 +44,7 @@ public void OnPluginStart()
     HookEvent("round_start", eventRoundStart); 
     HookEvent("round_end", eventRoundEnd);
     
-    zHP = CreateConVar("zs_tank_hp", "135", "Zombie Tank HP");
+    zHP = CreateConVar("zs_tank_hp", "160", "Zombie Tank HP");
     zDamage = CreateConVar("zs_tank_damage","30.0","Zombie Tank done damage");
     zSpeed = CreateConVar("zs_tank_speed","1.15","Zombie Tank speed");
     zGravity = CreateConVar("zs_tank_gravity","0.8","Zombie Tank gravity");

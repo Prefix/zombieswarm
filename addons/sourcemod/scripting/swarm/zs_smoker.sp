@@ -8,6 +8,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME ZS_PLUGIN_NAME ... " - Zombie Class: Smoker"
+#define ABILITY_UNIQUE "smoker_pull"
 
 public Plugin myinfo =
 {
@@ -36,7 +37,7 @@ public void OnPluginStart() {
     HookEvent("round_start", eventRoundStart, EventHookMode_Pre);
     HookEvent("round_end", eventRoundEnd);
     
-    zHP = CreateConVar("zs_smoker_hp", "80", "Zombie Smoker HP");
+    zHP = CreateConVar("zs_smoker_hp", "110", "Zombie Smoker HP");
     zDamage = CreateConVar("zs_smoker_damage","15.0","Zombie Smoker done damage");
     zSpeed = CreateConVar("zs_smoker_speed","1.0","Zombie Smoker speed");
     zGravity = CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
@@ -58,7 +59,7 @@ public void ZS_OnLoaded() {
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
     //
-    abilityPull = ZombieAbility(registeredClass, "smoker_pull");
+    abilityPull = ZombieAbility(registeredClass, ABILITY_UNIQUE);
     abilityPull.Duration = zDuration.FloatValue;
     abilityPull.Cooldown = zCooldown.FloatValue;
     abilityPull.Buttons = IN_USE;
@@ -220,7 +221,13 @@ public Action BeamTimer(Handle timer, any client)
     
     if (!UTIL_IsClientInTargetView(client, target)) {
         pullTarget[client] = 0;
-        
+        ZMPlayer player = ZMPlayer(client);
+        int ability_id = player.GetAbilityByUnique(ABILITY_UNIQUE);
+        int ability_index = player.GetAbilityByID(ability_id);
+        if (ability_index > -1 && ability_id > -1) {
+            PlayerAbility playerab = view_as<PlayerAbility>(ability_id);
+            playerab.AbilityFinished();
+        } 
         return Plugin_Handled;
     }
 

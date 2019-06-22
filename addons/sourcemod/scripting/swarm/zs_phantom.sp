@@ -32,7 +32,7 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zInvisibility;
 public void OnPluginStart() {                 
     HookEvent("player_spawn", eventPlayerSpawn);
     
-    zHP = CreateConVar("zs_phantom_hp", "80", "Zombie Phantom HP");
+    zHP = CreateConVar("zs_phantom_hp", "100", "Zombie Phantom HP");
     zDamage = CreateConVar("zs_phantom_damage","15.0","Zombie Phantom done damage");
     zSpeed = CreateConVar("zs_phantom_speed","1.2","Zombie Phantom speed");
     zGravity = CreateConVar("zs_phantom_gravity","0.8","Zombie Phantom gravity");

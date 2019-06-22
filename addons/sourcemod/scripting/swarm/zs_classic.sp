@@ -22,7 +22,7 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded;
 
 public void OnPluginStart() {                 
     
-    zHP = CreateConVar("zs_classic_hp", "120", "Zombie Classic HP");
+    zHP = CreateConVar("zs_classic_hp", "135", "Zombie Classic HP");
     zDamage = CreateConVar("zs_classic_damage","25.0","Zombie Classic done damage");
     zSpeed = CreateConVar("zs_classic_speed","1.0","Zombie Classic speed");
     zGravity = CreateConVar("zs_classic_gravity","0.8","Zombie Classic gravity");
