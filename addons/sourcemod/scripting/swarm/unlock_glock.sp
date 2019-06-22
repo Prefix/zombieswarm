@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <cstrike>
 #include <sdktools>
@@ -31,25 +33,25 @@ public void OnPluginStart()
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemSetCallback(client)
+public void gumItemSetCallback(int client)
 {
     itemEnabled[client] = true;
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(client)
+public void gumItemUnSetCallback(int client)
 {
     itemEnabled[client] = false;
 }
 
 // Take the item/unlock from the player
-public void OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
     if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
     if ( UTIL_IsValidClient(client) && !IsFakeClient(client) )
         SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);

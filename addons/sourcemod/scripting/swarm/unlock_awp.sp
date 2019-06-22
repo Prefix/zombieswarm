@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <cstrike>
 #include <sdktools>
@@ -38,19 +40,19 @@ public void OnPluginStart()
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemSetCallback(client)
+public void gumItemSetCallback(int client)
 {
     itemEnabled[client] = true;
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(client)
+public void gumItemUnSetCallback(int client)
 {
     itemEnabled[client] = false;
 }
 
 // Take the item/unlock from the player
-public void OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
     if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
@@ -255,7 +257,7 @@ public int GetRandomClient(int client, int targets[CHAIN_LIGHTNING_JUMPS])
     return -1;
 }
 
-stock fadePlayer(int client, int duration = 5, int time = 6, color[4] = {0, 0, 0, 255} )
+stock void fadePlayer(int client, int duration = 5, int time = 6, color[4] = {0, 0, 0, 255} )
 {
     Handle message = StartMessageOne("Fade", client, USERMSG_RELIABLE);
     PbSetInt(message, "duration", duration*300);

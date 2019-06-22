@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -36,19 +38,19 @@ public void OnPluginStart()
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemSetCallback(client)
+public void gumItemSetCallback(int client)
 {
     itemEnabled[client] = true;
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(client)
+public void gumItemUnSetCallback(int client)
 {
     itemEnabled[client] = false;
 }
 
 // Take the item/unlock from the player
-public void OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
     if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
@@ -89,7 +91,7 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     GetClientEyePosition(attacker, attackerloc);
     
     // Get attackers eye angles.
-    new Float:attackerang[3];
+    float attackerang[3];
     GetClientEyeAngles(attacker, attackerang);
     
     // Calculate knockback end-vector.
@@ -105,7 +107,7 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     KnockbackSetVelocity(victim, attackerloc, clientloc, knockback);
 }
 
-stock KnockbackSetVelocity(client, const Float:startpoint[3], const Float:endpoint[3], Float:magnitude)
+stock void KnockbackSetVelocity(int client, const float startpoint[3], const float endpoint[3], float magnitude)
 {
     // Create vector from the given starting and ending points.
     float vector[3];
@@ -133,7 +135,7 @@ public bool KnockbackTRFilter(int entity, int contentsMask)
     // Allow hit.
     return true;
 }
-stock ToolsClientVelocity(int client, float vecVelocity[3], bool apply = true, bool stack = true)
+stock void ToolsClientVelocity(int client, float vecVelocity[3], bool apply = true, bool stack = true)
 {
     // If retrieve if true, then get client's velocity.
     if (!apply)
@@ -152,10 +154,10 @@ stock ToolsClientVelocity(int client, float vecVelocity[3], bool apply = true, b
     if (stack)
     {
         // Get client's velocity.
-        new Float:vecClientVelocity[3];
+        float vecClientVelocity[3];
         
         // x = vector component.
-        for (new x = 0; x < 3; x++)
+        for (int x = 0; x < 3; x++)
         {
             vecClientVelocity[x] = GetEntDataFloat(client, g_iToolsVelocity + (x*4));
         }

@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
@@ -26,7 +28,7 @@ public void OnPluginStart()
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemSetCallback(client)
+public void gumItemSetCallback(int client)
 {
     itemEnabled[client] = true;
     
@@ -37,19 +39,19 @@ public void gumItemSetCallback(client)
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(client)
+public void gumItemUnSetCallback(int client)
 {
     itemEnabled[client] = false;
 }
 
 // Take the item/unlock from the player
-public void OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
     if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
-stock void setReserveAmmo(client, ammo)
+stock void setReserveAmmo(int client, int ammo)
 {
     int primary = GetPlayerWeaponSlot( client, CS_SLOT_PRIMARY ); 
     int secondary = GetPlayerWeaponSlot( client, CS_SLOT_SECONDARY ); 

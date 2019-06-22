@@ -360,12 +360,13 @@ public void OnMapStart()
     }
 }
 public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char[] sample, int &entity, int &iChannel, float &flVolume, int &iLevel, int &iPitch, int &iFlags) {
+   
     if (entity && entity <= MaxClients && (StrContains(sample, "physics") != -1 || StrContains(sample, "footsteps") != -1)) {
-        if (IsClientInGame(entity) && g_bGhost[entity]){
-            return Plugin_Handled;
+        if (UTIL_IsValidAlive(entity) && g_bGhost[entity]){
+            return Plugin_Stop;
         }
     }
-
+    
     return Plugin_Continue;
 }
 void CreateFog() {

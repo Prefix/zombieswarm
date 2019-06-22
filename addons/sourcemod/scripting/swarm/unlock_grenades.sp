@@ -1,3 +1,5 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
@@ -28,7 +30,7 @@ public void OnPluginStart()
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemSetCallback(client)
+public void gumItemSetCallback(int client)
 {
     itemEnabled[client] = true;
     
@@ -44,19 +46,19 @@ public void gumItemSetCallback(client)
 }
 
 // Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(client)
+public void gumItemUnSetCallback(int client)
 {
     itemEnabled[client] = false;
 }
 
 // Take the item/unlock from the player
-public void OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
     if ( UTIL_IsValidClient(client) )
         itemEnabled[client] = false;
 }
 
-public eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
