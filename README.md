@@ -13,10 +13,10 @@ There is optional flag mod, where you capture the flag and trying to protect it 
 ## Zombies
 
 Zombie swarm has currently these classes:
-* Boomer – Explodes after death, makes some damage also blinds nearby humans.
+* Boomer – Explodes after death, makes some damage also blinds nearby humans. Also has ability to Vomit enemies which makes them blinded.
 * Classical zombie – No special abilities
 * Fury (Tank) – Spawns after some time, this zombie is key to victory.
-* Hunter –This zombie can make really crazy jumps
+* Hunter – This zombie can make really crazy jumps
 * Phantom – Possibility to make himself full invisible
 * Smoker – Can drag person with his tongue. Makes smoke effect after death.
 
