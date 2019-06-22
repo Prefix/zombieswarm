@@ -180,21 +180,21 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
 
 void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if(!UTIL_IsValidClient(client)) return;
-    char temp_string[256];
+    char temp_string[512];
     ZMPlayer player = ZMPlayer(client);
     char rank_name[32];
     int bytes = GUM_GetRankName(client, rank_name);
-    FormatEx(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
-    FormatEx(temp_string, sizeof(temp_string), "%s  Level: [ %i / %i ]\n", temp_string, GUM_GetPlayerLevel(client), GUM_GetMaxLevel());
-    FormatEx(temp_string, sizeof(temp_string), "%s  XP: [ %i / %i ]\n", temp_string, GUM_GetPlayerUnlocks(client), GUM_GetUnlocksToLevel(client));
+    Format(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
+    Format(temp_string, sizeof(temp_string), "%s  Level: [ %i / %i ]\n", temp_string, GUM_GetPlayerLevel(client), GUM_GetMaxLevel());
+    Format(temp_string, sizeof(temp_string), "%s  XP: [ %i / %i ]\n", temp_string, GUM_GetPlayerUnlocks(client), GUM_GetUnlocksToLevel(client));
     if (bytes > 0) {
-        FormatEx(temp_string, sizeof(temp_string), "%s  Rank: [ %s ]\n", temp_string, rank_name);
+        Format(temp_string, sizeof(temp_string), "%s  Rank: [ %s ]\n \n", temp_string, rank_name);
     }
     int abilities[API_MAX_PLAYER_ABILITIES];
     int found = 0;
     bool havefound = player.GetPlayerAbilities(abilities, found);
     if (havefound) {
-        FormatEx(temp_string, sizeof(temp_string), "%s\nAbilities\n",temp_string);
+        Format(temp_string, sizeof(temp_string), "%sAbilities\n\n",temp_string);
         for (int i = 0; i < found; i++) {
             if (abilities[i] < 0) {
                 continue;
@@ -207,16 +207,27 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
             char sState[32];
             if (ability.State == stateIdle) {
                 Format(sState, sizeof(sState), "Ready to use");
+                char buttons[64];
+                UTIL_DEBUG_PrintButtons(ability.Buttons, buttons);
+                char name[MAX_ABILITY_NAME_SIZE];
+                ability.GetName(name, sizeof(name));
+                Format(temp_string, sizeof(temp_string), "\n%sName: %s\nState: %s\nClick ( %s ) to activate\n",temp_string, name, sState, buttons);
             } else if (ability.State == stateRunning) {
                 Format(sState, sizeof(sState), "Activated");
+                char name[MAX_ABILITY_NAME_SIZE];
+                ability.GetName(name, sizeof(name));
+                Format(temp_string, sizeof(temp_string), "\n%sName: %s\nState: %s\nTime until cooldown: %.1f\n",temp_string, name, sState, ability.CurrentDuration);
             } else if (ability.State == stateCooldown) {
                 Format(sState, sizeof(sState), "On cooldown");
+                char name[MAX_ABILITY_NAME_SIZE];
+                ability.GetName(name, sizeof(name));
+                Format(temp_string, sizeof(temp_string), "\n%sName: %s\nState: %s\nTime until ready: %.1f\n",temp_string, name, sState, ability.CurrentCooldown);
             } else if (ability.State == stateDisabled) {
                 Format(sState, sizeof(sState), "Disabled");
+                char name[MAX_ABILITY_NAME_SIZE];
+                ability.GetName(name, sizeof(name));
+                Format(temp_string, sizeof(temp_string), "\n%sName: %s\nState: %s\n",temp_string, name);
             }
-            char name[MAX_ABILITY_NAME_SIZE];
-            ability.GetName(name, sizeof(name));
-            FormatEx(temp_string, sizeof(temp_string), "%sName: %s\nState:%s\nCur CD:%.1f Duration: %.1f\n\n",temp_string, name, sState, ability.CurrentCooldown, ability.CurrentDuration);
         }
     }
     strcopy(str, maxlength, temp_string);
@@ -239,4 +250,71 @@ void KillHudHintTimer(int client)
         delete g_hHudSync[client];
         g_hHudSync[client] = null;
     }
+}
+
+stock void UTIL_DEBUG_PrintButtons(int buttons, char[] message) {
+    int found = 0;
+    char button_text[128];
+    if (buttons & IN_ATTACK) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sMOUSE 1", button_text);
+    } if (buttons & IN_JUMP) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sJUMP", button_text);
+    } if (buttons & IN_DUCK) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sDUCK", button_text);
+    } if (buttons & IN_FORWARD) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sW", button_text);
+    } if (buttons & IN_BACK) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sS", button_text);
+    } if (buttons & IN_USE) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sE", button_text);
+    } if (buttons & IN_MOVELEFT) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sA", button_text);
+    } if (buttons & IN_MOVERIGHT) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sD", button_text);
+    } if (buttons & IN_ATTACK2) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sRIGHT MOUSE", button_text);
+    } if (buttons & IN_RELOAD) {
+        if (found > 0) {
+            Format(button_text, sizeof(button_text), "%s + ", button_text);
+            found++;
+        }
+        Format(button_text, sizeof(button_text), "%sR", button_text);
+    }
+    Format(message, 128, "%s", button_text);
 }
