@@ -909,12 +909,12 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             char overlay[125];
             
             if(winner == CS_TEAM_T) {
-                int randomSound = GetRandomInt(0, sizeof(g_ZombieWinSounds)-1);
+                int randomSound = GetRandomInt(0, g_iTotalZombieWinSounds);
                 g_cOverlayTWin.GetString(overlay,sizeof(overlay));
                 
                 UTIL_PlayClientCommandSound(client, g_ZombieWinSounds[randomSound]);
             } else if(winner == CS_TEAM_CT) {
-                int randomSound = GetRandomInt(0, sizeof(g_HumanWinSounds)-1);
+                int randomSound = GetRandomInt(0, g_iTotalHumanWinSounds);
                 g_cOverlayCTWin.GetString(overlay,sizeof(overlay));
                 
                 UTIL_PlayClientCommandSound(client, g_HumanWinSounds[randomSound]);
@@ -1423,8 +1423,8 @@ public Action CountDown(Handle timer) {
     for (int client = 1; client <= MaxClients; client++) {
         if (!UTIL_IsValidClient(client))
             continue;
-        if(GetClientTeam(client) != CS_TEAM_T)
-            continue;
+        /*if(GetClientTeam(client) != CS_TEAM_T)
+            continue;*/
         
         Util_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)]);
     }
