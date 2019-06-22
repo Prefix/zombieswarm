@@ -168,10 +168,32 @@ enum abilityState {
     stateDisabled
 }
 
-methodmap PlayerAbility < ZombieAbility {
+methodmap PlayerAbility  {
     // Constructor
     public native PlayerAbility(int client, const char[] unique);
     // Properties
+    property int ZombieClass {
+        public native get();
+    }
+    property int ID {
+        public native get();
+    }
+    property bool Excluded {
+        public native get();
+        public native set(const bool val);
+    }
+    property float Duration {
+        public native get();
+        public native set(const float val);
+    }
+    property float Cooldown {
+        public native get();
+        public native set(const float val);
+    }
+    property int Buttons {
+        public native get();
+        public native set(const int val);
+    }
     property int Client {
         public native get();
     }
@@ -188,6 +210,11 @@ methodmap PlayerAbility < ZombieAbility {
         public native set(const float val);
     }
     // Methods
+    public native void GetName(char[] text, int size);
+    public native void SetName(const char[] text, int size);
+    public native void GetDesc(char[] text, int size);
+    public native void SetDesc(const char[] text, int size);
+    public native void GetUnique(char[] text, int size);
     public native void AbilityFinished();
     public native void AbilityStarted();
     public native void AbilityStartedNoDuration();
