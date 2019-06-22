@@ -6,18 +6,18 @@
 #define DISTANCE_BEFORE 3000.0
 
 stock void UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
-	Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
-	
-	if(Fade != null) {
-		// Write shake information to message handle
-		Fade.SetInt("duration", RoundToNearest(duration * 1000.0)); 
-		Fade.SetInt("hold_time", RoundToNearest(hold * 1000.0)); 
-		Fade.SetInt("flags", 0x0009); 
-		Fade.SetColor("clr", color); 
+    Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
+    
+    if(Fade != null) {
+        // Write shake information to message handle
+        Fade.SetInt("duration", RoundToNearest(duration * 1000.0)); 
+        Fade.SetInt("hold_time", RoundToNearest(hold * 1000.0)); 
+        Fade.SetInt("flags", 0x0009); 
+        Fade.SetColor("clr", color); 
 
-		// End usermsg and send to the client
-		EndMessage();
-	}
+        // End usermsg and send to the client
+        EndMessage();
+    }
 } 
 stock void UTIL_ShakeScreen(int client, float duration = 3.0, float amplitude = 2.0, float freq = 1.0) {
     // Create message
@@ -55,8 +55,8 @@ stock bool UTIL_IsValidAlive(int client)
     return ( 1 <= client <= MaxClients && IsClientInGame(client) && IsPlayerAlive(client) );
 }
 stock void Util_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
-	ClientCommand(client, "playgamesound Music.StopAllMusic");
-	EmitSoundToClient(client, sound, _, _, _, _, volume);
+    ClientCommand(client, "playgamesound Music.StopAllMusic");
+    EmitSoundToClient(client, sound, _, _, _, _, volume);
 }
 stock bool UTIL_IsClientInTargetView(int client, int target)
 {

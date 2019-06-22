@@ -151,8 +151,5 @@ public void explode2(float vec[3])
 
 public void boomSound(const char[] sound, const float origin[3])
 {
-    char sPathStar[PLATFORM_MAX_PATH];
-    Format(sPathStar, sizeof(sPathStar), "*/%s", sound);
-
-    EmitSoundToAll(sPathStar, SOUND_FROM_WORLD,SNDCHAN_AUTO,SNDLEVEL_NORMAL,SND_NOFLAGS,SNDVOL_NORMAL,SNDPITCH_NORMAL,-1,origin,NULL_VECTOR,true,0.0);
+    EmitSoundToAll(sound, SOUND_FROM_WORLD,SNDCHAN_AUTO,SNDLEVEL_NORMAL,SND_NOFLAGS,SNDVOL_NORMAL,SNDPITCH_NORMAL,-1,origin,NULL_VECTOR,true,0.0);
 }

@@ -347,11 +347,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     TE_SetupBeamRingPoint(position, 10.0, 100.0, fireSprite, haloSprite, 0, 10, 0.2, 30.0, 0.7, view_as<int>({204,0,0,200}), 25, 0);
     TE_SendToAll();
     
-    // Format sound
-    char sPath[PLATFORM_MAX_PATH];
-    FormatEx(sPath, sizeof(sPath), "*/%s", SOUND_FURY);
-    
-    EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(SOUND_FURY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
     
     timerFuryEffect[client] = CreateTimer(0.5, furyEffectCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     

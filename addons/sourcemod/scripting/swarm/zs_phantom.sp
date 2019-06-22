@@ -206,13 +206,9 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     UTIL_Fade(client, 1, 1, {255, 255, 255, 150});
     
     // Make invisible zombie
-    hasInvisibility[client] = true;
+    hasInvisibility[client] = true;  
     
-    // Format sound
-    char sPath[PLATFORM_MAX_PATH];
-    FormatEx(sPath, sizeof(sPath), "*/%s", SOUND_INVISIBILITY);
-    
-    EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(SOUND_INVISIBILITY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 }
 
 public void ZS_OnCooldownStarted(int client, int ability_id) {

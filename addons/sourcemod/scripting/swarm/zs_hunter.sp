@@ -151,11 +151,8 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     hunterNumLeapSounds[client]++;
     
     if (hunterNumLeapSounds[client] >= 3 ) {
-        // Format sound
-        char sPath[PLATFORM_MAX_PATH];
-        FormatEx(sPath, sizeof(sPath), "*/%s", SOUND_LEAP);
     
-        EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+        EmitSoundToAll(SOUND_LEAP, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
         
         hunterNumLeapSounds[client] = 0;
     }

@@ -1453,84 +1453,68 @@ public int FindPlayerAbilityIndex(int id) {
     return view_as<int>(g_aPlayerAbility.FindValue(id, view_as<int>(paID)));
 }
 stock void UTIL_LoadSounds() {
-	char SoundPath[PLATFORM_MAX_PATH];
-	KeyValues Sounds = new KeyValues("Sounds");
-	BuildPath(Path_SM, SoundPath, sizeof(SoundPath), "configs/swarm/sounds.cfg");
-	
-	if (!Sounds.ImportFromFile(SoundPath)) {
-		LogError("Couldn't import: \"%s\"", SoundPath);
-		return;
-	}
+    char SoundPath[PLATFORM_MAX_PATH];
+    KeyValues Sounds = new KeyValues("Sounds");
+    BuildPath(Path_SM, SoundPath, sizeof(SoundPath), "configs/swarm/sounds.cfg");
+    
+    if (!Sounds.ImportFromFile(SoundPath)) {
+        LogError("Couldn't import: \"%s\"", SoundPath);
+        return;
+    }
 
-	if (!Sounds.GotoFirstSubKey(false)) {
-		LogError("No sounds in: \"%s\"", SoundPath);
-		return;
-	}
-	Sounds.Rewind();
-	char key[64], sound[PLATFORM_MAX_PATH];
-	
-	if (Sounds.JumpToKey("human_win")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_HumanWinSounds[i] = sound;
-				UTIL_LoadSound(g_HumanWinSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Human win sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
-	if (Sounds.JumpToKey("zombie_win")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_ZombieWinSounds[i] = sound;
-				UTIL_LoadSound(g_ZombieWinSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Zombie win sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
-	if (Sounds.JumpToKey("countdown")) {
-		if (Sounds.GotoFirstSubKey(false)) {
-			int i;
-			do {
-				Sounds.GetSectionName(key, sizeof(key));
-				Sounds.GetString(NULL_STRING,sound,sizeof(sound));
-				g_CountdownSounds[i] = sound;
-				UTIL_LoadSound(g_CountdownSounds[i]);
-				i++;
-				
-			} while (Sounds.GotoNextKey(false));
-		}
-		else {
-			LogMessage("No Countdown sounds found. Skip");
-		}
-		Sounds.GoBack();
-	}
+    if (!Sounds.GotoFirstSubKey()) {
+        LogError("No sounds in: \"%s\"", SoundPath);
+        return;
+    }
+    char sectionname[PLATFORM_MAX_PATH];
+    char buffer[PLATFORM_MAX_PATH];
+    do
+    {
+        Sounds.GetSectionName(sectionname, sizeof(sectionname));
+        bool scatter = false;
+        int i = 0;
+        while (!scatter) {
+            char key[10];
+            IntToString(i, key, sizeof(key));
+            Sounds.GetString(key, buffer, sizeof(buffer), "notexists");
+            if (StrEqual(buffer, "notexists")) {
+                break;
+            }
+            UTIL_RegisterSound(sectionname, buffer);
+            i++;
+        }
+    } while (Sounds.GotoNextKey());
+
+    delete Sounds;
+}
+
+void UTIL_RegisterSound(const char[] sectionname, const char[] key) {
+    if (StrEqual(sectionname, "human_win")) {
+        strcopy(g_HumanWinSounds[g_iTotalHumanWinSounds], PLATFORM_MAX_PATH, key);
+        UTIL_LoadSound(g_HumanWinSounds[g_iTotalHumanWinSounds]);
+        g_iTotalHumanWinSounds++;
+    } else if (StrEqual(sectionname, "zombie_win")) {
+        strcopy(g_ZombieWinSounds[g_iTotalZombieWinSounds], PLATFORM_MAX_PATH, key);
+        UTIL_LoadSound(g_ZombieWinSounds[g_iTotalZombieWinSounds]);
+        g_iTotalZombieWinSounds++;
+    } else if (StrEqual(sectionname, "countdown")) {
+        strcopy(g_CountdownSounds[g_iTotalCountdownSounds], PLATFORM_MAX_PATH, key);
+        UTIL_LoadSound(g_CountdownSounds[g_iTotalCountdownSounds]);
+        g_iTotalCountdownSounds++;
+    } else {
+        LogMessage("Unknown sound category: %s", sectionname);
+    }
 }
 
 stock void UTIL_LoadSound(char[] sound) {
-	char soundsPath[PLATFORM_MAX_PATH];
-	Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
-	if (FileExists(soundsPath)) {
-		PrecacheSound(sound);
-		AddFileToDownloadsTable(soundsPath);
-	}
-	else {
-		LogError("Cannot locate sounds file: '%s'", soundsPath);
-	}
+    char soundsPath[PLATFORM_MAX_PATH];
+    Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
+    if (FileExists(soundsPath)) {
+        PrecacheSound(sound);
+        AddFileToDownloadsTable(soundsPath);
+    }
+    else {
+        LogError("Cannot locate sounds file: '%s'", soundsPath);
+    }
 
 }

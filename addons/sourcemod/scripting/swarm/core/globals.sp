@@ -76,3 +76,7 @@ int g_iCascadeLightIndex = -1;
 char g_HumanWinSounds[64][PLATFORM_MAX_PATH];
 char g_ZombieWinSounds[64][PLATFORM_MAX_PATH];
 char g_CountdownSounds[64][PLATFORM_MAX_PATH];
+
+int g_iTotalHumanWinSounds = 0;
+int g_iTotalZombieWinSounds = 0;
+int g_iTotalCountdownSounds = 0;
