@@ -54,7 +54,7 @@ stock bool UTIL_IsValidAlive(int client)
 {
     return ( 1 <= client <= MaxClients && IsClientInGame(client) && IsPlayerAlive(client) );
 }
-stock void Util_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
+stock void UTIL_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
     ClientCommand(client, "playgamesound Music.StopAllMusic");
     EmitSoundToClient(client, sound, _, _, _, _, volume);
 }

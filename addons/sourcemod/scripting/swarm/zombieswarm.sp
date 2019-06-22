@@ -1405,8 +1405,7 @@ public Action CountDown(Handle timer) {
             continue;
         /*if(GetClientTeam(client) != CS_TEAM_T)
             continue;*/
-        g_cCountDownVolume
-        Util_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)], g_cCountDownVolume.FloatValue);
+        UTIL_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)], g_cCountDownVolume.FloatValue);
     }
     
     g_iCountdownNumber--;
