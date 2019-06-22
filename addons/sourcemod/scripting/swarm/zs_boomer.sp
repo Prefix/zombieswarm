@@ -29,6 +29,8 @@ int explosionSprite;
 #define ABILITY_UNIQUE_EXPLODE "boomer_explosion"
 #define ABILITY_NAME "Vomit"
 #define ABILITY_DESCRIPTION "Vomit humans"
+#define CLASS_DESCRIPTION "Vomits humans and explodes on death"
+
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration;
 
@@ -52,7 +54,7 @@ public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("boomer");
     registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc(ABILITY_DESCRIPTION, MAX_CLASS_DESC_SIZE);
+    registeredClass.SetDesc(CLASS_DESCRIPTION, MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
