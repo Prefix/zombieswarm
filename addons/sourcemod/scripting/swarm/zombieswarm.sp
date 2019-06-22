@@ -62,7 +62,7 @@ public void OnPluginStart()
     HookConVarChange(g_cFog, OnConVarChange);
     
     HookEvent("player_spawn", eventPlayerSpawn);
-    HookEvent("round_start", eventRoundStartNoCopy, EventHookMode_PostNoCopy);
+    HookEvent("round_start", eventRoundStart);
     HookEvent("round_freeze_end", eventRoundFreezeEnd, EventHookMode_Post);
     HookEvent("cs_win_panel_round", eventWinPanelRound, EventHookMode_Pre);
     HookEvent("player_team", eventTeamChange, EventHookMode_Pre);
@@ -167,15 +167,18 @@ public void OnEntityCreated(int entity, const char[] classname) {
     
     if (StrEqual("info_player_terrorist",classname)) {
         SDKHook(entity, SDKHook_SpawnPost, OnTsEntitySpawnPost);
-    }
-    else if (StrEqual("info_player_counterterrorist",classname)) {
+    } else if (StrEqual("info_player_counterterrorist",classname)) {
         SDKHook(entity, SDKHook_SpawnPost, OnCTsEntitySpawnPost);
-    }
-    else if (StrEqual("sky_camera",classname)) {
+    } else if (StrEqual("sky_camera",classname)) {
         SDKHook(entity, SDKHook_SpawnPost, OnSkyCameraSpawnPost);
-    }
-    else if (StrEqual("env_cascade_light",classname)) {
-        SDKHook(entity, SDKHook_SpawnPost, OnCascadeLightSpawnPost);
+    } else if (StrEqual("func_bomb_target",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, RemoveMapEntity);
+    } else if (StrEqual("func_hostage_rescue",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, RemoveMapEntity);
+    } else if (StrEqual("hostage_entity",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, RemoveMapEntity);
+    } else if (StrEqual("func_buyzone",classname)) {
+        SDKHook(entity, SDKHook_SpawnPost, RemoveMapEntity);
     }
 }
 
@@ -204,6 +207,10 @@ public void OnCTsEntitySpawnPost(int EntRef) {
 public void OnSkyCameraSpawnPost(int EntRef) {
     g_iSkyCameraIndex = EntRefToEntIndex(EntRef);
     AcceptEntityInput(g_iSkyCameraIndex, "Kill");
+}
+public void RemoveMapEntity(int EntRef) {
+    int index = EntRefToEntIndex(EntRef);
+    AcceptEntityInput(index, "Kill");
 }
 public void OnCascadeLightSpawnPost(int EntRef) {
     g_iCascadeLightIndex = EntRefToEntIndex(EntRef);
@@ -357,6 +364,17 @@ public void OnMapStart()
     {
         // We're done with this file now, so we can close it
         delete iDocument;
+    }
+
+    int tempEnt = -1;
+    while((tempEnt = FindEntityByClassname(tempEnt, "func_bomb_target")) != -1)
+    {
+        AcceptEntityInput(tempEnt,"kill");
+    }
+    
+    while((tempEnt = FindEntityByClassname(tempEnt, "func_hostage_rescue")) != -1) 
+    {
+        AcceptEntityInput(tempEnt,"kill");
     }
 }
 public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char[] sample, int &entity, int &iChannel, float &flVolume, int &iLevel, int &iPitch, int &iFlags) {
@@ -853,7 +871,7 @@ public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroad
     g_hTimerCountDown = CreateTimer(1.0, CountDown, _, TIMER_REPEAT);
 }
 
-public Action eventRoundStartNoCopy(Event event, const char[] name, bool dontBroadcast)
+public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     
     g_iRoundKillCounter = 0;
@@ -867,11 +885,21 @@ public Action eventRoundStartNoCopy(Event event, const char[] name, bool dontBro
     }
     
     // Names of entities, which will be remove every round
-    #define ROUNDSTART_OBJECTIVE_ENTITIES "func_bomb_target_hostage_entity_func_hostage_rescue_func_buyzoneprop_physics_overrideprop_physics_multiplayer"
+    //#define ROUNDSTART_OBJECTIVE_ENTITIES "func_bomb_target_hostage_entity_func_hostage_rescue_func_buyzoneprop_physics_overrideprop_physics_multiplayer"
     
     // Removes all entities with a targetname that match in ROUNDSTART_OBJECTIVE_ENTITIES,
     // and removes them, so standart map will avalible for playing
-    removeMapEventEntity(ROUNDSTART_OBJECTIVE_ENTITIES); 
+    //removeMapEventEntity(ROUNDSTART_OBJECTIVE_ENTITIES); 
+    int removEnt = -1;
+    while((removEnt = FindEntityByClassname(removEnt, "hostage_entity")) != -1)
+    {
+        AcceptEntityInput(removEnt, "kill");
+    }
+    while((removEnt = FindEntityByClassname(removEnt, "func_buyzone")) != -1)
+    {
+        AcceptEntityInput(removEnt, "kill");
+    }
+    
 }
 
 public Action eventWinPanelRound(Event event, const char[] name, bool dontBroadcast)
@@ -961,51 +989,6 @@ public Action eventTeamChange(Event event, const char[] name, bool dontBroadcast
     }
     
     return Plugin_Handled;
-}
-
-public int nativeAbilityFinished(Handle plugin, int numParams) {
-    int client = GetNativeCell(1);
-
-    if (!UTIL_IsValidClient(client))
-        return false;
-
-    DataPack pack;
-    float time = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), dataAbilityButton));
-    g_hTimerCooldown[client] = CreateDataTimer(0.1, cooldownCallback, pack, TIMER_REPEAT);
-    pack.WriteCell(client);
-    pack.WriteFloat(time);
-
-    return true;
-}
-public Action cooldownCallback(Handle timer, DataPack pack) {
-    pack.Reset();
-    int client = pack.ReadCell();
-    float end = pack.ReadFloat();
-        
-    if (!UTIL_IsValidAlive(client) || GetClientTeam(client) != CS_TEAM_T || g_bGhost[client]) {
-        return Plugin_Stop;
-    }
-    else {
-        float now = GetGameTime();
-        ZMPlayer player = ZMPlayer(client);
-        
-        if (now > end) {
-            player.isCooldown = false;
-            player.OverrideHint = false;
-            
-            return Plugin_Stop;
-        }
-        else {
-            player.OverrideHint = true;
-            player.isCooldown = true;
-            float left = end - now;
-            char hintText[512];
-            Format(hintText, sizeof(hintText), "%t","Hint: Ability cooldown",left);
-            player.OverrideHintText(hintText);
-        }
-    }
-
-    return Plugin_Continue;
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])

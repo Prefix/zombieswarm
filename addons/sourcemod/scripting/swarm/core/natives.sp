@@ -24,8 +24,6 @@ public void InitMethodMaps() {
     CreateNative("ZMPlayer.LastButtons.set", Native_ZMPlayer_LastButtonsSet);
     CreateNative("ZMPlayer.OverrideHint.get", Native_ZMPlayer_OverrideHintGet);
     CreateNative("ZMPlayer.OverrideHint.set", Native_ZMPlayer_OverrideHintSet);
-    CreateNative("ZMPlayer.isCooldown.get", Native_ZMPlayer_isCooldownGet);
-    CreateNative("ZMPlayer.isCooldown.set", Native_ZMPlayer_isCooldownSet);
     // Functions
     CreateNative("ZMPlayer.OverrideHintText", Native_ZMPlayer_OverrideHintText);
     CreateNative("ZMPlayer.GetAbilityByUnique", Native_ZMPlayer_GetPlayerAbilityUnique); 
@@ -184,19 +182,19 @@ public int Native_ZMPlayer_ClientGet(Handle plugin, int numParams)
 public int Native_ZMPlayer_LevelGet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
-    return getPlayerLevel(player.Client);
+    return GUM_GetPlayerLevel(player.Client);
 }
 
 public int Native_ZMPlayer_XPGet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
-    return getPlayerUnlocks(player.Client);
+    return GUM_GetPlayerUnlocks(player.Client);
 }
 
 public int Native_ZMPlayer_XPSet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
-    setPlayerUnlocks( player.Client, GetNativeCell(2));
+    GUM_SetPlayerUnlocks( player.Client, GetNativeCell(2));
 }
 
 public int Native_ZMPlayer_GhostGet(Handle plugin, int numParams)
@@ -299,16 +297,6 @@ public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     GetNativeString(2, g_sOverrideHintText[client], MAX_HINT_SIZE);
-}
-public int Native_ZMPlayer_isCooldownSet(Handle plugin, int numParams) {
-    ZMPlayer player = GetNativeCell(1);
-    int client = player.Client;
-    g_bCooldown[client] = GetNativeCell(2);
-}
-public int Native_ZMPlayer_isCooldownGet(Handle plugin, int numParams) {
-    ZMPlayer player = GetNativeCell(1);
-    int client = player.Client;
-    return g_bCooldown[client];
 }
 
 public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)

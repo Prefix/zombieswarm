@@ -16,8 +16,7 @@
 #define PLUGIN_VERSION "1.0"
 #define PLUGIN_NAME "Gun Unlocks Mod"
 
-#define IsValidClient(%1)  ( 1 <= %1 <= MaxClients && IsClientInGame(%1) )
-#define IsValidAlive(%1) ( 1 <= %1 <= MaxClients && IsClientInGame(%1) && IsPlayerAlive(%1) )
+#define MAX_RANK_NAME 32
 
 public Plugin myinfo =
 {
@@ -32,6 +31,7 @@ ArrayList weaponEntities;
 ArrayList weaponUnlocks;
 ArrayList weaponAmmo;
 ArrayList weaponNames;
+ArrayList rankNames;
 
 bool weaponSelected[MAXPLAYERS + 1];
 
@@ -62,7 +62,7 @@ char modConfig[PLATFORM_MAX_PATH];
 
 public void OnPluginStart()
 {
-    CreateConVar("gum", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+    CreateConVar("gum_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 
     cvarSaveType = CreateConVar("gum_savetype", "0", "Save Data Type : 0 = SteamID, 1 = IP, 2 = Name.");
 
@@ -115,10 +115,12 @@ public void OnPluginStart()
 }
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    CreateNative("setPlayerUnlocks", nativeSetPlayerUnlocks);
-    CreateNative("getPlayerUnlocks", nativeGetPlayerUnlocks);
-    CreateNative("getPlayerLevel", nativeGetPlayerLevel);
-    CreateNative("getMaxLevel", nativeGetMaxLevel);
+    CreateNative("GUM_SetPlayerUnlocks", nativeSetPlayerUnlocks);
+    CreateNative("GUM_GetPlayerUnlocks", nativeGetPlayerUnlocks);
+    CreateNative("GUM_GetUnlocksToLevel", nativeGetUnlocksToLevel);
+    CreateNative("GUM_GetRankName", nativeGetPlayerRankName);
+    CreateNative("GUM_GetPlayerLevel", nativeGetPlayerLevel);
+    CreateNative("GUM_GetMaxLevel", nativeGetMaxLevel);
     
     
     // Optional native for ZombiePlague
@@ -129,7 +131,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     MarkNativeAsOptional("ZR_IsClientZombie");
     
     // Optional native for ZombieSwarm
-    MarkNativeAsOptional("getTeam");
+    MarkNativeAsOptional("ZS_IsClientZombie");
     
     // Register mod library
     RegPluginLibrary("gum");
@@ -208,6 +210,7 @@ public void OnConfigsExecuted()
     weaponUnlocks = new ArrayList(ByteCountToCells(10));
     weaponAmmo = new ArrayList(ByteCountToCells(10));
     weaponNames = new ArrayList(ByteCountToCells(32));
+    rankNames = new ArrayList(ByteCountToCells(32));
 
     KeyValues kvModCfg = CreateKeyValues("weapon_config");
 
@@ -218,6 +221,7 @@ public void OnConfigsExecuted()
     char unlock[10];
     char ammo[10];
     char weaponName[32];
+    char rankName[32];
     
     do
     {
@@ -225,6 +229,7 @@ public void OnConfigsExecuted()
         kvModCfg.GetString("unlocks", unlock, sizeof(unlock));
         kvModCfg.GetString("ammo", ammo, sizeof(ammo));
         kvModCfg.GetString("name", weaponName, sizeof(weaponName));
+        kvModCfg.GetString("rank", rankName, sizeof(rankName));
         
         int iUnlocks = StringToInt(unlock);
         int iAmmo = StringToInt(ammo);
@@ -233,6 +238,7 @@ public void OnConfigsExecuted()
         weaponUnlocks.Push(iUnlocks);
         weaponAmmo.Push(iAmmo);
         weaponNames.PushString(weaponName);
+        rankNames.PushString(rankName);
     } while (kvModCfg.GotoNextKey());
     
     delete kvModCfg;
@@ -249,13 +255,13 @@ public void OnMapStart()
 
 public void OnClientPutInServer(int client)
 {
-    if ( IsValidClient(client) && !IsFakeClient(client) )
+    if ( UTIL_IsValidClient(client) && !IsFakeClient(client) )
     {
         loadData(client);
         
         if (!AreClientCookiesCached(client)) {
-        	rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
-        	rememberSecondary[client] = 0;
+            rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
+            rememberSecondary[client] = 0;
         }
         
         SendConVarValue(client, FindConVar("mp_playercashawards"), "0");
@@ -316,7 +322,7 @@ public Action CS_OnBuyCommand(int client, const char[] weapon)
 
 public Action onWeaponCanUse(int client, int weapon)
 {
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return Plugin_Handled;
     
     if (IsFakeClient(client) || !GetConVarInt(cvarWeaponRestriction))
@@ -358,7 +364,7 @@ public Action onWeaponCanUse(int client, int weapon)
 
 public Action setAdminUnlocks(int client, int args)
 {
-    if(!IsValidClient(client))
+    if(!UTIL_IsValidClient(client))
     {
         PrintToServer("%t","Command is in-game only!");
         return Plugin_Handled;
@@ -391,7 +397,7 @@ public Action setAdminUnlocks(int client, int args)
     for (int i = 0; i < targetCount; i++) 
     {
         int tClient = targetList[i]; 
-        if (IsValidClient(tClient)) 
+        if (UTIL_IsValidClient(tClient)) 
         {
             CPrintToChat(tClient, "[ GUM ] Admin {blue}%N {default}has set you {green}%i {default}unlocks", client, amount);
             setPlayerUnlocks(tClient, amount);
@@ -403,7 +409,7 @@ public Action setAdminUnlocks(int client, int args)
 
 public Action sayCommand(int client, int args)
 {
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
         return Plugin_Continue;
     
     char text[192];
@@ -467,7 +473,7 @@ public void eventPlayerChangename(Event event, const char[] name, bool dontBroad
     GetEventString( event, "newname", sNewName, sizeof( sNewName ) );
     GetEventString( event, "oldname", sOldName, sizeof( sOldName ) );
     
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
         return;
 
     if ( GetConVarInt(cvarSaveType) == 2 && !StrEqual( sOldName, sNewName )  )
@@ -485,7 +491,7 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
     int victim   = GetClientOfUserId(GetEventInt(event, "userid"));
     int damage   = GetEventInt(event, "dmg_health");
 
-    if ( !IsValidClient(attacker) )
+    if ( !UTIL_IsValidClient(attacker) )
         return;
 
     if ( attacker == victim )
@@ -514,7 +520,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     /* Reserved */
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (IsValidClient(client))
+    if (UTIL_IsValidClient(client))
         SaveClientData(client);
 }
 
@@ -527,7 +533,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if ( !IsValidAlive(client) )
+    if ( !UTIL_IsValidAlive(client) )
         return;
     if ( IsClientSourceTV(client) )
         return;
@@ -552,7 +558,7 @@ public Action mainMenu(Handle timer, any client)
 {
     menuTimer[client] = null;
 
-    if ( !IsValidAlive(client) ) {
+    if ( !UTIL_IsValidAlive(client) ) {
         return Plugin_Stop;
     }
     
@@ -764,7 +770,7 @@ public int primaryWeaponMenuHandler(Menu menu, MenuAction action, int client, in
 }
 public void giveWeaponSelection(int client, int selection, int strip)
 {
-    if( IsValidAlive(client) && !IsClientSourceTV(client) ) 
+    if( UTIL_IsValidAlive(client) && !IsClientSourceTV(client) ) 
     {
         if ( strip )
         {
@@ -794,7 +800,7 @@ public void SetWeaponAmmo(DataPack data) {
     int weapon = data.ReadCell(); 
     int ammo = data.ReadCell(); 
     data.Close(); 
-    if (!IsValidAlive(client)) return;
+    if (!UTIL_IsValidAlive(client)) return;
     if (weapon < 1) return;
 
     int ammotype = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType"); 
@@ -818,7 +824,7 @@ public void stripPlayerWeapons(int client)
 }
 public void setPlayerUnlocks(int client, int value)
 {
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
         return;
 
     setPlayerUnlocksLogics(client, value);
@@ -879,7 +885,7 @@ public int nativeSetPlayerUnlocks(Handle plugin, int numParams)
     int client = GetNativeCell( 1 );
     int value = GetNativeCell( 2 );
 
-    if ( !IsValidClient(client) )
+    if ( !UTIL_IsValidClient(client) )
         return;
 
     setPlayerUnlocksLogics(client, value);
@@ -894,11 +900,47 @@ public int nativeGetPlayerUnlocks(Handle plugin, int numParams)
 {
     int client = GetNativeCell( 1 );
 
+    if (!UTIL_IsValidClient(client)) {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
+    }
+
     return pUnlocks[client];
 }
+public int nativeGetUnlocksToLevel(Handle plugin, int numParams)
+{
+    int client = GetNativeCell( 1 );
+
+    if (!UTIL_IsValidClient(client)) {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
+    }
+
+    return getMaxPlayerUnlocksByLevel(playerLevel[client]);
+}
+
+
+public int nativeGetPlayerRankName(Handle plugin, int numParams)
+{
+    int client = GetNativeCell( 1 );
+
+    if (!UTIL_IsValidClient(client)) {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
+    }
+
+    int level = playerLevel[client];
+    char rank_name[MAX_RANK_NAME];
+    rankNames.GetString(level, rank_name, MAX_RANK_NAME);
+    int bytes;
+    SetNativeString(2, rank_name, MAX_RANK_NAME, true, bytes);
+    return bytes;
+}
+
 public int nativeGetPlayerLevel(Handle plugin, int numParams)
 {
     int client = GetNativeCell( 1 );
+
+    if (!UTIL_IsValidClient(client)) {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index (%d)", client);
+    }
 
     return playerLevel[client];
 }
@@ -1091,7 +1133,7 @@ public void queryShowTopTableCallback(Database db, DBResultSet results, const ch
 { 
     if ( db != null )
     {
-        if ( !IsValidClient(client) )
+        if ( !UTIL_IsValidClient(client) )
             return;
         
         char name[64], szInfo[128];
@@ -1148,4 +1190,12 @@ public void GetWeaponClassname(int weapon, char[] buffer, int size) {
         case 64: Format(buffer, size, "weapon_revolver");
         default: GetEdictClassname(weapon, buffer, size);
     }
+}
+stock bool UTIL_IsValidClient(int client)
+{
+    return ( 1 <= client <= MaxClients && IsClientInGame(client) );
+}
+stock bool UTIL_IsValidAlive(int client)
+{
+    return ( 1 <= client <= MaxClients && IsClientInGame(client) && IsPlayerAlive(client) );
 }

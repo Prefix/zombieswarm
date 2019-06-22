@@ -129,7 +129,7 @@ public void mainUnlocksMenu(int client)
 {
     char sMsg[64];
     char sItems[64];
-    int getUnlocks = getPlayerUnlocks( client );
+    int getUnlocks = GUM_GetPlayerUnlocks( client );
     
     Format(sMsg, sizeof( sMsg ), "Shop [Unlocks - %d]", getUnlocks );
     Menu menu = new Menu(unlocksMenuCallback);
@@ -182,7 +182,7 @@ public int unlocksMenuCallback(Handle menu, MenuAction action, int client, int i
 {
     if( action == MenuAction_Select )
     {    
-        int getUnlocks = getPlayerUnlocks( client );
+        int getUnlocks = GUM_GetPlayerUnlocks( client );
         
         int iPrice = uItemPrice[itemId];
         
@@ -191,7 +191,7 @@ public int unlocksMenuCallback(Handle menu, MenuAction action, int client, int i
         {
             hookItemSet(client, itemId, false);
             
-            setPlayerUnlocks( client, getUnlocks - iPrice );
+            GUM_SetPlayerUnlocks( client, getUnlocks - iPrice );
             
             mainUnlocksMenu(client);
         }

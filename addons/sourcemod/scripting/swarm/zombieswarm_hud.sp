@@ -182,14 +182,19 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if(!UTIL_IsValidClient(client)) return;
     char temp_string[256];
     ZMPlayer player = ZMPlayer(client);
+    char rank_name[32];
+    int bytes = GUM_GetRankName(client, rank_name);
     FormatEx(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
-    FormatEx(temp_string, sizeof(temp_string), "%s  Level: %d\n", temp_string, player.Level);
-    FormatEx(temp_string, sizeof(temp_string), "%s  XP: %d\n", temp_string, player.XP);
+    FormatEx(temp_string, sizeof(temp_string), "%s  Level: [ %i / %i ]\n", temp_string, GUM_GetPlayerLevel(client), GUM_GetMaxLevel());
+    FormatEx(temp_string, sizeof(temp_string), "%s  XP: [ %i / %i ]\n", temp_string, GUM_GetPlayerUnlocks(client), GUM_GetUnlocksToLevel(client));
+    if (bytes > 0) {
+        FormatEx(temp_string, sizeof(temp_string), "%s  Rank: [ %s ]\n", temp_string, rank_name);
+    }
     int abilities[API_MAX_PLAYER_ABILITIES];
     int found = 0;
     bool havefound = player.GetPlayerAbilities(abilities, found);
-    FormatEx(temp_string, sizeof(temp_string), "%s\nAbilities\n",temp_string);
     if (havefound) {
+        FormatEx(temp_string, sizeof(temp_string), "%s\nAbilities\n",temp_string);
         for (int i = 0; i < found; i++) {
             if (abilities[i] < 0) {
                 continue;

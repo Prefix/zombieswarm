@@ -30,7 +30,7 @@ enum
  * @param value    An integer.
  * @return        None.
  */
-native void setPlayerUnlocks(int id, int value );
+native void GUM_SetPlayerUnlocks(int id, int value );
 
 
 /**
@@ -39,23 +39,38 @@ native void setPlayerUnlocks(int id, int value );
  * @param id    An integer.
  * @return        Returns player's carrying unlocks.
  */
-native int getPlayerUnlocks(int id );
+native int GUM_GetPlayerUnlocks(int id );
 
 
 /**
+ * Gets max possible level
+ *
+ * @return        Returns max possible level
+ */
+native int GUM_GetMaxLevel( );
+
+/*
  * Gets player's level.
  *
  * @param id    An integer.
- * @return        Returns player's level.
+ * @return        returns Player level
  */
-native int getMaxLevel( );
+native int GUM_GetPlayerLevel(int id );
 
 /**
- * Gets maximum possible level
+ * Gets player's total unlocks to level up.
  *
  * @return        Returns possible max level in game
  */
-native int getPlayerLevel(int id );
+native int GUM_GetUnlocksToLevel(int id );
+
+/**
+ * Gets player verbose rank by level
+ * @param client    An integer.
+ * @param char      String to write result.
+ * @return        Bytes written to string
+ */
+native int GUM_GetRankName(int client, char[] rankname );
 
 
 /* Search and get plugin item index */
@@ -116,66 +131,4 @@ public int registerGumItem(const char[] itemName, const char[] itemDesc, int ite
 	}
 
 	return temp;
-}
-
-/**
- * Precache models and also adding them into the downloading table.
- * 
- * @param modelPath			The model path.
- *
- * @return					The model index.
- **/
-stock int FakePrecacheModel(const char[] modelPath)
-{
-	// Precache main model
-	int modelIndex = PrecacheModel(modelPath);
-	
-	// Adding main model to the download list
-	AddFileToDownloadsTable(modelPath);
-
-	// Initialize path char
-	char fullPath[PLATFORM_MAX_PATH];
-	char typePath[4][SMALL_LINE_LENGTH] = { ".dx90", ".phy", ".vvd", ".dx90.vtx" };
-	
-	// Get number of the all types
-	int iSize = sizeof(typePath);
-	
-	// i = type index
-	for(int i = 0; i < iSize; i++)
-	{
-		// Adding other parts to download list
-		Format(fullPath, sizeof(fullPath), "%s", modelPath);
-		ReplaceString(fullPath, sizeof(fullPath), ".mdl", typePath[i]);
-		if(FileExists(fullPath)) {
-			AddFileToDownloadsTable(fullPath);
-		} else {
-			LogMessage("%s does not exist", fullPath);
-		}
-	}
-	
-	// Return model index
-	return modelIndex;
-}
-
-/**
- * Precache sounds and also adding them into the downloading table.
- * 
- * @param soundPath			The sound path. .
- **/
-stock void FakePrecacheSound(const char[] soundPath)
-{
-	// Initialize path char
-	char fullPath[PLATFORM_MAX_PATH];
-	
-	// Adding sound to the download list
-	Format(fullPath, sizeof(fullPath), "sound/%s", soundPath);
-	if(FileExists(fullPath)) {
-		AddFileToDownloadsTable(fullPath);
-	} else {
-		LogMessage("%s does not exist", fullPath);
-	}
-	
-	// Precache sound
-	Format(fullPath, sizeof(fullPath), "*/%s", soundPath);
-	AddToStringTable(FindStringTable("soundprecache"), fullPath);
 }

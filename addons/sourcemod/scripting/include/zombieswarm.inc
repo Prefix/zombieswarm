@@ -72,10 +72,6 @@ methodmap ZMPlayer {
         public native get();
         public native set(const bool val);
     }
-    property bool isCooldown {
-        public native get();
-        public native set(const bool val);
-    }
     // Methods
     public native void OverrideHintText(const char[] text);
     public native int GetAbilityByUnique(const char[] ability_unique_id);
