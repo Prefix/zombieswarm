@@ -463,23 +463,22 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     if ( player.Ghost )
         return Plugin_Continue;
     
-    // If not CT and not T go away.
-    if (player.Team != CS_TEAM_CT && player.Team != CS_TEAM_T)
+    // If not CT go away.
+    if (player.Team != CS_TEAM_CT)
         return Plugin_Continue;
     
     // Prevent CT From running away while being pulled away
-    if(IsBeingPulled(client) && player.Team == CS_TEAM_CT) {
-        if (buttons & IN_FORWARD) SetEntityFlags(client, (buttons |= FL_FROZEN))
-        else if (buttons & IN_BACK) SetEntityFlags(client, (buttons |= FL_FROZEN))
-        else if (buttons & IN_MOVELEFT) SetEntityFlags(client, (buttons &= ~FL_FROZEN))
-        else if (buttons & IN_MOVERIGHT) SetEntityFlags(client, (buttons &= ~FL_FROZEN))
-        if(buttons & IN_WALK || buttons & IN_JUMP || buttons & IN_DUCK) {
+    if(IsBeingPulled(client)) {
+        if(buttons & IN_FORWARD || buttons & IN_BACK || buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT || buttons & IN_WALK || buttons & IN_JUMP || buttons & IN_DUCK) {
+            buttons &= ~IN_FORWARD;
+            buttons &= ~IN_BACK;
+            buttons &= ~IN_MOVELEFT;
+            buttons &= ~IN_MOVERIGHT;
             buttons &= ~IN_WALK;
             buttons &= ~IN_JUMP;
             buttons &= ~IN_DUCK;
             return Plugin_Changed;
         }
-        return Plugin_Continue;
     }
 
     return Plugin_Continue;
