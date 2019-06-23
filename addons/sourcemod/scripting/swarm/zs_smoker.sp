@@ -248,7 +248,7 @@ public Action BeamTimer(Handle timer, any client)
     
     
     if ( distancebetween > 70.0 ) {
-        float fl_Time = distancebetween / 220.0;
+        float fl_Time = distancebetween / 315.0;
 
         fl_Velocity[0] = (Origin[0] - targetorigin[0]) / fl_Time;
         fl_Velocity[1] = (Origin[1] - targetorigin[1]) / fl_Time;
@@ -469,11 +469,11 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     
     // Prevent CT From running away while being pulled away
     if(IsBeingPulled(client) && player.Team == CS_TEAM_CT) {
-        if(buttons & IN_FORWARD || buttons & IN_BACK || buttons & IN_LEFT || buttons & IN_RIGHT || buttons & IN_WALK || buttons & IN_JUMP || buttons & IN_DUCK) {
-            buttons &= ~IN_FORWARD;
-            buttons &= ~IN_BACK;
-            buttons &= ~IN_LEFT;
-            buttons &= ~IN_RIGHT;
+        if (buttons & IN_FORWARD) SetEntityFlags(client, (buttons |= FL_FROZEN))
+        else if (buttons & IN_BACK) SetEntityFlags(client, (buttons |= FL_FROZEN))
+        else if (buttons & IN_MOVELEFT) SetEntityFlags(client, (buttons &= ~FL_FROZEN))
+        else if (buttons & IN_MOVERIGHT) SetEntityFlags(client, (buttons &= ~FL_FROZEN))
+        if(buttons & IN_WALK || buttons & IN_JUMP || buttons & IN_DUCK) {
             buttons &= ~IN_WALK;
             buttons &= ~IN_JUMP;
             buttons &= ~IN_DUCK;

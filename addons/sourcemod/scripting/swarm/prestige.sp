@@ -686,7 +686,7 @@ public int Native_PrestigePlayer_NirvanaSet(Handle plugin, int numParams)
 {
     PrestigePlayer player = GetNativeCell(1);
     g_iNirvana[player.Client] = GetNativeCell(2);
-    SaveClientData(client); 
+    SaveClientData(player.Client); 
     CPrintToChat(player.Client, "[ Nirvana ] You have reached Nirvana! Your current nirvanas {green}%d{default}!", g_iNirvana[player.Client]);
 }
 
@@ -700,7 +700,7 @@ public int Native_PrestigePlayer_RBPointsSet(Handle plugin, int numParams)
 {
     PrestigePlayer player = GetNativeCell(1);
     g_iRebornPoints[player.Client] = GetNativeCell(2);
-    SaveClientData(client); 
+    SaveClientData(player.Client); 
 }
 
 public int Native_PrestigePlayer_EvoPointsGet(Handle plugin, int numParams)
@@ -713,7 +713,7 @@ public int Native_PrestigePlayer_EvoPointsSet(Handle plugin, int numParams)
 {
     PrestigePlayer player = GetNativeCell(1);
     g_iEvolutionPoints[player.Client] = GetNativeCell(2);
-    SaveClientData(client); 
+    SaveClientData(player.Client); 
 }
 
 public int Native_PrestigePlayer_NirvanaPointsGet(Handle plugin, int numParams)
@@ -726,7 +726,7 @@ public int Native_PrestigePlayer_NirvanaPointsSet(Handle plugin, int numParams)
 {
     PrestigePlayer player = GetNativeCell(1);
     g_iNirvanaPoints[player.Client] = GetNativeCell(2);
-    SaveClientData(client); 
+    SaveClientData(player.Client); 
 }
 
 public int Native_PrestigePlayer_TotalReborns(Handle plugin, int numParams)
