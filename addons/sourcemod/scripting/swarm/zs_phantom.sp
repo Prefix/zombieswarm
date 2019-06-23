@@ -111,7 +111,7 @@ public Action onSetTransmit(int entity, int client)
     if (entity == client) return Plugin_Continue;
     int entityteam = GetClientTeam(entity);
     int clientteam = GetClientTeam(client);
-    if ( entityteam != clientteam && ZS_IsClientZombie(client) && hasInvisibility[entity] )
+    if ( entityteam != clientteam && ZS_IsClientZombie(entity) && hasInvisibility[entity] )
         return Plugin_Handled; 
     
     return Plugin_Continue;

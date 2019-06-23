@@ -21,7 +21,7 @@
 #include <sdktools>
 #include <sdkhooks>
 
-#include <zombiemod>
+#include <zombieswarm>
 #pragma newdecls required
 
 #define PLUGIN_VERSION "2.3.1 CSGO fix by Franc1sco franug"
@@ -200,8 +200,8 @@ public void OnPlayerHurt(Handle event, const char[] name, bool dontBroadcast)
 	}
 	
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	
-	if (getTeam(client) == HUMAN_TEAM || isGhost(client))
+	ZMPlayer player = ZMPlayer(client);
+	if (!ZS_IsClientZombie(client) || player.Ghost)
 	{
 		return;
 	}
@@ -264,11 +264,19 @@ public void GranadaCongela(int client, float origin[3])
 	float targetOrigin[3];
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (!IsClientInGame(i) || !IsPlayerAlive(i) || getTeam(i) == HUMAN_TEAM || isGhost(client))
+		
+		if (!IsClientInGame(i) || !IsPlayerAlive(i))
 		{
 			continue;
 		}
 		
+		ZMPlayer player = ZMPlayer(client);
+		if (player.Ghost) {
+			continue;
+		}
+		if (!ZS_IsClientZombie(i)) {
+			continue;
+		}
 		GetClientAbsOrigin(i, targetOrigin);
 		targetOrigin[2] += 2.0;
 		if (GetVectorDistance(origin, targetOrigin) <= f_smoke_freeze_distance)

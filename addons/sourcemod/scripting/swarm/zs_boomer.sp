@@ -127,7 +127,7 @@ stock void explodePlayer(int client)
         if (( distanceBetween <= zRadius.FloatValue)) {
             SDKHooks_TakeDamage(enemy, client, client, zExplodeDamage.FloatValue, DMG_BLAST, -1, NULL_VECTOR, NULL_VECTOR);
             
-            UTIL_Fade(enemy, 9, 10, {0, 133, 33, 210});
+            UTIL_Fade(enemy, 5, 6, {0, 133, 33, 210});
             UTIL_ShakeScreen(enemy);
         }
     }
@@ -236,7 +236,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
         
         if (( distanceBetween <= zRadius.FloatValue)) {
             
-            UTIL_Fade(enemy, zDuration.IntValue, 10, {0, 133, 33, 210});
+            UTIL_Fade(enemy, 2, 3, {0, 133, 33, 210});
             UTIL_ShakeScreen(enemy);
         }
     }

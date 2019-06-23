@@ -6,34 +6,23 @@
 #define DISTANCE_BEFORE 3000.0
 
 stock void UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
-    Protobuf Fade = view_as<Protobuf>(StartMessageOne("Fade", client));
-    
-    if(Fade != null) {
-        // Write shake information to message handle
-        Fade.SetInt("duration", RoundToNearest(duration * 1000.0)); 
-        Fade.SetInt("hold_time", RoundToNearest(hold * 1000.0)); 
-        Fade.SetInt("flags", 0x0009); 
-        Fade.SetColor("clr", color); 
 
-        // End usermsg and send to the client
-        EndMessage();
-    }
+    Handle message = StartMessageOne("Fade", client, USERMSG_RELIABLE);
+    PbSetInt(message, "duration", duration*300);
+    PbSetInt(message, "hold_time", hold*300);
+    PbSetInt(message, "flags", 0x0009);
+    PbSetColor(message, "clr", color);
+    EndMessage();
+
 } 
 stock void UTIL_ShakeScreen(int client, float duration = 3.0, float amplitude = 2.0, float freq = 1.0) {
-    // Create message
-    Protobuf Shake = view_as<Protobuf>(StartMessageOne("Shake", client));
 
-    // Validate message
-    if(Shake != null) {
-        // Write shake information to message handle
-        Shake.SetInt("command", 0);
-        Shake.SetFloat("local_amplitude", amplitude);
-        Shake.SetFloat("frequency", freq);
-        Shake.SetFloat("duration", duration);
-
-        // End usermsg and send to the client
-        EndMessage();
-    }
+    Handle message = StartMessageOne("Shake", client, 1);
+    PbSetInt(message, "command", 0);
+    PbSetFloat(message, "local_amplitude", amplitude);
+    PbSetFloat(message, "frequency", freq);
+    PbSetFloat(message, "duration", duration);
+    EndMessage();
 }
 
 stock void UTIL_VelocityByAim(int client, float distance, float velocity[3])

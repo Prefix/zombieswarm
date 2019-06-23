@@ -49,7 +49,6 @@ public void OnPluginStart()
     g_cFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
     // End of Fog CVARS
     g_cCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
-    g_cCountDownVolume = CreateConVar("zm_countdown_volume", "0.2", "Volume of announcer",_,true,0.1,true,1.0);
     g_cOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
     g_cOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
     g_cOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
@@ -1048,7 +1047,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 UTIL_ShowHintMessage(client, hintText);
             }
         }
-        if ((buttons & IN_RELOAD)) {
+        /*if ((buttons & IN_RELOAD)) {
             if (g_iTSpawns > 0) {
                 int random = GetRandomInt(0,g_iTSpawns);
                 float spawn[3];
@@ -1059,7 +1058,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
             else {
                 CPrintToChat(client,"%t","Chat: No valid spawns found");
             }
-        }
+        }*/
     }
     return Plugin_Continue;
 }
@@ -1405,7 +1404,7 @@ public Action CountDown(Handle timer) {
             continue;
         /*if(GetClientTeam(client) != CS_TEAM_T)
             continue;*/
-        UTIL_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)], g_cCountDownVolume.FloatValue);
+        UTIL_PlaySoundToClient(client,g_CountdownSounds[(g_iCountdownNumber - 1)], 0.2);
     }
     
     g_iCountdownNumber--;

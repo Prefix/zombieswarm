@@ -44,21 +44,20 @@ public void ZS_OnLoaded() {
     // We are registering zombie
     Zombie = ZombieClass("hunter");
     Zombie.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
-    Zombie.SetDesc("Has leaping (CTRL + ATTACK2 button)", MAX_CLASS_DESC_SIZE);
+    Zombie.SetDesc("While ducking can make high leap", MAX_CLASS_DESC_SIZE);
     Zombie.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
     Zombie.Health = zHP.IntValue;
     Zombie.Damage = zDamage.FloatValue;
     Zombie.Speed = zSpeed.FloatValue;
     Zombie.Gravity = zGravity.FloatValue;
     Zombie.Excluded = zExcluded.BoolValue;
-    Zombie.Cooldown = zCooldown.FloatValue;
     // Abilities
     abilityLeap = ZombieAbility(Zombie, "hunter_leap");
     abilityLeap.Duration = ABILITY_NO_DURATION; // This is for classes who has no durations on skills
     abilityLeap.Cooldown = zCooldown.FloatValue;
-    abilityLeap.Buttons = IN_DUCK|IN_ATTACK2;
+    abilityLeap.Buttons = IN_ATTACK;
     abilityLeap.SetName("Leap", MAX_ABILITY_NAME_SIZE);
-    abilityLeap.SetDesc("Can make leap where hunter looks to", MAX_ABILITY_DESC_SIZE);
+    abilityLeap.SetDesc("While ducking can make high leap", MAX_ABILITY_DESC_SIZE);
 }
 
 public void OnMapStart() {
@@ -92,6 +91,12 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     int ability_index = player.GetAbilityByID(ability_id);
 
     if (ability_index < 0)
+        return;
+
+    if (!(GetEntityFlags(client) & FL_ONGROUND))
+        return;
+
+    if (!(GetEntityFlags(client) & FL_DUCKING))
         return;
 
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
