@@ -54,6 +54,7 @@ ClientSecondaryCookie = INVALID_HANDLE;
 
 Database conDatabase = null;
 Handle menuTimer[MAXPLAYERS + 1] = null;
+Handle g_hForwardOnLevelUp;
 
 int playerLevel[MAXPLAYERS + 1], pUnlocks[MAXPLAYERS + 1], pDamageDone[MAXPLAYERS + 1];
 int rememberPrimary[MAXPLAYERS + 1], rememberSecondary[MAXPLAYERS + 1];
@@ -121,6 +122,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("GUM_GetRankName", nativeGetPlayerRankName);
     CreateNative("GUM_GetPlayerLevel", nativeGetPlayerLevel);
     CreateNative("GUM_GetMaxLevel", nativeGetMaxLevel);
+    CreateNative("GUM_SetPlayerLevel", nativeSetPlayerLevel);
     
     
     // Optional native for ZombiePlague
@@ -135,6 +137,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     
     // Register mod library
     RegPluginLibrary("gum");
+
+    g_hForwardOnLevelUp = CreateGlobalForward("GUM_OnLevelUp", ET_Ignore, Param_Cell);
 
     return APLRes_Success;
 }
@@ -853,6 +857,11 @@ public void setPlayerUnlocksLogics(int client, int value)
     }
     
     playerLevel[client] = levelByUnlocks;
+    if (playerLevel[client] > 0) {
+        Call_StartForward(g_hForwardOnLevelUp);
+        Call_PushCell(client);
+        Call_Finish();
+    }
     SaveClientData(client);
 }
 public int getPlayerLevelByUnlocks(int client)
@@ -889,6 +898,20 @@ public int nativeSetPlayerUnlocks(Handle plugin, int numParams)
         return;
 
     setPlayerUnlocksLogics(client, value);
+}
+
+public int nativeSetPlayerLevel(Handle plugin, int numParams)
+{
+    int client = GetNativeCell( 1 );
+    int value = GetNativeCell( 2 );
+
+    if ( !UTIL_IsValidClient(client) )
+        return;
+
+    if (value+1 >= weaponUnlocks.Length)
+        return;
+
+    setPlayerUnlocksLogics(client, weaponUnlocks.Get(value));
 }
 
 public int nativeGetMaxLevel(Handle plugin, int numParams)

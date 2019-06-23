@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <zombieswarm>
 #include <swarm/utils>
+#include <prestige>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -182,10 +183,17 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if(!UTIL_IsValidClient(client)) return;
     char temp_string[512];
     ZMPlayer player = ZMPlayer(client);
+    PrestigePlayer prestige = PrestigePlayer(client);
     char rank_name[32];
     int bytes = GUM_GetRankName(client, rank_name);
     Format(temp_string, sizeof(temp_string), "About %N:\n", player.Client);
-    Format(temp_string, sizeof(temp_string), "%s  Level: [ %i / %i ]\n", temp_string, GUM_GetPlayerLevel(client), GUM_GetMaxLevel());
+    Format(temp_string, sizeof(temp_string), "%s  Reborns: [ %i / %i ]\n", temp_string, prestige.Reborn, prestige.MaxReborns);
+    if (prestige.Evolution > 0 || prestige.Nirvana > 0)
+        Format(temp_string, sizeof(temp_string), "%s  Evolutions: [ %i / %i ]\n", temp_string, prestige.Evolution, prestige.MaxEvolutions);
+    if (prestige.Nirvana > 0)
+        Format(temp_string, sizeof(temp_string), "%s  Nirvanas: [ %i ]\n", temp_string, prestige.Nirvana);
+
+    Format(temp_string, sizeof(temp_string), "%s  Level: [ %i / %i ]\n", temp_string, GUM_GetPlayerLevel(client), prestige.MaxLevel);
     Format(temp_string, sizeof(temp_string), "%s  XP: [ %i / %i ]\n", temp_string, GUM_GetPlayerUnlocks(client), GUM_GetUnlocksToLevel(client));
     if (bytes > 0) {
         Format(temp_string, sizeof(temp_string), "%s  Rank: [ %s ]\n \n", temp_string, rank_name);
