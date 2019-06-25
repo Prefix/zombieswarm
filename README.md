@@ -28,9 +28,9 @@ Humans level up in order to get better weapon, get better upgrades. How do they 
 Prestige system is GunXp mod expansion. When you reach levels it's over, but Prestige mod allows users to have levels reset and get some kind of bonus and continue leveling (a.k.a. grinding for those extra bonus). There a few tiers for leveling in other words:
 
 Levels
-When you reach certain level you get levels reset and get 1 Reborn, 1 Reborn point, +1 to total reborns.
-When you reach specific amount of reborns your reborns being reset and you get 1 Evolution and 1 Evolution point
-When you reach specific amount of evolutions your evolutions being reset and you get 1 Nirvana and 1 Evolution point
+* When you reach certain level you get levels reset and get 1 Reborn, 1 Reborn point, +1 to total reborns.
+* When you reach specific amount of reborns your reborns being reset and you get 1 Evolution and 1 Evolution point
+* When you reach specific amount of evolutions your evolutions being reset and you get 1 Nirvana and 1 Evolution point
 
 ## Server commands
 
