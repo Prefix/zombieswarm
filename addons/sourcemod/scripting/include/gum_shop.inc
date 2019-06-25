@@ -76,6 +76,10 @@ methodmap GumItem {
         public native get();
         public native set(const bool val);
     }
+    property bool Upgradeable {
+        public native get();
+        public native set(const bool val);
+    }
     // Methods
     public native void GetName(char[] text, int size);
     public native void SetName(const char[] text, int size);

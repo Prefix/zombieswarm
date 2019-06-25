@@ -27,6 +27,8 @@ void InitMethodMaps() {
     CreateNative("GumItem.RebuyTimes.set", Native_GumItem_RebuyTimesSet);
     CreateNative("GumItem.AdminFlagOnly.get", Native_GumItem_AdminFlagOnlyGet);
     CreateNative("GumItem.AdminFlagOnly.set", Native_GumItem_AdminFlagOnlySet);
+    CreateNative("GumItem.Upgradeable.get", Native_GumItem_UpgradeableGet);
+    CreateNative("GumItem.Upgradeable.set", Native_GumItem_UpgradeableSet);
     // Functions
     CreateNative("GumItem.GetName", Native_GumItem_NameGet);
     CreateNative("GumItem.SetName", Native_GumItem_NameSet);
@@ -403,6 +405,35 @@ public int Native_GumItem_AdminFlagOnlySet(Handle plugin, int numParams)
     ShopItem tempItem;
     g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
     tempItem.AdminFlagOnly = value;
+    g_aItems.SetArray(item_id, tempItem, sizeof(tempItem));
+    return 1;
+}
+
+public int Native_GumItem_UpgradeableGet(Handle plugin, int numParams)
+{
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindGUMItemIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    ShopItem tempItem;
+    g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
+    return view_as<int>(tempItem.Upgradeable);
+}
+
+public int Native_GumItem_UpgradeableSet(Handle plugin, int numParams)
+{
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindGUMItemIndex(item_unique);
+    bool value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    ShopItem tempItem;
+    g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
+    tempItem.Upgradeable = value;
     g_aItems.SetArray(item_id, tempItem, sizeof(tempItem));
     return 1;
 }
