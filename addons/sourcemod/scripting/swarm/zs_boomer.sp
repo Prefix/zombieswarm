@@ -37,9 +37,9 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCool
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
     
-    zHP = CreateConVar("zs_boomer_hp", "125", "Zombie Boomer HP");
+    zHP = CreateConVar("zs_boomer_hp", "150", "Zombie Boomer HP");
     zDamage = CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
-    zSpeed = CreateConVar("zs_boomer_speed","1.1","Zombie Boomer speed");
+    zSpeed = CreateConVar("zs_boomer_speed","0.8","Zombie Boomer speed");
     zGravity = CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");
     zExcluded = CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
     zExplodeDamage = CreateConVar("zs_boomer_explode_damage","30.0","Zombie Boomer damage done then he explode");
@@ -116,9 +116,7 @@ stock void explodePlayer(int client)
     float targetOrigin[3], distanceBetween;
     for(int enemy = 1; enemy <= MaxClients; enemy++) 
     {
-        ZMPlayer player = ZMPlayer(client);
-        ZMPlayer enemyplayer = ZMPlayer(client);
-        if (!UTIL_IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
+        if (!UTIL_IsValidAlive(enemy) || ZS_IsClientZombie(enemy))
             continue;
 
         GetClientAbsOrigin ( enemy, targetOrigin );
@@ -227,8 +225,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     float targetOrigin[3], distanceBetween;
     for(int enemy = 1; enemy <= MaxClients; enemy++) 
     {
-        ZMPlayer enemyplayer = ZMPlayer(client);
-        if (!UTIL_IsValidAlive(enemy) || enemy == client || enemyplayer.Team != player.Team || enemyplayer.Team != CS_TEAM_T)
+        if (!UTIL_IsValidAlive(enemy) || ZS_IsClientZombie(enemy))
             continue;
 
         GetClientAbsOrigin ( enemy, targetOrigin );

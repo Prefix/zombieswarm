@@ -55,8 +55,6 @@ public void OnPluginStart()
 
     LoadResetConfig();
 
-    RegConsoleCmd("sm_testprestige", Command_Test);
-
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -163,20 +161,6 @@ public void MakeNirvana(int client) {
         CPrintToChat(client, "[ Nirvana ] You have reached Nirvana! Your current nirvanas {green}%d{default}!", g_iNirvana[client]);
     }
 }
-
-public Action Command_Test(int client, int args)
-{
- 
-    if (client)
-    {
-        PrintToChat(client, "Can reborn: %s", CanReborn(client) ? "yes" : "no");
-        PrintToChat(client, "Can evolution: %s", CanEvolution(client) ? "yes" : "no");
-        PrintToChat(client, "Can nirvana: %s", CanNirvana(client) ? "yes" : "no");
-    } 
-
-    return Plugin_Handled;
-}
-
 
 public void databaseInit()
 {

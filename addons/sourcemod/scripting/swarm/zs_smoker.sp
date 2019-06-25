@@ -37,9 +37,9 @@ public void OnPluginStart() {
     HookEvent("round_start", eventRoundStart, EventHookMode_Pre);
     HookEvent("round_end", eventRoundEnd);
     
-    zHP = CreateConVar("zs_smoker_hp", "110", "Zombie Smoker HP");
+    zHP = CreateConVar("zs_smoker_hp", "130", "Zombie Smoker HP");
     zDamage = CreateConVar("zs_smoker_damage","15.0","Zombie Smoker done damage");
-    zSpeed = CreateConVar("zs_smoker_speed","1.0","Zombie Smoker speed");
+    zSpeed = CreateConVar("zs_smoker_speed","0.9","Zombie Smoker speed");
     zGravity = CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
     zExcluded = CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);

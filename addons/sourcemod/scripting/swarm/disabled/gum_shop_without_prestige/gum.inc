@@ -88,3 +88,63 @@ native int GUM_GetRankName(int client, char[] rankname );
  */
 forward void GUM_OnLevelUp(int client);
 
+
+/* Search and get plugin item index */
+public Handle findItemIndex()
+{
+	char name[64], pluginName[64];
+	Handle iter = GetPluginIterator();
+	Handle pluginId;
+	
+	GetPluginFilename( null, pluginName, sizeof ( pluginName ) );
+	
+	while (MorePlugins(iter))
+	{
+		pluginId = ReadPlugin(iter);
+	
+		GetPluginFilename( pluginId, name, sizeof( name ) );
+		
+ 		if(StrEqual(name, pluginName))
+		{
+			return pluginId;
+		}
+	}
+	
+	CloseHandle(iter);
+
+ 	return null;
+}
+
+/* Register item function */
+public int registerGumItem(const char[] itemName, const char[] itemDesc, int itemCost, int itemRebuy, int itemRebuyTimes)
+{
+	Handle itemIndex = findItemIndex();
+	Handle itemPlugin = FindPluginByFile( "swarm/gum_shop.smx" );
+	if (itemPlugin == INVALID_HANDLE) {
+		LogError ( "Couldn't find swarm/gum_shop.smx!" );
+		return 0;
+	}
+	Function itemRegFunc = GetFunctionByName (itemPlugin, "registerItemGum");
+	
+	int temp = 0;
+	Call_StartFunction(itemPlugin, itemRegFunc);
+
+	Call_PushCell(itemIndex);
+	Call_PushString(itemName);
+	Call_PushString(itemDesc);
+	Call_PushCell(itemCost);
+	Call_PushCell(itemRebuy);
+	Call_PushCell(itemRebuyTimes);
+	
+	temp = Call_Finish();
+	
+	if( temp == -1 ) 
+	{
+		LogError ( "MAX_UNLOCKS are reached maximum limit!" );
+		return 0;
+	} else {
+		LogError("temp: %d", temp);
+	}
+
+	return temp;
+}

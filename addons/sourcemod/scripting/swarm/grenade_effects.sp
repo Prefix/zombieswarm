@@ -16,13 +16,12 @@
  */
 
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-
 #include <zombieswarm>
-#pragma newdecls required
 
 #define PLUGIN_VERSION "2.3.1 CSGO fix by Franc1sco franug"
 

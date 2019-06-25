@@ -1,14 +1,17 @@
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
-#include <zombiemod>
+#include <zombieswarm>
 #include <colorvariables>
 #include <gum>
+#include <swarm/utils>
 
 #define PLUGIN_VERSION "1.0"
 
-#define SOUND_RED_TAKE "zombie_mod/redflag.mp3"
-#define SOUND_BLUE_TAKE "zombie_mod/blueflag.mp3"
+#define SOUND_RED_TAKE "swarm/redflag.mp3"
+#define SOUND_BLUE_TAKE "swarm/blueflag.mp3"
 
 #define FLAG_NAME 0 // constant
 #define FLAG_POSITION 1 // constant
@@ -46,6 +49,8 @@ ArrayList flagsList;
 
 char sMap[PLATFORM_MAX_PATH];
 
+Handle g_hSetProgressBarTime = null;
+
 public void OnPluginStart()
 {
 	CreateConVar("map_missions", PLUGIN_VERSION, "Map missions", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
@@ -56,6 +61,11 @@ public void OnPluginStart()
 	
 	RegAdminCmd("mm_flag", flagCreateMenuCommand, ADMFLAG_CUSTOM3);
 	RegAdminCmd("mm_menu", MainMenuCommand, ADMFLAG_CUSTOM3);
+
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetSignature(SDKLibrary_Server, "\x55\x89\xE5\x83\xEC\x48\x89\x5D\xF4\x8B\x5D\x08\x89\x75\xF8\x8B\x75\x0C\x89\x7D\xFC\x39\xB3\xE8\x27\x00\x00", 27); //Linux
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	g_hSetProgressBarTime = EndPrepSDKCall();
 	
 	flagsList = new ArrayList();
 }
@@ -182,9 +192,9 @@ public void OnMapStart()
 	delete kv;
 }
 
-public void OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
-	if ( IsValidClient(client) )
+	if ( UTIL_IsValidClient(client) )
 	{
 		takingFlag[client] = -1;
 	}
@@ -207,8 +217,7 @@ public void OnClientDisconnect(int client)
 				flagArray.Set(FLAG_TAKETIMER, INVALID_HANDLE);
 			}
 			
-			SetEntPropFloat(client, Prop_Send, "m_flProgressBarStartTime", 0.0);
-			SetEntProp(client, Prop_Send, "m_iProgressBarDuration", 0);
+			SDKCall(g_hSetProgressBarTime, client, 0);
 			
 			takingFlag[client] = -1;
 		}
@@ -217,7 +226,7 @@ public void OnClientDisconnect(int client)
 
 public Action flagCreateMenuCommand(int client, int args)
 {
-	if(!IsValidClient(client))
+	if(!UTIL_IsValidClient(client))
 	{
 		PrintToServer("%t","Command is in-game only!");
 		return Plugin_Handled;
@@ -267,7 +276,7 @@ public Action flagCreateMenuCommand(int client, int args)
 
 public Action MainMenuCommand(int client, int args)
 {
-	if(!IsValidClient(client))
+	if(!UTIL_IsValidClient(client))
 	{
 		PrintToServer("%t","Command is in-game only!");
 		return Plugin_Handled;
@@ -278,7 +287,7 @@ public Action MainMenuCommand(int client, int args)
 	return Plugin_Handled;
 }
 
-public eventRoundStart(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	int size = flagsList.Length;
 	
@@ -313,7 +322,7 @@ public eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 	CS_SetTeamScore(CS_TEAM_T, 0);
 }
 
-public eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	int size = flagsList.Length;
 	
@@ -324,9 +333,8 @@ public eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	int i;
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i)) {
-			SetEntPropFloat(i, Prop_Send, "m_flProgressBarStartTime", 0.0);
-			SetEntProp(i, Prop_Send, "m_iProgressBarDuration", 0);
+		if (UTIL_IsValidClient(i)) {
+			SDKCall(g_hSetProgressBarTime, i, 0);
 			
 			takingFlag[i] = -1;
 		}
@@ -335,16 +343,15 @@ public eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	removeFlags(size);
 }
 
-public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
-	if ( !IsValidClient(victim) )
+	if ( !UTIL_IsValidClient(victim) )
 		return;
 	
 	if (takingFlag[victim] != -1) {
-		SetEntPropFloat(victim, Prop_Send, "m_flProgressBarStartTime", 0.0);
-		SetEntProp(victim, Prop_Send, "m_iProgressBarDuration", 0);
+		SDKCall(g_hSetProgressBarTime, victim, 0);
 		
 		ArrayList flagArray = flagsList.Get(takingFlag[victim]);
 		
@@ -362,7 +369,7 @@ public eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
-public objectsMenu(int client)
+public void objectsMenu(int client)
 {
 	Menu menu = new Menu(objectsMenuCallback);
 
@@ -388,7 +395,7 @@ public int objectsMenuCallback(Handle menu, MenuAction action, int client, int i
 	}
 }
 
-public deleteFlagsMenu(int client)
+public void deleteFlagsMenu(int client)
 {
 	Menu menu = new Menu(deleteFlagsMenuCallback);
 
@@ -425,7 +432,7 @@ public int deleteFlagsMenuCallback(Handle menu, MenuAction action, int client, i
 		int i;
 		for (i = 1; i <= MaxClients; i++)
 		{
-			if (IsValidClient(i)) {
+			if (UTIL_IsValidClient(i)) {
 				takingFlag[i] = -1;
 			}
 		}
@@ -445,7 +452,7 @@ public int deleteFlagsMenuCallback(Handle menu, MenuAction action, int client, i
 			createFlag(position, cell);
 		}
 		
-		PrintToChatAll("Successfully deleted flag!")
+		PrintToChatAll("Successfully deleted flag!");
 		
 		objectsMenu(client);
 	} 
@@ -560,7 +567,7 @@ public Action timerBeamCallback(Handle timer, any index)
 		
 	int color[4] = {102,102,102,220};
 	
-	if (GetTeamScore(CS_TEAM_T) >= SCORE_TO_WIN) {
+	if (CS_GetTeamScore(CS_TEAM_T) >= SCORE_TO_WIN) {
 		if (!roundTerminated) {
 			CS_TerminateRound(10.0, CSRoundEnd_TerroristWin, true);
 			roundTerminated = true;
@@ -568,7 +575,7 @@ public Action timerBeamCallback(Handle timer, any index)
 		
 		return Plugin_Stop;
 		
-	} else if (GetTeamScore(CS_TEAM_CT) >= SCORE_TO_WIN) {
+	} else if (CS_GetTeamScore(CS_TEAM_CT) >= SCORE_TO_WIN) {
 		if (!roundTerminated) {
 			CS_TerminateRound(10.0, CSRoundEnd_CTWin, true);
 			roundTerminated = true;
@@ -579,7 +586,7 @@ public Action timerBeamCallback(Handle timer, any index)
 	
 	if (team == CS_TEAM_T) {
 		if (!roundTerminated) {
-			SetTeamScore(CS_TEAM_T, GetTeamScore(CS_TEAM_T)+1);
+			SetTeamScore(CS_TEAM_T, CS_GetTeamScore(CS_TEAM_T)+1);
 			CS_SetTeamScore(CS_TEAM_T, CS_GetTeamScore(CS_TEAM_T)+1);
 		}
 		
@@ -588,7 +595,7 @@ public Action timerBeamCallback(Handle timer, any index)
 		color[2] = 0;
 	} else if (team == CS_TEAM_CT) {
 		if (!roundTerminated) {
-			SetTeamScore(CS_TEAM_CT, GetTeamScore(CS_TEAM_CT)+1);
+			SetTeamScore(CS_TEAM_CT, CS_GetTeamScore(CS_TEAM_CT)+1);
 			CS_SetTeamScore(CS_TEAM_CT, CS_GetTeamScore(CS_TEAM_CT)+1);
 		}
 		
@@ -614,13 +621,12 @@ public Action timerTakingCallback(Handle timer, any index)
 	int flag = flagArray.Get(FLAG_ENTITY);
 	int client = flagArray.Get(FLAG_ACTIVATOR);
 
-	if(!IsValidAlive(client) || !IsValidEntity(flag))
+	if(!UTIL_IsValidAlive(client) || !IsValidEntity(flag))
 		return Plugin_Stop;
 		
 	takingFlag[client] = -1;
 	
-	SetEntPropFloat(client, Prop_Send, "m_flProgressBarStartTime", 0.0);
-	SetEntProp(client, Prop_Send, "m_iProgressBarDuration", 0);
+	SDKCall(g_hSetProgressBarTime, client, 0);
 	
 	float entityOrigin[3], clientOrigin[3], distanceBetween;
 	GetEntPropVector(flag, Prop_Send, "m_vecOrigin", entityOrigin);
@@ -628,17 +634,17 @@ public Action timerTakingCallback(Handle timer, any index)
 	char fName[128];
 	flagArray.GetString(FLAG_NAME, fName, sizeof(fName));
 		
-	if (getTeam(client) == CS_TEAM_CT) {
+	if (GetClientTeam(client) == CS_TEAM_CT) {
 		playClientCommandSoundAll(SOUND_BLUE_TAKE);
 		
-		CPrintToChatAll("{green}Humans has taken {blue}[%s] {green}flag!", fName ) 
+		CPrintToChatAll("{green}Humans has taken {blue}[%s] {green}flag!", fName );
 		
 		DispatchKeyValue(flag, "skin", "2");
 		
 		int i;
 		for (i = 1; i <= MaxClients; i++)
 		{
-			if (IsValidAlive(i) && getTeam(i) == CS_TEAM_CT) {
+			if (UTIL_IsValidAlive(i) && GetClientTeam(i) == CS_TEAM_CT) {
 				GetClientAbsOrigin ( i, clientOrigin );
 				distanceBetween = GetVectorDistance ( entityOrigin, clientOrigin );
 				
@@ -646,11 +652,11 @@ public Action timerTakingCallback(Handle timer, any index)
 				{
 					CPrintToChat(i, "{default}Reward: {green} %d UL {default} for taking the flag!", REWARD_TAKING_FLAG);
 					
-					setPlayerUnlocks( i, getPlayerUnlocks( i ) + REWARD_TAKING_FLAG );
+					GUM_SetPlayerUnlocks( i, GUM_GetPlayerUnlocks( i ) + REWARD_TAKING_FLAG );
 				}
 			}
 		}
-	} else if (getTeam(client) == CS_TEAM_T) {
+	} else if (GetClientTeam(client) == CS_TEAM_T) {
 		playClientCommandSoundAll(SOUND_RED_TAKE);
 		
 		CPrintToChatAll("{green}Zombies has taken {red}[%s] {green}flag!", fName);
@@ -660,7 +666,7 @@ public Action timerTakingCallback(Handle timer, any index)
 		int i;
 		for (i = 1; i <= MaxClients; i++)
 		{
-			if (IsValidAlive(i) && getTeam(i) == CS_TEAM_T) {
+			if (UTIL_IsValidAlive(i) && GetClientTeam(i) == CS_TEAM_T) {
 				GetClientAbsOrigin ( i, clientOrigin );
 				distanceBetween = GetVectorDistance ( entityOrigin, clientOrigin );
 				
@@ -668,13 +674,13 @@ public Action timerTakingCallback(Handle timer, any index)
 				{
 					CPrintToChat(i, "{default}Reward: {green} %d UL {default} for taking the flag!", REWARD_TAKING_FLAG);
 					
-					setPlayerUnlocks( i, getPlayerUnlocks( i ) + REWARD_TAKING_FLAG );
+					GUM_SetPlayerUnlocks( i, GUM_GetPlayerUnlocks( i ) + REWARD_TAKING_FLAG );
 				}
 			}
 		}
 	}
 		
-	flagArray.Set(FLAG_TEAM, getTeam(client));
+	flagArray.Set(FLAG_TEAM, GetClientTeam(client));
 	flagArray.Set(FLAG_ACTIVATOR, 0);
 	
 	return Plugin_Stop;
@@ -736,11 +742,11 @@ public void removeFlags(int size)
 	}
 }
 
-public triggerFlagOnStartTouch(char[] output, int caller, int activator, float delay)
+public void triggerFlagOnStartTouch(char[] output, int caller, int activator, float delay)
 {
 	// Ignore dead players
-	//if(!IsValidAlive(activator) || isGhost(activator))
-	if(!IsValidAlive(activator) || GetClientTeam(activator) == CS_TEAM_SPECTATOR)
+	//if(!UTIL_IsValidAlive(activator) || isGhost(activator))
+	if(!UTIL_IsValidAlive(activator) || GetClientTeam(activator) == CS_TEAM_SPECTATOR)
 	{
 		return;
 	}
@@ -756,24 +762,22 @@ public triggerFlagOnStartTouch(char[] output, int caller, int activator, float d
 	int flagTeam = flagArray.Get(FLAG_TEAM);
 	Handle flagConquerTimer = flagArray.Get(FLAG_TAKETIMER);
 	
-	if (getTeam(activator) == flagTeam)
+	if (GetClientTeam(activator) == flagTeam)
 		return;
 		
 	if (takingFlag[activator] != -1)
 		return;
 		
-	if (getTeammateTakingFlag(activator, index))
+	if (GetClientTeammateTakingFlag(activator, index))
 		return;
 		
-	SetEntPropFloat(activator, Prop_Send, "m_flProgressBarStartTime", 0.0);
-	SetEntProp(activator, Prop_Send, "m_iProgressBarDuration", 0);
+	SDKCall(g_hSetProgressBarTime, activator, 0);
 		
 	takingFlag[activator] = index;
 				
 	int enemy = getEnemyTakingFlag(activator, index);
 	if (enemy > 0) {
-		SetEntPropFloat(enemy, Prop_Send, "m_flProgressBarStartTime", 0.0);
-		SetEntProp(enemy, Prop_Send, "m_iProgressBarDuration", 0);
+		SDKCall(g_hSetProgressBarTime, enemy, 0);
 		
 		flagArray.Set(FLAG_ACTIVATOR, 0);
 		
@@ -786,8 +790,7 @@ public triggerFlagOnStartTouch(char[] output, int caller, int activator, float d
 		takingFlag[enemy] = -1;
 		takingFlag[activator] = -1;
 	} else {
-		SetEntPropFloat(activator, Prop_Send, "m_flProgressBarStartTime", GetGameTime());
-		SetEntProp(activator, Prop_Send, "m_iProgressBarDuration", 5);
+		SDKCall(g_hSetProgressBarTime, activator, 5);
 		
 		flagArray.Set(FLAG_ACTIVATOR, activator);
 		flagConquerTimer = CreateTimer(5.0, timerTakingCallback, index, TIMER_FLAG_NO_MAPCHANGE);
@@ -795,10 +798,10 @@ public triggerFlagOnStartTouch(char[] output, int caller, int activator, float d
 	}
 }
 
-public triggerFlagOnEndTouch(char[] output, int caller, int activator, float delay)
+public void triggerFlagOnEndTouch(char[] output, int caller, int activator, float delay)
 {
 	// Ignore anything other than players
-	if(!IsValidClient(activator))
+	if(!UTIL_IsValidClient(activator))
 	{
 		return;
 	}
@@ -814,8 +817,7 @@ public triggerFlagOnEndTouch(char[] output, int caller, int activator, float del
 	Handle flagConquerTimer = flagArray.Get(FLAG_TAKETIMER);
 
 	if (takingFlag[activator] != -1) {
-		SetEntPropFloat(activator, Prop_Send, "m_flProgressBarStartTime", 0.0);
-		SetEntProp(activator, Prop_Send, "m_iProgressBarDuration", 0);
+		SDKCall(g_hSetProgressBarTime, activator, 0);
 		
 		flagArray.Set(FLAG_ACTIVATOR, 0);
 		
@@ -888,13 +890,13 @@ public bool getLookPositionFilter(int entity, int contentsMask, any client)
 	return client != entity; 
 }
 
-public int getTeammateTakingFlag(int client, int index)
+public int GetClientTeammateTakingFlag(int client, int index)
 {
 	int i;
 	
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && client != i && takingFlag[i] == index && getTeam(client) == getTeam(i))
+		if (UTIL_IsValidClient(i) && client != i && takingFlag[i] == index && GetClientTeam(client) == GetClientTeam(i))
 		{
 			return true;
 		}
@@ -909,7 +911,7 @@ public int getEnemyTakingFlag(int client, int index)
 	
 	for (i = 1; i <= MaxClients; i++)
 	{
-		if (IsValidClient(i) && client != i && takingFlag[i] == index && getTeam(client) != getTeam(i))
+		if (UTIL_IsValidClient(i) && client != i && takingFlag[i] == index && GetClientTeam(client) != GetClientTeam(i))
 		{
 			return i;
 		}
@@ -922,7 +924,7 @@ stock void playClientCommandSoundAll(const char[] sound)
 {
 	for (int client = 1; client <= MaxClients; client++) 
 	{ 
-		if (IsValidClient(client) )
+		if (UTIL_IsValidClient(client) )
 		{
 			ClientCommand(client, "playgamesound Music.StopAllMusic");
 			ClientCommand(client, "play *%s", sound);
@@ -941,13 +943,13 @@ stock bool FakePrecacheSoundEx( const char[] szPath )
 
 void GetCurrentWorkshopMap(char[] szMap, int iMapBuf, char[] szWorkShopID, int iWorkShopBuf)
 {
-	char szCurMap[128]
-	char szCurMapSplit[2][64]
+	char szCurMap[128];
+	char szCurMapSplit[2][64];
 
-	GetCurrentMap(szCurMap, 127)
-	ReplaceString(szCurMap, sizeof(szCurMap), "workshop/", "", false)
-	ExplodeString(szCurMap, "/", szCurMapSplit, 2, 63)
+	GetCurrentMap(szCurMap, 127);
+	ReplaceString(szCurMap, sizeof(szCurMap), "workshop/", "", false);
+	ExplodeString(szCurMap, "/", szCurMapSplit, 2, 63);
 
-	strcopy(szMap, iMapBuf, szCurMapSplit[1])
-	strcopy(szWorkShopID, iWorkShopBuf, szCurMapSplit[0])
+	strcopy(szMap, iMapBuf, szCurMapSplit[1]);
+	strcopy(szWorkShopID, iWorkShopBuf, szCurMapSplit[0]);
 }

@@ -200,6 +200,8 @@ public int Native_ZMPlayer_XPSet(Handle plugin, int numParams)
 public int Native_ZMPlayer_GhostGet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
+    if (!g_cGhostMode.BoolValue)
+        return false;
     return g_bGhost[player.Client];
 }
 

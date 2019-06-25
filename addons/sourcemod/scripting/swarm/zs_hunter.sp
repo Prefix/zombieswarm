@@ -29,9 +29,9 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zLeep;
 
 public void OnPluginStart() {                   
     
-    zHP = CreateConVar("zs_hunter_hp", "100", "Zombie Hunter HP");
+    zHP = CreateConVar("zs_hunter_hp", "120", "Zombie Hunter HP");
     zDamage = CreateConVar("zs_hunter_damage","17.0","Zombie Hunter done damage");
-    zSpeed = CreateConVar("zs_hunter_speed","1.0","Zombie Hunter speed");
+    zSpeed = CreateConVar("zs_hunter_speed","0.85","Zombie Hunter speed");
     zGravity = CreateConVar("zs_hunter_gravity","0.8","Zombie Hunter gravity");
     zExcluded = CreateConVar("zs_hunter_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = CreateConVar("zs_hunter_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);

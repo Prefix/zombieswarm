@@ -3,288 +3,346 @@
 #include <sourcemod>
 #include <sdktools>
 #include <gum>
+#include <gum_shop>
+#include <prestige>
+#include <zombieswarm>
 #include <colorvariables>
 #include <swarm/utils>
+// Includes
+#include "swarm/gumshop/globals.sp"
+#include "swarm/gumshop/natives.sp"
+
 #define PLUGIN_VERSION "1.0"
-
-#define MENU_DISPLAY_TIME 30
-
-#define MAX_UNLOCKS 30
-#define MAX_UNLOCKS_NAME_SIZE 64
-#define MAX_UNLOCKS_DESC_SIZE 128
+#define PLUGIN_NAME "[GUM SHOP] Core"
+#define PLUGIN_DESC "Shop for [ Zombie Swarm + Gum + Prestige ]"
 
 public Plugin myinfo =
 {
-    name = "Gun Unlocks Mod Shop",
+    name = PLUGIN_NAME,
     author = "Zombie Swarm Contributors",
-    description = "Shop to buy items",
+    description = PLUGIN_DESC,
     version = PLUGIN_VERSION,
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-int numItems;
-
-bool playerItems[MAXPLAYERS + 1][MAX_UNLOCKS];
-
-int playerItemRebuyTimes[MAXPLAYERS + 1][MAX_UNLOCKS];
-
-Handle uItemId[MAX_UNLOCKS] = null;
-int uItemPrice[MAX_UNLOCKS], uItemRebuy[MAX_UNLOCKS], uItemRebuyTimes[MAX_UNLOCKS];
-char uItemName[MAX_UNLOCKS][MAX_UNLOCKS_NAME_SIZE], uItemDesc[MAX_UNLOCKS][MAX_UNLOCKS_DESC_SIZE];
-
-Handle cvarItemDropRate, cvarItemDropMaxRate;
-
 public void OnPluginStart()
-{
-    CreateConVar("gum_shop", PLUGIN_VERSION, "Gun Unlocks Mod Shop", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
-    
-    cvarItemDropRate = CreateConVar("gum_item_drop_rate", "50", "Item drop rate killing player");
-    cvarItemDropMaxRate = CreateConVar("gum_item_drop_maxrate", "1000", "Item drop maximum rate");
-    
-    HookEvent("player_death", eventPlayerDeath);
-    HookEvent("round_end",  eventRoundEnd);
-
-    RegConsoleCmd("say", sayCommand);
+{   
+    g_aItems = new ArrayList(sizeof(ShopItem));
+    g_aCategories = new ArrayList(sizeof(ShopCategory));
+    RegConsoleCmd("sm_shop", Command_Shop);
+    RegConsoleCmd("sm_ul", Command_Shop);
+    RegConsoleCmd("sm_unlocks", Command_Shop);
+    LoadShopConfig();
 }
 
-public void OnClientPutInServer(int client)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    if ( UTIL_IsValidClient(client) )
-    {
-        for(int i = 0; i < MAX_UNLOCKS; i++) 
-        {
-            playerItems[client][i] = false;
-            playerItemRebuyTimes[client][i] = 0;
-        }
-    }
+    InitMethodMaps();
+    InitForwards();
+    // Register mod library
+    RegPluginLibrary("gum_shop");
+
+    return APLRes_Success;
 }
 
-public Action sayCommand(int client, int args)
+public void OnAllPluginsLoaded() {
+    g_aItems.Clear();
+    g_iRegisteredItems = 0;
+    Call_StartForward(g_hForwardOnShopLoaded);
+    Call_Finish();
+}
+
+public Action Command_Shop(int client, int args)
 {
-    if ( !UTIL_IsValidClient(client) )
+    if (!UTIL_IsValidClient(client))
         return Plugin_Continue;
     
-    char text[192];
-    char sArg1[16];
-    GetCmdArgString(text, sizeof(text));
+    OpenMainMenu(client);
+ 
+    return Plugin_Handled;
+}
 
-    StripQuotes(text);
-
-    BreakString(text, sArg1, sizeof(sArg1));
-    
-    if(StrEqual(sArg1, "!shop") || StrEqual(sArg1, "shop") || StrEqual(sArg1, "/shop") ||  StrEqual(sArg1, "!ul") || StrEqual(sArg1, "ul") || StrEqual(sArg1, "unlock") 
-    || StrEqual(sArg1, "!unlocks") || StrEqual(sArg1, "!unlock") || StrEqual(sArg1, "unlocks") )
-    {
-        mainUnlocksMenu(client);
-    
-        return Plugin_Handled;
+public void OpenMainMenu(int client) {
+    Menu menu = new Menu(MenuHandler1);
+    menu.SetTitle("Upgrades shop");
+    for (int i = 0; i < g_aCategories.Length; i++) {
+        ShopCategory category;
+        g_aCategories.GetArray(i, category, sizeof(category)); 
+        menu.AddItem(category.Unique,category.Name);
     }
-    
-    return Plugin_Continue;
+    menu.ExitButton = true;
+    //menu.ExitBackButton = true;
+    menu.Display(client, 20);
 }
 
-public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
-    int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-    
-    if (GetConVarInt(cvarItemDropRate) < 1)
-        return;
-    
-    if (victim == attacker)
-        return;
-    
-    if ( !UTIL_IsValidAlive(attacker) )
-        return;
-        
-    if (GetRandomInt(0, GetConVarInt(cvarItemDropMaxRate)) > GetConVarInt(cvarItemDropRate))
-        return;
-        
-    int itemId = GetRandomInt(0, numItems-1);
-    
-    if (playerItems[attacker][itemId])
-        return;
-    
-    hookItemSet(attacker, itemId, true);
-}
-
-public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
-{
-    for (int client = 1; client <= MaxClients; client++) 
-    { 
-        if (!UTIL_IsValidClient(client) )
-            continue;
-        for (int itemId = 0; itemId < numItems; itemId++)
-        {
-            if (uItemRebuy[itemId] == 2) {
-                playerItems[client][itemId] = false;
-                
-                hookItemUnSetCallback(client, itemId);
-            }
-        }
-    } 
-}
-
-public void mainUnlocksMenu(int client)
-{
-    char sMsg[64];
-    char sItems[64];
-    int getUnlocks = GUM_GetPlayerUnlocks( client );
-    
-    Format(sMsg, sizeof( sMsg ), "Shop [Unlocks - %d]", getUnlocks );
-    Menu menu = new Menu(unlocksMenuCallback);
-
-    menu.SetTitle(sMsg);
-    
-    for (int itemId = 0; itemId < numItems; itemId++)
+    switch(action)
     {
-        if( getUnlocks < uItemPrice[itemId] ) 
+        case MenuAction_Select:
         {
-            if(playerItems[client][itemId]) 
-            {
-                Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
+            PrintToChatAll("Client %N selected %s", client, info);
+            DrawCategoryMenu(client, info);
+        }
+ 
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
+ 
+    return 0;
+}
 
-                menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+void DrawCategoryMenu(int client, char[] info) {
+    if (!UTIL_IsValidClient(client))
+        return;
+
+    ShopCategory category;
+    bool found = false;
+    for (int i = 0; i < g_aCategories.Length; i++) {
+        ShopCategory temp_category;
+        g_aCategories.GetArray(i, temp_category, sizeof(temp_category));
+        if (StrEqual(temp_category.Unique, info)) {
+            category = temp_category;
+            found = true;
+            break;
+        } else {
+            for (int y = 0; y < temp_category.SubCategories.Length; y++) {
+                ShopCategory temp_sub_category;
+                temp_category.SubCategories.GetArray(y, temp_sub_category, sizeof(temp_sub_category));
+                if (StrEqual(temp_sub_category.Unique, info)) {
+                    category = temp_sub_category;
+                    found = true;
+                    break;
+                }
             }
-            else
-            {
-                Format(sItems, sizeof(sItems), "%s (%d UL)", uItemName[itemId], uItemPrice[itemId]);
+        }
+    }
+    if (!found) {
+        return;
+    }
 
-                menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+    Menu menu = new Menu(MenuHandlerCategory);
+    menu.SetTitle(category.Name);
+    int menuitems = 0;
+    for (int i = 0; i < category.SubCategories.Length; i++) {
+        ShopCategory print_category;
+        category.SubCategories.GetArray(i, print_category, sizeof(print_category)); 
+        menu.AddItem(print_category.Unique,print_category.Name);
+        menuitems++;
+    }
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopItem temp_item;
+        g_aItems.GetArray(i, temp_item, sizeof(temp_item)); 
+        if (StrEqual(temp_item.UniqueCategory, info)) {
+            char tempunique[64];
+            Format(tempunique, sizeof(tempunique), "menuitem-%s", temp_item.Unique);
+            menu.AddItem(tempunique,temp_item.Name);
+            menuitems++;
+        }
+    }
+    if (menuitems == 0) {
+        menu.AddItem("disabled","No categories/items in this category.",ITEMDRAW_DISABLED );
+    }
+    menu.ExitButton = true;
+    menu.ExitBackButton = true;
+    menu.Display(client, 30);
+}
+
+public int MenuHandlerCategory(Menu menu, MenuAction action, int client, int param2)
+{
+    switch(action)
+    {
+        case MenuAction_Select:
+        {
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
+            
+            if (StrContains( info, "menuitem-", false ) != -1) {
+                PrintToChatAll("Client %N selected item %s", client, info);
+                ReplaceString(info, sizeof(info), "menuitem-", "", false);
+                ShowGUMItemMenu(client, info);
+            } else {
+                PrintToChatAll("Client %N selected menu %s", client, info);
+                DrawCategoryMenu(client, info);
             }
         }
-        else if (playerItems[client][itemId])
+        case MenuAction_Cancel:
         {
-            Format(sItems, sizeof(sItems), "%s (Bought)", uItemName[itemId]);
-
-            menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+            if (param2 == MenuCancel_ExitBack) {
+                OpenMainMenu(client);
+            }
         }
-        else if (uItemRebuy[itemId] > 0 && uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] >= uItemRebuyTimes[itemId])
+        case MenuAction_End:
         {
-            Format(sItems, sizeof(sItems), "%s (Reached limit)", uItemName[itemId], uItemRebuyTimes[itemId]);
-
-            menu.AddItem("item", sItems, ITEMDRAW_DISABLED);
+            delete menu;
         }
-        else
-        {
-            Format(sItems, sizeof(sItems), "%s (%d UL) - Buy", uItemName[itemId], uItemPrice[itemId]);
+    }
+ 
+    return 0;
+}
 
-            menu.AddItem("item", sItems);
+void ShowGUMItemMenu(int client, char[] info) {
+    if (!UTIL_IsValidClient(client))
+        return;
+
+    ShopItem item;
+    bool found = false;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopItem tempItem;
+        g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+        if (StrEqual(tempItem.Unique, info)) {
+            item = tempItem;
+            found = true;
+            break;
         }
+    }
+    if (!found) {
+        return;
+    }
 
+    Menu menu = new Menu(MenuItemHandlerCategory);
+    menu.SetTitle(item.Name);
+    char buyid[32];
+    char showdescid[32];
+    Format(buyid, sizeof(buyid), "buyitem-%s", info);
+    Format(showdescid, sizeof(showdescid), "buydesc-%s", info);
+    menu.AddItem(buyid,"Buy item" );
+    menu.AddItem(showdescid,"Show item description" );
+    
+    if (item.LevelRequired > 0 || item.RebornRequired > 0 || item.EvolutionRequired > 0 || item.NirvanaRequired > 0) {
+        menu.AddItem("disabled3","Requirements: ",ITEMDRAW_DISABLED );
+        char requirements[32];
+        if (item.NirvanaRequired > 0)
+            Format(requirements, sizeof(requirements), "%i Nirvanas ", item.NirvanaRequired);
+        if (item.EvolutionRequired > 0)
+            Format(requirements, sizeof(requirements), "%i Evolutions ", item.EvolutionRequired);
+        if (item.RebornRequired > 0)
+            Format(requirements, sizeof(requirements), "%i Reborns ", item.RebornRequired);
+        if (item.LevelRequired > 0)
+            Format(requirements, sizeof(requirements), "%i Levels ", item.LevelRequired);
+        menu.AddItem("disabled4", requirements ,ITEMDRAW_DISABLED );
+    } else {
+        menu.AddItem("disabled4","Requirements: Everyone can buy",ITEMDRAW_DISABLED );
+    }
+    menu.AddItem("disabled6","Cost",ITEMDRAW_DISABLED );
+    if (item.XPCost > 0 || item.RBPointsCost > 0 || item.EvoPointsCost > 0 || item.NirvanaPointsCost > 0) {
+        char cost[64];
+        if (item.NirvanaPointsCost > 0)
+            Format(cost, sizeof(cost), "%i Nirvana Points ", item.NirvanaPointsCost);
+        if (item.EvoPointsCost > 0)
+            Format(cost, sizeof(cost), "%i Evolution Points ", item.EvoPointsCost);
+        if (item.RBPointsCost > 0)
+            Format(cost, sizeof(cost), "%i Reborn Points", item.RBPointsCost);
+        if (item.XPCost > 0)
+            Format(cost, sizeof(cost), "%i XP ", item.XPCost);
+        menu.AddItem("disabled7", cost ,ITEMDRAW_DISABLED );
+    } else {
+        menu.AddItem("disabled7","For free",ITEMDRAW_DISABLED );
     }
 
     menu.ExitButton = true;
-    
-    menu.Display(client, MENU_DISPLAY_TIME );
+    menu.ExitBackButton = true;
+    menu.Display(client, 30);
 }
-public int unlocksMenuCallback(Handle menu, MenuAction action, int client, int itemId)
+
+public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int param2)
 {
-    if( action == MenuAction_Select )
-    {    
-        int getUnlocks = GUM_GetPlayerUnlocks( client );
-        
-        int iPrice = uItemPrice[itemId];
-        
-        if (getUnlocks >= iPrice && !playerItems[client][itemId] && ((uItemRebuy[itemId] < 1) || (uItemRebuy[itemId] > 0
-        && ((uItemRebuyTimes[itemId] < 1) || (uItemRebuyTimes[itemId] > 0 && playerItemRebuyTimes[client][itemId] < uItemRebuyTimes[itemId])))))
+    switch(action)
+    {
+        case MenuAction_Select:
         {
-            hookItemSet(client, itemId, false);
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
             
-            GUM_SetPlayerUnlocks( client, getUnlocks - iPrice );
-            
-            mainUnlocksMenu(client);
+            if (StrContains( info, "buyitem-", false ) != -1) {
+                PrintToChatAll("Client %N selected to buy item %s", client, info);
+                ReplaceString(info, sizeof(info), "buyitem-", "", false);
+                ShowGUMItemMenu(client, info);
+            } else if (StrContains( info, "buydesc-", false ) != -1) {
+                ReplaceString(info, sizeof(info), "buydesc-", "", false);
+                ShopItem item;
+                bool found = false;
+                for (int i = 0; i < g_aItems.Length; i++) {
+                    ShopItem tempItem;
+                    g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+                    if (StrEqual(tempItem.Unique, info)) {
+                        item = tempItem;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return 0;
+                }
+
+                CPrintToChat(client, "Description of [%s] : %s", item.Name, item.Description);
+                ShowGUMItemMenu(client, info);
+            }
         }
-    } 
-    else if (action == MenuAction_End)    
-    {
-        delete menu;
-    }
-}
-
-public void hookItemSet(int client, int itemId, bool itemDrop)
-{
-    hookItemSetCallback(client, itemId);
-    
-    if (uItemRebuy[itemId] < 1 || uItemRebuy[itemId] == 2) {
-        playerItems[client][itemId] = true;
-        
-        if (uItemRebuy[itemId] == 2) {
-            playerItemRebuyTimes[client][itemId]++;
+        case MenuAction_Cancel:
+        {
+            if (param2 == MenuCancel_ExitBack) {
+                OpenMainMenu(client);
+            }
         }
-    } else {
-        hookItemUnSetCallback(client, itemId);
-        
-        playerItemRebuyTimes[client][itemId]++;
-        
-        playerItems[client][itemId] = false;
+        case MenuAction_End:
+        {
+            delete menu;
+        }
     }
-    
-    if (itemDrop) {
-        CPrintToChat(client, "{yellow}ITEM DROPPED!", uItemName[itemId]);
-        CPrintToChat(client, "{default}Item: {yellow}%s{default}!", uItemName[itemId]);
-        CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
-    } else {
-        CPrintToChat(client, "{default}Item: {yellow}%s{default}.", uItemName[itemId]);
-        CPrintToChat(client, "{default}Description: {yellow}%s{default}.", uItemDesc[itemId]);
-    }
+ 
+    return 0;
 }
 
-public void hookItemSetCallback(int client, int itemId)
-{
-    Handle pluginId = uItemId[itemId];
-    if (pluginId == INVALID_HANDLE) {
-        LogError("[Gum_shop] Handle was invalid for gumItemSetCallback in hookItemSetCallback");
+stock void LoadShopConfig() {
+    char ResetPath[PLATFORM_MAX_PATH];
+    KeyValues ResetKV = new KeyValues("Shop");
+    BuildPath(Path_SM, ResetPath, sizeof(ResetPath), "configs/prestige/gum_shop.cfg");
+    
+    if (!ResetKV.ImportFromFile(ResetPath)) {
+        LogError("Couldn't import: \"%s\"", ResetPath);
         return;
     }
-    Function func = GetFunctionByName (pluginId, "gumItemSetCallback");
-    
-    if (func == INVALID_FUNCTION) {
-        LogError("[Gum_shop] not found for gumItemSetCallback in hookItemUnSetCallback");
-        return;
-    }
-    
-    Call_StartFunction(pluginId, func);
-    Call_PushCell( client );
-    Call_Finish();
-}
-public void hookItemUnSetCallback(int client, int itemId)
-{
-    Handle pluginId = uItemId[itemId];
-    if (pluginId == INVALID_HANDLE) {
-        LogError("[Gum_shop] Handle was invalid for gumItemUnSetCallback in hookItemUnSetCallback");
-        return;
-    }
-    Function func = GetFunctionByName (pluginId, "gumItemUnSetCallback");
-    
-    if (func == INVALID_FUNCTION) {
-        LogError("[Gum_shop] not found for gumItemUnSetCallback in hookItemUnSetCallback");
-        return;
-    }
-    
-    Call_StartFunction(pluginId, func);
-    Call_PushCell( client );
-    Call_Finish();
-}
 
-public int registerItemGum(Handle iIndex, const char[] iName, const char[] iDesc, int iPrice, int iRebuy, int iRebuyTimes)
-{
-    if( numItems == MAX_UNLOCKS )
+    if (!ResetKV.GotoFirstSubKey()) {
+        LogError("No configs in: \"%s\"", ResetPath);
+        return;
+    }
+    do
     {
-        return -1;
-    }
-    if (iIndex == INVALID_HANDLE) {
-        LogError("[Gum_shop] Invalid plugin handle while registering plugin.");
-        return -1;
-    }
-    uItemId[numItems] = iIndex;
-    Format(uItemName[numItems], MAX_UNLOCKS_NAME_SIZE, iName);
-    Format(uItemDesc[numItems], MAX_UNLOCKS_DESC_SIZE, iDesc);
-    uItemPrice[numItems] = iPrice;
-    uItemRebuy[numItems] = iRebuy;
-    uItemRebuyTimes[numItems] = iRebuyTimes;
-    
-    numItems++;
-    
-    return numItems;
+        char sectioname[64];
+        ResetKV.GetSectionName(sectioname, sizeof(sectioname));
+        
+        ShopCategory category;
+        category.SubCategories = new ArrayList(sizeof(ShopCategory));
+        strcopy(category.Unique, sizeof(ShopCategory::Unique), sectioname);
+        strcopy(category.Name, sizeof(ShopCategory::Name), sectioname);
+        strcopy(category.MotherCategory, sizeof(ShopCategory::MotherCategory), GUM_ROOT_CATEGORY);
+
+        do
+        {
+            ResetKV.GotoFirstSubKey(false);
+            if (ResetKV.GetDataType(NULL_STRING) != KvData_None)
+            {
+                char sectionkey[32];
+                char sectionvalue[32];
+                ResetKV.GetSectionName(sectionkey, sizeof(sectionkey));
+                ResetKV.GetString(NULL_STRING, sectionvalue, sizeof(sectionvalue));
+                ShopCategory subcategory;
+                subcategory.SubCategories = new ArrayList(sizeof(ShopCategory));
+                strcopy(subcategory.Unique, sizeof(ShopCategory::Unique), sectionkey);
+                strcopy(subcategory.Name, sizeof(ShopCategory::Name), sectionvalue);
+                strcopy(subcategory.MotherCategory, sizeof(ShopCategory::MotherCategory), sectioname);
+                category.SubCategories.PushArray(subcategory, sizeof(subcategory)); 
+            }
+        } while (ResetKV.GotoNextKey(false));
+        ResetKV.GoBack();
+        g_aCategories.PushArray(category, sizeof(category)); 
+    } while (ResetKV.GotoNextKey());
+
+    delete ResetKV;
 }

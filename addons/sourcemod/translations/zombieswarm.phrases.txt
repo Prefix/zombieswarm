@@ -17,7 +17,7 @@
 	"Random Zombie class"
 	{
 		"#format"	"{1:s}"
-		"en"	"Random Zombie class: {red}%s"
+		"en"	"Random Zombie class: {red}{1}"
 	}
 	"Hint: Ability cooldown"
 	{
@@ -42,7 +42,7 @@
 	}
 	"Hint: Currently you are a ghost"
 	{
-		"en" "<font color='#FFFFFF'>Currently you are a ghost</font>\n<font color='#00FF00'>E</font><font color='#FFFFFF'> to teleport.\n<font color='#00FF00'>MOUSE1</font><font color='#FFFFFF'> to spawn.</font>"
+		"en" "<font color='#FFFFFF'>Currently you are a ghost</font>\nHide from humans and click <font color='#00FF00'>[Left Mouse Click]</font><font color='#FFFFFF'> to respawn</font>."
 	}
 	// {1} - Zombie name, {2} - Zombie description
 	"Hint: Zombie Info Name and Description"

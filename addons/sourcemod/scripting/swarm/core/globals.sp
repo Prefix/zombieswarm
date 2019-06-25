@@ -58,6 +58,7 @@ ConVar g_cOverlayCTWin;
 ConVar g_cOverlayTWin;
 ConVar g_cOverlayEnable;
 ConVar g_cHumanGravity;
+ConVar g_cGhostMode;
 // Server ConVars
 Handle g_cAlpha;
 // Misc

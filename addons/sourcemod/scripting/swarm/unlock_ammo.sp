@@ -3,52 +3,53 @@
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
-#include <gum>
+#include <gum_shop>
+#include <zombieswarm>
 #include <swarm/utils>
+
+GumItem small_ammopack;
+GumItem medium_ammopack;
+GumItem large_ammopack;
 
 public Plugin myinfo =
 {
-    name = "Additional ammo",
+    name = "[GUM Shop] Additional ammo",
     author = "Zombie Swarm Contributors",
-    description = "none",
+    description = "Gives human additional ammo",
     version = "1.0",
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-#define ITEM_COST 5
+public void GUMShop_OnLoaded() {
+    small_ammopack = GumItem(
+        "small_ammopack",
+        "category_ammopacks",
+        "[Ammo pack] Small",
+        "Gives you a small ammunition pack"
+    );
+    small_ammopack.LevelRequired = 1;
+    small_ammopack.XPCost = 10;
+    small_ammopack.RebuyTimes = itemBuyOnceRound;
 
-bool itemEnabled[MAXPLAYERS + 1];
+    medium_ammopack = GumItem(
+        "medium_ammopack",
+        "category_ammopacks",
+        "[Ammo pack] Medium",
+        "Gives you a medium ammunition pack"
+    );
+    medium_ammopack.XPCost = 20;
+    medium_ammopack.RebornRequired = 5;
+    medium_ammopack.RebuyTimes = itemBuyOnceRound;
 
-public void OnPluginStart()
-{
-    // We are registering item here
-    // itemRebuy - 0 = Item can be bought one time per connect, 1 = Buy item many times, 2 = Item can be bought one time per round
-    // itemRebuyTimes - 0 = Infinite buy, >0 = Item rebuy times
-    registerGumItem("Ammo Pack", "Additional ammo packs", ITEM_COST, 1, 0);
-}
-
-// Called when item/unlock was selected by menu
-public void gumItemSetCallback(int client)
-{
-    itemEnabled[client] = true;
-    
-    if (!UTIL_IsValidAlive(client))
-        return;
-        
-    setReserveAmmo(client, 100);
-}
-
-// Called when item/unlock was selected by menu
-public void gumItemUnSetCallback(int client)
-{
-    itemEnabled[client] = false;
-}
-
-// Take the item/unlock from the player
-public void OnClientDisconnect(int client)
-{
-    if ( UTIL_IsValidClient(client) )
-        itemEnabled[client] = false;
+    large_ammopack = GumItem(
+        "medium_ammopack",
+        "category_ammopacks",
+        "[Ammo pack] Large",
+        "Gives you a medium ammunition pack"
+    );
+    large_ammopack.XPCost = 30;
+    large_ammopack.EvolutionRequired = 1;
+    large_ammopack.RebuyTimes = itemBuyOnceRound;
 }
 
 stock void setReserveAmmo(int client, int ammo)

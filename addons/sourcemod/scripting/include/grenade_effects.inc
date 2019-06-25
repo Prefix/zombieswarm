@@ -1,3 +1,7 @@
+#if defined _grenade_effects_included
+ #endinput
+#endif
+#define _grenade_effects_included
 /** 
  * Called when a player is about to be freezed by a grenade 
  * 
