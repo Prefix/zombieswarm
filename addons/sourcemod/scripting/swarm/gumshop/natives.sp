@@ -84,6 +84,8 @@ public int Native_GumItem_Constructor(Handle plugin, int numParams)
     newItem.Rebuy = DEFAULT_REBUY;
     newItem.RebuyTimes = DEFAULT_REBUY_TIMES;
     newItem.AdminFlagOnly = DEFAULT_ADMFLAG_ONLY;
+    newItem.Upgradeable = DEFAULT_UPGRADEABLE;
+    newItem.Upgrades = new ArrayList(sizeof(ShopItemUpgrade));
     strcopy(newItem.AdminFlags, sizeof(ShopItem::AdminFlags), DEFAULT_ADMFLAGS);
     strcopy(newItem.AdminFlagDesc, sizeof(ShopItem::AdminFlagDesc), DEFAULT_ADMFLAG_DESC);
 

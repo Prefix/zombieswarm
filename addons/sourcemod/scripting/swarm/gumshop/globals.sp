@@ -29,9 +29,9 @@ enum struct ShopItem {
     ArrayList Upgrades;
 }
 
-enum struct ItemUpgrade {
-    char ItemID[GUM_MAX_CATEGORY_UNIQUE];
-    char ItemUnique[GUM_MAX_CATEGORY_UNIQUE];
+enum struct ShopItemUpgrade {
+    int ItemID;
+    char ItemUnique[GUM_MAX_ITEM_UNIQUE];
     int XPCost;
     int RBPointsCost;
     int EvoPointsCost;
@@ -60,3 +60,4 @@ int g_iRegisteredItems = 0;
 #define DEFAULT_ADMFLAG_ONLY false
 #define DEFAULT_ADMFLAGS ""
 #define DEFAULT_ADMFLAG_DESC ""
+#define DEFAULT_UPGRADEABLE false
