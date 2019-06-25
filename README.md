@@ -30,7 +30,9 @@ Prestige system is GunXp mod expansion. When you reach levels it's over, but Pre
 Levels
 * When you reach certain level you get levels reset and get 1 Reborn, 1 Reborn point, +1 to total reborns.
 * When you reach specific amount of reborns your reborns being reset and you get 1 Evolution and 1 Evolution point
-* When you reach specific amount of evolutions your evolutions being reset and you get 1 Nirvana and 1 Evolution point
+* When you reach specific amount of evolutions your evolutions being reset and you get 1 Nirvana and 1 Nirvana point
+
+More reborns you need to make, more levels you need to achieve, thats also goes same for Reborns to achieve Evolution and Evoliutions to achieve Nirvana.
 
 ## Server commands
 
