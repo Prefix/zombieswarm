@@ -143,7 +143,16 @@ void DrawCategoryMenu(int client, char[] info) {
         if (StrEqual(temp_item.UniqueCategory, info)) {
             char tempunique[64];
             Format(tempunique, sizeof(tempunique), "menuitem-%s", temp_item.Unique);
-            menu.AddItem(tempunique,temp_item.Name);
+            if (PlayerHasItem(client, temp_item.Unique)) {
+                char shopitemname[64];
+                Format(shopitemname, sizeof(shopitemname), "[+] %s", temp_item.Name);
+                PrintToChatAll("[+] %N %s %s", client, tempunique, shopitemname);
+                menu.AddItem(tempunique,shopitemname);
+            } else {
+                PrintToChatAll("%N %s %s", client, temp_item.Unique, temp_item.Name);
+                menu.AddItem(tempunique,temp_item.Name);
+            }
+            
             menuitems++;
         }
     }
@@ -213,7 +222,12 @@ void ShowGUMItemMenu(int client, char[] info) {
     char showdescid[32];
     Format(buyid, sizeof(buyid), "buyitem-%s", info);
     Format(showdescid, sizeof(showdescid), "buydesc-%s", info);
-    menu.AddItem(buyid,"Buy item" );
+
+    // check for rebuy
+    if (PlayerHasItem(client, info)) menu.AddItem(buyid, "You have it bought already", ITEMDRAW_DISABLED );
+    else if (!CanBuyItem(client, info)) menu.AddItem(buyid, "You cannot buy this item", ITEMDRAW_DISABLED );
+    else menu.AddItem(buyid,"Buy item" );
+
     menu.AddItem(showdescid,"Show item description" );
     
     if (item.LevelRequired > 0 || item.RebornRequired > 0 || item.EvolutionRequired > 0 || item.NirvanaRequired > 0) {
@@ -265,36 +279,12 @@ bool CanBuyItem(int client, char[] info) {
             break;
         }
     }
-
     if (!found) return false;
+    if (PlayerHasItem(client, info)) return false;
 
     PrestigePlayer pplayer = PrestigePlayer(client);
-
-    if (item.LevelRequired > 0) {
-        if (item.LevelRequired > pplayer.MaxLevel)
-            return false;
-        if (item.LevelRequired > pplayer.Level)
-            return false;
-    } 
-
-    if (item.RebornRequired > 0) {
-        if (item.RebornRequired > pplayer.MaxReborns)
-            return false;
-        if (item.RebornRequired > pplayer.Reborn)
-            return false;
-    }
-
-    if (item.EvolutionRequired > 0) {
-        if (item.EvolutionRequired > pplayer.MaxEvolutions)
-            return false;
-        if (item.EvolutionRequired > pplayer.Evolution)
-            return false;
-    }
-
-    if (item.NirvanaRequired > 0) {
-        if (item.NirvanaRequired > pplayer.Nirvana)
-            return false;
-    }
+    if (!pplayer.DoesMeetRequirements(item.LevelRequired, item.RebornRequired, item.EvolutionRequired, item.NirvanaRequired))
+        return false;
 
     if (item.XPCost > 0) {
         if (item.XPCost > GUM_GetPlayerUnlocks(client))
@@ -338,8 +328,13 @@ bool BuyItem(int client, char[] info) {
     }
 
     if (!found) return false;
+    // check if rebuy
+    if (PlayerHasItem(client, info)) return false;
 
     PrestigePlayer pplayer = PrestigePlayer(client);
+
+    if (!pplayer.DoesMeetRequirements(item.LevelRequired, item.RebornRequired, item.EvolutionRequired, item.NirvanaRequired))
+        return false;
 
     // First check if have enought stuff to buy, than take it away.
     if (item.XPCost > 0) {
@@ -383,6 +378,32 @@ bool BuyItem(int client, char[] info) {
             pplayer.NirvanaPoints -= item.NirvanaPointsCost;
     }
     // Add rebuy thing
+    ShopPlayerItem newItem;
+
+    newItem.ID = g_iRegisteredPlayerItems;
+    newItem.Client = client;
+    newItem.ItemID = item.ID;
+    strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
+    if (item.Rebuy == itemBuyOnceMap) {
+        newItem.RebuyTimes = GUM_NO_REBUY_MAP;
+    } else if ( item.Rebuy == itemBuyOnce) {
+        // Save to sql
+        newItem.RebuyTimes = GUM_NO_REBUY;
+    } else if ( item.Rebuy == itemBuyOnceRound) {
+        // Clear such items after round
+        newItem.RebuyTimes = 0;
+    } else if ( item.Rebuy == itemRebuy) {
+        // Clear such items after round
+        newItem.RebuyTimes = item.RebuyTimes;
+    }
+    if (item.Upgradeable)
+        newItem.Upgrades = 0;
+    else 
+        newItem.Upgrades = GUM_NO_UPGRADES;
+    g_aPlayerItems.PushArray(newItem, sizeof(newItem));
+
+    g_iRegisteredPlayerItems++;
+
     return true;
 }
 
@@ -419,7 +440,22 @@ stock bool CheckAdminFlagsByString(int client, const char[] flagString)
     }
 
     return false;
-}  
+} 
+
+bool PlayerHasItem(int client, char[] info) {
+    ShopPlayerItem item;
+    bool found = false;
+    for (int i = 0; i < g_aPlayerItems.Length; i++) {
+        ShopPlayerItem tempItem;
+        g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
+        if (StrEqual(tempItem.ItemUnique, info) && client == tempItem.Client) {
+            item = tempItem;
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
 
 public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int param2)
 {
@@ -472,16 +508,15 @@ public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int
                 Call_PushCell(client);
                 Call_PushCell(item.ID);
                 Call_Finish(res);
-
-                if (result == Plugin_Stop || result == Plugin_Handled)
+                // Use there Plugin_Stop to end cycle when we find our item from plugins side
+                if (res == Plugin_Stop || res == Plugin_Handled)
                 {
-                    ShowGUMItemMenu(client, info);
-                    return 0;
+                    BuyItem(client, info);
+                    CPrintToChat(client, "Item bought [%s]", item.Name);
+                } else {
+                    CPrintToChat(client, "Failed to buy item [%s]", item.Name);
+                    LogMessage("%N Failed to buy item %s", client, item.Name);
                 }
-
-                BuyItem(client, info);
-
-                CPrintToChat(client, "Item bought [%s]", item.Name);
                 
             } else if (StrContains( info, "buydesc-", false ) != -1) {
                 ReplaceString(info, sizeof(info), "buydesc-", "", false);

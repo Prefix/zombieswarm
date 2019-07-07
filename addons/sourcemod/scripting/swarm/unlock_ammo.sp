@@ -42,7 +42,7 @@ public void GUMShop_OnLoaded() {
     medium_ammopack.RebuyTimes = itemBuyOnceRound;
 
     large_ammopack = GumItem(
-        "medium_ammopack",
+        "large_ammopack",
         "category_ammopacks",
         "[Ammo pack] Large",
         "Gives you a medium ammunition pack"
@@ -50,6 +50,22 @@ public void GUMShop_OnLoaded() {
     large_ammopack.XPCost = 30;
     large_ammopack.EvolutionRequired = 1;
     large_ammopack.RebuyTimes = itemBuyOnceRound;
+}
+
+public Action GUMShop_OnBuyItem(int client, int item) {
+    if (item == small_ammopack.ID) {
+        setReserveAmmo(client, 100);
+        return Plugin_Stop;
+    }
+    if (item == medium_ammopack.ID) {
+        setReserveAmmo(client, 250);
+        return Plugin_Stop;
+    }
+    if (item == large_ammopack.ID) {
+        setReserveAmmo(client, 500);
+        return Plugin_Stop;
+    }
+    return Plugin_Continue;
 }
 
 stock void setReserveAmmo(int client, int ammo)

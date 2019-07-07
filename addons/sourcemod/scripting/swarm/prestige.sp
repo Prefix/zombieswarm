@@ -727,5 +727,5 @@ public int Native_PrestigePlayer_Requirements(Handle plugin, int numParams)
     int rb = GetNativeCell(3);
     int evo = GetNativeCell(4);
     int nirvana = GetNativeCell(5);
-    return (level >= GUM_GetPlayerLevel(client) && rb >= g_iReborns[client] && evo >= g_iEvolutions[client] && nirvana >= g_iNirvana[client]);
+    return (level <= GUM_GetPlayerLevel(client) && rb <= g_iReborns[client] && evo <= g_iEvolutions[client] && nirvana <= g_iNirvana[client]);
 }

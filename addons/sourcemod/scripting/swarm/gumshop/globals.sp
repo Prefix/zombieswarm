@@ -8,8 +8,10 @@ enum struct ShopCategory {
 }
 
 enum struct ShopPlayerItem {
+    int ID;
     int Client;
     int ItemID;
+    char ItemUnique[GUM_MAX_ITEM_UNIQUE];
     int RebuyTimes;
     int Upgrades;
 }

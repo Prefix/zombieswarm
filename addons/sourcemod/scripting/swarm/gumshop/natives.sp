@@ -60,14 +60,20 @@ public int Native_GumItem_Constructor(Handle plugin, int numParams)
     GetNativeString(3, temp_unique_name, sizeof(temp_unique_name));
     GetNativeString(4, temp_unique_desc, sizeof(temp_unique_desc));
 
+    bool found = false;
     for (int i = 0; i < g_aItems.Length; i++)
     {
         ShopItem tempitem;
         g_aItems.GetArray(0, tempitem, sizeof(tempitem)); 
-        if (StrEqual(tempitem.Unique, temp_unique, false))
+        if (StrEqual(tempitem.Unique, temp_unique))
         {
-            return -1;
+            found = true;
+            break;
         }
+    }
+    if (found) {
+        ThrowNativeError(SP_ERROR_NATIVE, "Item with unique (%s) already exists", temp_unique);
+        return -1;
     }
 
     ShopItem newItem;

@@ -15,12 +15,18 @@
 #define GUM_MAX_ITEM_DESC 64
 // uPGRADES
 #define GUM_MAX_ITEM_UPGRADE_UNIQUE 16
+// No need to rebuy (saved on sql)
 #define GUM_NO_REBUY -1
+// No need to rebuy whole map
+#define GUM_NO_REBUY_MAP -2
+#define GUM_NO_UPGRADES -1
 
 // Fowards
 forward void GUMShop_OnLoaded();
 
+// Return Plugin_Stop to disable buying it.
 forward Action GUMShop_OnPreBuyItem(int client, int item);
+// Return Plugin_Stop on 3rd party plugins when buying to enable buying.
 forward Action GUMShop_OnBuyItem(int client, int item);
 
 enum g_eItemBuy {
