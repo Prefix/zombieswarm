@@ -10,7 +10,6 @@ matrix:
     - env: SOURCEMOD=1.10
 
 env:
-  - SOURCEMOD=1.9
   - SOURCEMOD=1.10
 
 before_script:
