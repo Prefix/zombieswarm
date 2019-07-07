@@ -29,6 +29,7 @@ public void OnPluginStart()
 {   
     g_aItems = new ArrayList(sizeof(ShopItem));
     g_aCategories = new ArrayList(sizeof(ShopCategory));
+    g_aPlayerItems = new ArrayList(sizeof(ShopPlayerItem));
     RegConsoleCmd("sm_shop", Command_Shop);
     RegConsoleCmd("sm_ul", Command_Shop);
     RegConsoleCmd("sm_unlocks", Command_Shop);
@@ -47,7 +48,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnAllPluginsLoaded() {
     g_aItems.Clear();
+    g_aPlayerItems.Clear();
     g_iRegisteredItems = 0;
+    g_iRegisteredPlayerItems = 0;
     Call_StartForward(g_hForwardOnShopLoaded);
     Call_Finish();
 }
@@ -249,6 +252,175 @@ void ShowGUMItemMenu(int client, char[] info) {
     menu.Display(client, 30);
 }
 
+bool CanBuyItem(int client, char[] info) {
+
+    ShopItem item;
+    bool found = false;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopItem tempItem;
+        g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+        if (StrEqual(tempItem.Unique, info)) {
+            item = tempItem;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) return false;
+
+    PrestigePlayer pplayer = PrestigePlayer(client);
+
+    if (item.LevelRequired > 0) {
+        if (item.LevelRequired > pplayer.MaxLevel)
+            return false;
+        if (item.LevelRequired > pplayer.Level)
+            return false;
+    } 
+
+    if (item.RebornRequired > 0) {
+        if (item.RebornRequired > pplayer.MaxReborns)
+            return false;
+        if (item.RebornRequired > pplayer.Reborn)
+            return false;
+    }
+
+    if (item.EvolutionRequired > 0) {
+        if (item.EvolutionRequired > pplayer.MaxEvolutions)
+            return false;
+        if (item.EvolutionRequired > pplayer.Evolution)
+            return false;
+    }
+
+    if (item.NirvanaRequired > 0) {
+        if (item.NirvanaRequired > pplayer.Nirvana)
+            return false;
+    }
+
+    if (item.XPCost > 0) {
+        if (item.XPCost > GUM_GetPlayerUnlocks(client))
+            return false;
+    }
+
+    if (item.RBPointsCost > 0) {
+        if (item.RBPointsCost > pplayer.RebornPoints)
+            return false;
+    }
+
+    if (item.EvoPointsCost > 0) {
+        if (item.EvoPointsCost > pplayer.EvolutionPoints)
+            return false;
+    }
+
+    if (item.NirvanaPointsCost > 0) {
+        if (item.NirvanaPointsCost > pplayer.NirvanaPoints)
+            return false;
+    }
+    if (item.AdminFlagOnly) {
+        if (!CheckAdminFlagsByString(client, item.AdminFlags))
+            return false;
+    }
+    // Add rebuy thing
+    return true;
+}
+
+bool BuyItem(int client, char[] info) {
+
+    ShopItem item;
+    bool found = false;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopItem tempItem;
+        g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+        if (StrEqual(tempItem.Unique, info)) {
+            item = tempItem;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) return false;
+
+    PrestigePlayer pplayer = PrestigePlayer(client);
+
+    // First check if have enought stuff to buy, than take it away.
+    if (item.XPCost > 0) {
+        if (item.XPCost > GUM_GetPlayerUnlocks(client))
+            return false;
+    }
+
+    if (item.RBPointsCost > 0) {
+        if (item.RBPointsCost > pplayer.RebornPoints)
+            return false;
+    }
+
+    if (item.EvoPointsCost > 0) {
+        if (item.EvoPointsCost > pplayer.EvolutionPoints)
+            return false;
+    }
+
+    if (item.NirvanaPointsCost > 0) {
+        if (item.NirvanaPointsCost > pplayer.NirvanaPoints)
+            return false;
+    }
+    // it's shopping time
+    if (item.XPCost > 0) {
+        int xp = GUM_GetPlayerUnlocks(client);
+        if (item.XPCost <= xp)
+            GUM_SetPlayerUnlocks(client, xp-item.XPCost);
+    }
+
+    if (item.RBPointsCost > 0) {
+        if (item.RBPointsCost <= pplayer.RebornPoints)
+            pplayer.RebornPoints -= item.RBPointsCost;
+    }
+
+    if (item.EvoPointsCost > 0) {
+        if (item.EvoPointsCost <= pplayer.EvolutionPoints)
+            pplayer.EvolutionPoints -= item.EvoPointsCost;
+    }
+
+    if (item.NirvanaPointsCost > 0) {
+        if (item.NirvanaPointsCost <= pplayer.NirvanaPoints)
+            pplayer.NirvanaPoints -= item.NirvanaPointsCost;
+    }
+    // Add rebuy thing
+    return true;
+}
+
+/**
+ * Checks to see if a client has all of the specified admin flags
+ *
+ * @param client        Player's index.
+ * @param flagString    String of flags to check for.
+ * @return                True on admin having all flags, false otherwise.
+ * Original taken from https://forums.alliedmods.net/showpost.php?p=886345&postcount=4
+ */
+stock bool CheckAdminFlagsByString(int client, const char[] flagString)
+{
+    AdminId admin = view_as<AdminId>(GetUserAdmin(client));
+    if (admin != INVALID_ADMIN_ID){
+        if(GetAdminFlag(admin, Admin_Root)) {
+            return true;
+        }
+        int count, found, flags = ReadFlagString(flagString);
+        for (int i = 0; i <= 20; i++){
+            if (flags & (1<<i))
+            {
+                count++;
+
+                if(GetAdminFlag(admin, view_as<AdminFlag>(i))){
+                    found++;
+                }
+            }
+        }
+
+        if (count == found){
+            return true;
+        }
+    }
+
+    return false;
+}  
+
 public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int param2)
 {
     switch(action)
@@ -261,7 +433,56 @@ public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int
             if (StrContains( info, "buyitem-", false ) != -1) {
                 PrintToChatAll("Client %N selected to buy item %s", client, info);
                 ReplaceString(info, sizeof(info), "buyitem-", "", false);
-                ShowGUMItemMenu(client, info);
+
+                ShopItem item;
+                bool found = false;
+                for (int i = 0; i < g_aItems.Length; i++) {
+                    ShopItem tempItem;
+                    g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+                    if (StrEqual(tempItem.Unique, info)) {
+                        item = tempItem;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) return 0;
+
+                // check if can buy
+                bool canbuy = CanBuyItem(client, info);
+                if (!canbuy) {
+                    CPrintToChat(client, "You cannot buy [%s]", item.Name);
+                    return 0;
+                }
+
+                Action result = Plugin_Continue;
+                Call_StartForward(g_hForwardOnPreBuyItem);
+                Call_PushCell(client);
+                Call_PushCell(item.ID);
+                Call_Finish(result);
+
+                if (result == Plugin_Stop || result == Plugin_Handled)
+                {
+                    ShowGUMItemMenu(client, info);
+                    return 0;
+                }
+                
+                Action res = Plugin_Continue;
+                Call_StartForward(g_hForwardOnBuyItem);
+                Call_PushCell(client);
+                Call_PushCell(item.ID);
+                Call_Finish(res);
+
+                if (result == Plugin_Stop || result == Plugin_Handled)
+                {
+                    ShowGUMItemMenu(client, info);
+                    return 0;
+                }
+
+                BuyItem(client, info);
+
+                CPrintToChat(client, "Item bought [%s]", item.Name);
+                
             } else if (StrContains( info, "buydesc-", false ) != -1) {
                 ReplaceString(info, sizeof(info), "buydesc-", "", false);
                 ShopItem item;

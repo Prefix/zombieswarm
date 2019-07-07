@@ -1,4 +1,4 @@
-Handle g_hForwardOnShopLoaded;
+
 void InitMethodMaps() {
     // Our MethodMap -> GumItem
     CreateNative("GumItem.GumItem", Native_GumItem_Constructor);
@@ -43,6 +43,8 @@ void InitMethodMaps() {
 }
 void InitForwards() {
     g_hForwardOnShopLoaded = CreateGlobalForward("GUMShop_OnLoaded", ET_Ignore);
+    g_hForwardOnPreBuyItem = CreateGlobalForward("GUMShop_OnPreBuyItem", ET_Event, Param_Cell, Param_Cell);
+    g_hForwardOnBuyItem = CreateGlobalForward("GUMShop_OnBuyItem", ET_Event, Param_Cell, Param_Cell);
 }
 
 // Natives for MethodMap GumItem

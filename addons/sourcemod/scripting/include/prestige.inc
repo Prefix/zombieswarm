@@ -43,9 +43,9 @@ methodmap PrestigePlayer {
         public native get();
         public native set(const int val);
     }
-    property bool EvolutionPoints {
+    property int EvolutionPoints {
         public native get();
-        public native set(const bool val);
+        public native set(const int val);
     }
     property int NirvanaPoints {
         public native get();

@@ -7,15 +7,21 @@
 #define GUM_MAX_CATEGORY_NAME_UNIQUE 32
 #define GUM_MAX_SUB_CATEGORIES 64
 #define GUM_MAX_CATEGORY_UNIQUE 32
-#define GUM_MAX_FLAGS 12
+#define GUM_MAX_FLAGS 21
 #define GUM_MAX_FLAGS_DESC 32
 // Max items
-#define GUM_MAX_ITEM_UNIQUE 32
+#define GUM_MAX_ITEM_UNIQUE 16
 #define GUM_MAX_ITEM_NAME 32
-#define GUM_MAX_ITEM_DESC 32
+#define GUM_MAX_ITEM_DESC 64
+// uPGRADES
+#define GUM_MAX_ITEM_UPGRADE_UNIQUE 16
+#define GUM_NO_REBUY -1
 
 // Fowards
 forward void GUMShop_OnLoaded();
+
+forward Action GUMShop_OnPreBuyItem(int client, int item);
+forward Action GUMShop_OnBuyItem(int client, int item);
 
 enum g_eItemBuy {
     itemBuyOnce,

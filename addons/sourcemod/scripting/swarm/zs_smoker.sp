@@ -236,19 +236,20 @@ public Action BeamTimer(Handle timer, any client)
     GetClientAbsOrigin ( client, Origin );
     GetClientAbsOrigin ( target, targetorigin );
     
-    Origin2[0] = Origin[0];
+    /*Origin2[0] = Origin[0];
     Origin2[1] = Origin[1];
     Origin2[2] = Origin[2] + 50.0;
     
     targetorigin2[0] = targetorigin[0];
     targetorigin2[1] = targetorigin[1];
-    targetorigin2[2] = targetorigin[2] + 50.0;
+    targetorigin2[2] = targetorigin[2] + 50.0;*/
     
     distancebetween = GetVectorDistance ( targetorigin, Origin );
     
     
     if ( distancebetween > 70.0 ) {
-        float fl_Time = distancebetween / 315.0;
+        // Original was 170 after all
+        float fl_Time = distancebetween / 170.0;
 
         fl_Velocity[0] = (Origin[0] - targetorigin[0]) / fl_Time;
         fl_Velocity[1] = (Origin[1] - targetorigin[1]) / fl_Time;
