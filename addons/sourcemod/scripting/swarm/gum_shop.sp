@@ -30,10 +30,239 @@ public void OnPluginStart()
     g_aItems = new ArrayList(sizeof(ShopItem));
     g_aCategories = new ArrayList(sizeof(ShopCategory));
     g_aPlayerItems = new ArrayList(sizeof(ShopPlayerItem));
+    g_aPlayerItemsRebuy = new ArrayList(sizeof(ShopPlayerRebuy));
     RegConsoleCmd("sm_shop", Command_Shop);
     RegConsoleCmd("sm_ul", Command_Shop);
     RegConsoleCmd("sm_unlocks", Command_Shop);
     LoadShopConfig();
+    // Database
+    databaseInit();
+}
+
+public void databaseInit()
+{
+    Database.Connect(databaseConnectionCallback);
+}
+
+public void OnClientPutInServer(int client)
+{
+    if ( UTIL_IsValidClient(client) && !IsFakeClient(client) )
+    {
+        loadData(client);
+        loadDataFromRebuy(client);
+    }
+}
+
+public void loadData(int client)
+{
+    char sQuery[ 256 ]; 
+    
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+
+    Format( sQuery, sizeof( sQuery ), "SELECT * FROM `gumshop_items` WHERE ( `player_id` = '%s' );", szKey );
+    
+    conDatabase.Query( querySelectDataCallback, sQuery, client);
+}
+
+public void querySelectDataCallback(Database db, DBResultSet results, const char[] error, any client)
+{ 
+    if (error[0] != EOS) {
+        LogError( "Server misfunctioning come back later: %s", error );
+        KickClientEx(client, "Server misfunctioning come back later!");
+        return;
+    }
+    if ( db != null)
+    {
+        if (results.HasResults) {
+            while ( results.FetchRow() ) 
+            {
+                char item_name[GUM_MAX_ITEM_UNIQUE];
+                int upgrade_points = 0;
+
+                int fieldItemName;
+                results.FieldNameToNum("item_name", fieldItemName);
+                results.FetchString(fieldItemName, item_name, sizeof(item_name));
+                
+                int fieldUpPoints;
+                results.FieldNameToNum("upgrade_points", fieldUpPoints);
+                upgrade_points = results.FetchInt(fieldUpPoints);
+                AddItemToPlayer(client, item_name, upgrade_points);
+            }
+        }
+        
+    } 
+    else
+    {
+        LogError( "%s", error ); 
+        
+        return;
+    }
+}
+
+public void loadDataFromRebuy(int client) 
+{
+
+    if (!UTIL_IsValidClient(client))
+        return;
+
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopPlayerRebuy tempItemRebuy;
+        g_aPlayerItemsRebuy.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        if (StrEqual(tempItemRebuy.SteamID, szKey)) {
+            AddItemToPlayer(client, tempItemRebuy.ItemUnique);
+        }
+    }
+}
+
+void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0) 
+{
+
+    if (!UTIL_IsValidClient(client))
+        return;
+    
+    // Check if such item exist
+    ShopItem item;
+    bool found = false;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopItem tempItem;
+        g_aItems.GetArray(i, tempItem, sizeof(tempItem));
+        if (StrEqual(tempItem.Unique, item_name)) {
+            item = tempItem;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found) return;
+
+    if (PlayerHasItem(client, item_name)) return;
+
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+
+    ShopPlayerItem newItem;
+    ShopPlayerRebuy newItemRebuy;
+
+    newItem.ID = g_iRegisteredPlayerItems;
+    newItem.Client = client;
+    newItem.ItemID = item.ID;
+    strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
+
+    strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
+    strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
+    newItemRebuy.ItemID = item.ID;
+
+    if (item.Rebuy == itemBuyOnceMap) {
+        newItem.RebuyID = GUM_NO_REBUY_MAP;
+        newItemRebuy.RebuyTimes = GUM_NO_REBUY_MAP;
+    } else if ( item.Rebuy == itemBuyOnce) {
+        // Save to sql
+        // SavePlayerShopItem(client, item.Unique);
+        newItemRebuy.RebuyTimes = GUM_NO_REBUY;
+        newItem.RebuyID = GUM_NO_REBUY;
+    } else if ( item.Rebuy == itemBuyOnceRound) {
+        // Clear such items after round
+        newItem.RebuyID = g_iRegisteredPlayerRebuy;
+        newItemRebuy.RebuyTimes = GUM_NO_REBUY_ROUND;
+    } else if ( item.Rebuy == itemRebuy) {
+        // Clear such items after round
+        newItem.RebuyID = g_iRegisteredPlayerRebuy;
+        newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
+    }
+    if (item.Upgradeable)
+        newItem.Upgrades = 0;
+    else 
+        newItem.Upgrades = GUM_NO_UPGRADES;
+    newItemRebuy.ID = g_iRegisteredPlayerRebuy;
+    if (newItem.RebuyID != GUM_NO_REBUY) {
+        g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
+        g_iRegisteredPlayerRebuy++;
+    }
+    g_aPlayerItems.PushArray(newItem, sizeof(newItem));
+
+    g_iRegisteredPlayerItems++;
+    LogMessage("[ Gum Shop ] Player %N loaded item name %s with %i upgrade points", item_name, upgrade_points);
+    // TODO forward on loaded profile
+}
+
+public void OnClientDisconnect(int client)
+{
+    if ( IsClientInGame(client) )
+    {
+        if (!IsFakeClient(client)) {
+            RemovePlayerItems(client);
+        }
+    }
+}
+
+public void RemovePlayerItems(int client)
+{
+    if (!UTIL_IsValidClient(client))
+        return;
+    for (int i = 0; i < g_aPlayerItems.Length; i++)
+    {
+        if (i == g_aPlayerItems.Length)
+            break;
+        ShopPlayerItem tempItem;
+        g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
+        if(tempItem.Client == client) {
+            g_aPlayerItems.Erase(i--);
+        }
+    }
+}
+
+public void databaseConnectionCallback(Database db, const char[] error, any data)
+{
+    if ( db == null )
+    {
+        PrintToServer("Failed to connect: %s", error);
+        LogError( "%s", error ); 
+        
+        return;
+    }
+    
+    conDatabase = db;
+
+    conDatabase.SetCharset("utf8mb4");
+    
+    char sQuery_Upgrades[512], driverName[16];
+    conDatabase.Driver.GetIdentifier(driverName, sizeof(driverName));
+
+    if ( StrEqual(driverName, "mysql") )
+    {
+        Format( sQuery_Upgrades, sizeof( sQuery_Upgrades ), "CREATE TABLE IF NOT EXISTS `gumshop_items` ( `id` int NOT NULL AUTO_INCREMENT, \
+        `player_id` varchar(64) NOT NULL, \
+        `player_name` varchar(64) default NULL, \
+        `item_name` varchar(64) default NULL, \
+        `upgrade_points` int default 0, \
+        PRIMARY KEY (`id`), UNIQUE KEY `player_id` (`player_id`) ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4;" );
+    }
+    else
+    {
+        Format( sQuery_Upgrades, sizeof( sQuery_Upgrades ), "CREATE TABLE IF NOT EXISTS `gumshop_items` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, \
+        `player_id` TEXT NOT NULL UNIQUE, \
+        `player_name` TEXT DEFAULT NULL, \
+        `item_name` TEXT DEFAULT NULL, \
+        `upgrade_points` INTEGER DEFAULT 0 \
+         );" );
+    }
+
+    conDatabase.Query( QueryCreateTable, sQuery_Upgrades);
+
+}
+
+public void QueryCreateTable(Database db, DBResultSet results, const char[] error, any data)
+{ 
+    if ( db == null )
+    {
+        LogError( "%s", error ); 
+        
+        return;
+    } 
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -49,8 +278,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnAllPluginsLoaded() {
     g_aItems.Clear();
     g_aPlayerItems.Clear();
+    g_aPlayerItemsRebuy.Clear();
     g_iRegisteredItems = 0;
     g_iRegisteredPlayerItems = 0;
+    g_iRegisteredPlayerRebuy = 0;
     Call_StartForward(g_hForwardOnShopLoaded);
     Call_Finish();
 }
@@ -86,7 +317,6 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
         {
             char info[32];
             menu.GetItem(param2, info, sizeof(info));
-            PrintToChatAll("Client %N selected %s", client, info);
             DrawCategoryMenu(client, info);
         }
  
@@ -146,10 +376,8 @@ void DrawCategoryMenu(int client, char[] info) {
             if (PlayerHasItem(client, temp_item.Unique)) {
                 char shopitemname[64];
                 Format(shopitemname, sizeof(shopitemname), "[+] %s", temp_item.Name);
-                PrintToChatAll("[+] %N %s %s", client, tempunique, shopitemname);
                 menu.AddItem(tempunique,shopitemname);
             } else {
-                PrintToChatAll("%N %s %s", client, temp_item.Unique, temp_item.Name);
                 menu.AddItem(tempunique,temp_item.Name);
             }
             
@@ -174,11 +402,9 @@ public int MenuHandlerCategory(Menu menu, MenuAction action, int client, int par
             menu.GetItem(param2, info, sizeof(info));
             
             if (StrContains( info, "menuitem-", false ) != -1) {
-                PrintToChatAll("Client %N selected item %s", client, info);
                 ReplaceString(info, sizeof(info), "menuitem-", "", false);
                 ShowGUMItemMenu(client, info);
             } else {
-                PrintToChatAll("Client %N selected menu %s", client, info);
                 DrawCategoryMenu(client, info);
             }
         }
@@ -227,6 +453,7 @@ void ShowGUMItemMenu(int client, char[] info) {
     if (PlayerHasItem(client, info)) menu.AddItem(buyid, "You have it bought already", ITEMDRAW_DISABLED );
     else if (!CanBuyItem(client, info)) menu.AddItem(buyid, "You cannot buy this item", ITEMDRAW_DISABLED );
     else menu.AddItem(buyid,"Buy item" );
+
 
     menu.AddItem(showdescid,"Show item description" );
     
@@ -309,6 +536,17 @@ bool CanBuyItem(int client, char[] info) {
         if (!CheckAdminFlagsByString(client, item.AdminFlags))
             return false;
     }
+
+    Action result = Plugin_Continue;
+    Call_StartForward(g_hForwardOnPreBuyItem);
+    Call_PushCell(client);
+    Call_PushCell(item.ID);
+    Call_Finish(result);
+
+    if (result == Plugin_Stop || result == Plugin_Handled)
+    {
+        return false;
+    }
     // Add rebuy thing
     return true;
 }
@@ -377,32 +615,75 @@ bool BuyItem(int client, char[] info) {
         if (item.NirvanaPointsCost <= pplayer.NirvanaPoints)
             pplayer.NirvanaPoints -= item.NirvanaPointsCost;
     }
-    // Add rebuy thing
-    ShopPlayerItem newItem;
 
-    newItem.ID = g_iRegisteredPlayerItems;
-    newItem.Client = client;
-    newItem.ItemID = item.ID;
-    strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
-    if (item.Rebuy == itemBuyOnceMap) {
-        newItem.RebuyTimes = GUM_NO_REBUY_MAP;
-    } else if ( item.Rebuy == itemBuyOnce) {
-        // Save to sql
-        newItem.RebuyTimes = GUM_NO_REBUY;
-    } else if ( item.Rebuy == itemBuyOnceRound) {
-        // Clear such items after round
-        newItem.RebuyTimes = 0;
-    } else if ( item.Rebuy == itemRebuy) {
-        // Clear such items after round
-        newItem.RebuyTimes = item.RebuyTimes;
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+    
+    bool foundrebuy = false;
+    ShopPlayerRebuy currentrebuy;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopPlayerRebuy tempItemRebuy;
+        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        if (StrEqual(tempItemRebuy.ItemUnique, info) && StrEqual(tempItemRebuy.SteamID, szKey)) {
+            currentrebuy = tempItemRebuy;
+            foundrebuy = true;
+            break;
+        }
     }
-    if (item.Upgradeable)
-        newItem.Upgrades = 0;
-    else 
-        newItem.Upgrades = GUM_NO_UPGRADES;
-    g_aPlayerItems.PushArray(newItem, sizeof(newItem));
+    if (foundrebuy) 
+    {
+        if (!currentrebuy.CanBuy())
+            return false;
 
-    g_iRegisteredPlayerItems++;
+        if (currentrebuy.Buy()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    else 
+    {
+        ShopPlayerItem newItem;
+        ShopPlayerRebuy newItemRebuy;
+
+        newItem.ID = g_iRegisteredPlayerItems;
+        newItem.Client = client;
+        newItem.ItemID = item.ID;
+        strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
+
+        strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
+        strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
+        newItemRebuy.ItemID = item.ID;
+
+        if (item.Rebuy == itemBuyOnceMap) {
+            newItem.RebuyID = GUM_NO_REBUY_MAP;
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY_MAP;
+        } else if ( item.Rebuy == itemBuyOnce) {
+            // Save to sql
+            // SavePlayerShopItem(client, item.Unique);
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY;
+            newItem.RebuyID = GUM_NO_REBUY;
+        } else if ( item.Rebuy == itemBuyOnceRound) {
+            // Clear such items after round
+            newItem.RebuyID = g_iRegisteredPlayerRebuy;
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY_ROUND;
+        } else if ( item.Rebuy == itemRebuy) {
+            // Clear such items after round
+            newItem.RebuyID = g_iRegisteredPlayerRebuy;
+            newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
+        }
+        if (item.Upgradeable)
+            newItem.Upgrades = 0;
+        else 
+            newItem.Upgrades = GUM_NO_UPGRADES;
+        newItemRebuy.ID = g_iRegisteredPlayerRebuy;
+        if (newItem.RebuyID != GUM_NO_REBUY) {
+            g_iRegisteredPlayerRebuy++;
+        }
+        g_aPlayerItems.PushArray(newItem, sizeof(newItem));
+
+        g_iRegisteredPlayerItems++;
+    }
 
     return true;
 }
@@ -467,7 +748,6 @@ public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int
             menu.GetItem(param2, info, sizeof(info));
             
             if (StrContains( info, "buyitem-", false ) != -1) {
-                PrintToChatAll("Client %N selected to buy item %s", client, info);
                 ReplaceString(info, sizeof(info), "buyitem-", "", false);
 
                 ShopItem item;
@@ -491,18 +771,6 @@ public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int
                     return 0;
                 }
 
-                Action result = Plugin_Continue;
-                Call_StartForward(g_hForwardOnPreBuyItem);
-                Call_PushCell(client);
-                Call_PushCell(item.ID);
-                Call_Finish(result);
-
-                if (result == Plugin_Stop || result == Plugin_Handled)
-                {
-                    ShowGUMItemMenu(client, info);
-                    return 0;
-                }
-                
                 Action res = Plugin_Continue;
                 Call_StartForward(g_hForwardOnBuyItem);
                 Call_PushCell(client);
@@ -514,7 +782,7 @@ public int MenuItemHandlerCategory(Menu menu, MenuAction action, int client, int
                     BuyItem(client, info);
                     CPrintToChat(client, "Item bought [%s]", item.Name);
                 } else {
-                    CPrintToChat(client, "Failed to buy item [%s]", item.Name);
+                    CPrintToChat(client, "Failed to buy item [%s] report to server owner.", item.Name);
                     LogMessage("%N Failed to buy item %s", client, item.Name);
                 }
                 

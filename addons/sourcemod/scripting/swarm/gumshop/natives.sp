@@ -21,6 +21,8 @@ void InitMethodMaps() {
     CreateNative("GumItem.EvolutionRequired.set", Native_GumItem_EvolutionRequiredSet);
     CreateNative("GumItem.NirvanaRequired.get", Native_GumItem_EvolutionRequiredGet);
     CreateNative("GumItem.NirvanaRequired.set", Native_GumItem_EvolutionRequiredSet);
+    CreateNative("GumItem.Keep.get", Native_GumItem_KeepGet);
+    CreateNative("GumItem.Keep.set", Native_GumItem_KeepSet);
     CreateNative("GumItem.Rebuy.get", Native_GumItem_RebuyGet);
     CreateNative("GumItem.Rebuy.set", Native_GumItem_RebuySet);
     CreateNative("GumItem.RebuyTimes.get", Native_GumItem_RebuyTimesGet);
@@ -91,6 +93,7 @@ public int Native_GumItem_Constructor(Handle plugin, int numParams)
     newItem.RebornRequired = DEFAULT_REBORN_REQ;
     newItem.EvolutionRequired = DEFAULT_EVO_REQ;
     newItem.NirvanaRequired = DEFAULT_NIRVANA_REQ;
+    newItem.Keep = DEFAULT_KEEP;
     newItem.Rebuy = DEFAULT_REBUY;
     newItem.RebuyTimes = DEFAULT_REBUY_TIMES;
     newItem.AdminFlagOnly = DEFAULT_ADMFLAG_ONLY;
@@ -326,6 +329,35 @@ public int Native_GumItem_EvolutionRequiredSet(Handle plugin, int numParams)
     ShopItem tempItem;
     g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
     tempItem.EvolutionRequired = value;
+    g_aItems.SetArray(item_id, tempItem, sizeof(tempItem));
+    return 1;
+}
+
+public int Native_GumItem_KeepGet(Handle plugin, int numParams)
+{
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindGUMItemIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    ShopItem tempItem;
+    g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
+    return view_as<int>(tempItem.Keep);
+}
+
+public int Native_GumItem_KeepSet(Handle plugin, int numParams)
+{
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindGUMItemIndex(item_unique);
+    g_eItemKeep value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    ShopItem tempItem;
+    g_aItems.GetArray(item_id, tempItem, sizeof(tempItem)); 
+    tempItem.Keep = value;
     g_aItems.SetArray(item_id, tempItem, sizeof(tempItem));
     return 1;
 }

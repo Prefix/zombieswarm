@@ -12,8 +12,38 @@ enum struct ShopPlayerItem {
     int Client;
     int ItemID;
     char ItemUnique[GUM_MAX_ITEM_UNIQUE];
+    int RebuyID;
+    int Upgrades; // With those later
+}
+
+enum struct ShopPlayerRebuy {
+    int ID;
+    char SteamID[GUM_MAX_STEAMID]; // We do SteamID in case of reconnects
+    int ItemID;
+    char ItemUnique[GUM_MAX_ITEM_UNIQUE];
     int RebuyTimes;
-    int Upgrades;
+    g_eItemBuy RebuyType;
+    bool CanBuy() {
+        if (this.RebuyType == itemBuyOnce)
+            return false;
+        if (this.RebuyType == itemBuyOnceMap)
+            return false;
+        if (this.RebuyType == itemBuyOnceRound)
+            return false;
+        if (this.RebuyType == itemRebuy) {
+            return (this.RebuyTimes > 0 ? true : false);
+        }
+        return true;
+    }
+    bool Buy() {
+        if (this.CanBuy()) {
+            if (this.RebuyType == itemRebuy) {
+                this.RebuyTimes--;
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 enum struct ShopItem {
@@ -30,6 +60,7 @@ enum struct ShopItem {
     int RebornRequired;
     int EvolutionRequired;
     int NirvanaRequired;
+    g_eItemKeep Keep;
     g_eItemBuy Rebuy;
     bool AdminFlagOnly;
     char AdminFlags[GUM_MAX_FLAGS];
@@ -55,8 +86,10 @@ enum struct ShopItemUpgrade {
 ArrayList g_aCategories;
 ArrayList g_aItems;
 ArrayList g_aPlayerItems;
+ArrayList g_aPlayerItemsRebuy; // we do not remove these after disconnect
 int g_iRegisteredItems = 0;
 int g_iRegisteredPlayerItems = 0;
+int g_iRegisteredPlayerRebuy = 0;
 
 // Forwards
 Handle g_hForwardOnPreBuyItem;
@@ -71,9 +104,12 @@ Handle g_hForwardOnShopLoaded;
 #define DEFAULT_REBORN_REQ 0
 #define DEFAULT_EVO_REQ 0
 #define DEFAULT_NIRVANA_REQ 0
+#define DEFAULT_KEEP itemKeepRound
 #define DEFAULT_REBUY itemBuyOnceRound
 #define DEFAULT_REBUY_TIMES 0 // 0 - unlimited
 #define DEFAULT_ADMFLAG_ONLY false
 #define DEFAULT_ADMFLAGS ""
 #define DEFAULT_ADMFLAG_DESC ""
 #define DEFAULT_UPGRADEABLE false
+
+Database conDatabase = null;

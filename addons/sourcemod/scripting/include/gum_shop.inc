@@ -13,11 +13,14 @@
 #define GUM_MAX_ITEM_UNIQUE 16
 #define GUM_MAX_ITEM_NAME 32
 #define GUM_MAX_ITEM_DESC 64
-// uPGRADES
+#define GUM_MAX_STEAMID 32
+// UPGRADES
 #define GUM_MAX_ITEM_UPGRADE_UNIQUE 16
 // No need to rebuy (saved on sql)
 #define GUM_NO_REBUY -1
 // No need to rebuy whole map
+#define GUM_
+#define GUM_NO_REBUY_ROUND -3
 #define GUM_NO_REBUY_MAP -2
 #define GUM_NO_UPGRADES -1
 
@@ -33,7 +36,14 @@ enum g_eItemBuy {
     itemBuyOnce,
     itemBuyOnceMap,
     itemBuyOnceRound,
+    itemBuyUnlimited, // keep = none only?
     itemRebuy
+}
+
+enum g_eItemKeep {
+    itemKeepNone, // doesnt even add to item list, just rebuy if needed
+    itemKeepRound, // default
+    itemKeepAlways // map or always
 }
 
 methodmap GumItem {
@@ -78,6 +88,10 @@ methodmap GumItem {
     property g_eItemBuy Rebuy {
         public native get();
         public native set(const g_eItemBuy val);
+    }
+    property g_eItemKeep Keep {
+        public native get();
+        public native set(const g_eItemKeep val);
     }
     // If Rebuy = itemRebuy
     property int RebuyTimes {

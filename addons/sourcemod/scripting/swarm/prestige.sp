@@ -504,29 +504,6 @@ public void databaseConnectionCallback(Database db, const char[] error, any data
     
     conDatabase.Query( QueryCreateTable, sQuery);
 
-    char sQuery_Upgrades[512];
-
-    if ( StrEqual(driverName, "mysql") )
-    {
-        Format( sQuery_Upgrades, sizeof( sQuery_Upgrades ), "CREATE TABLE IF NOT EXISTS `prestige_upgrades` ( `id` int NOT NULL AUTO_INCREMENT, \
-        `player_id` varchar(64) NOT NULL, \
-        `player_name` varchar(64) default NULL, \
-        `upgrade_name` varchar(64) default NULL, \
-        `upgrade_points` int default 0, \
-        PRIMARY KEY (`id`), UNIQUE KEY `player_id` (`player_id`) ) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4;" );
-    }
-    else
-    {
-        Format( sQuery_Upgrades, sizeof( sQuery_Upgrades ), "CREATE TABLE IF NOT EXISTS `prestige_upgrades` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, \
-        `player_id` TEXT NOT NULL UNIQUE, \
-        `player_name` TEXT DEFAULT NULL, \
-        `upgrade_name` TEXT DEFAULT NULL, \
-        `upgrade_points` INTEGER DEFAULT 0 \
-         );" );
-    }
-
-    conDatabase.Query( QueryCreateTable, sQuery_Upgrades);
-
 }
 public void QueryCreateTable(Database db, DBResultSet results, const char[] error, any data)
 { 
