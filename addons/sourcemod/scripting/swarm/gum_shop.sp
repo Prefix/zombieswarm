@@ -240,10 +240,12 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
             // Clear such items after round
             newItem.RebuyID = g_iRegisteredPlayerRebuy;
             newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
+        } else if ( item.Rebuy == itemBuyUnlimited) {
+            // Clear such items after round
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY;
+            newItem.RebuyID = GUM_NO_REBUY;
         }
-        newItem.Upgrades = upgrade_points;
-        newItem.Keep = item.Keep; // For less cycles
-        if (newItem.RebuyID != GUM_NO_REBUY) {
+        if (item.Rebuy != itemBuyOnce && item.Rebuy != itemBuyUnlimited) {
             newItemRebuy.ID = g_iRegisteredPlayerRebuy;
             g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
             g_iRegisteredPlayerRebuy++;
@@ -251,17 +253,22 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
         
     } else {
         newItem.RebuyID = currentrebuy.ID;
-        newItem.Upgrades = upgrade_points;
         currentrebuy.Buy();
     }
-    if (item.Upgradeable)
-        newItem.Upgrades = 0;
-    else 
+    
+    newItem.Keep = item.Keep; // For less cycles
+
+    if (item.Upgradeable) {
+        newItem.Upgrades = upgrade_points;
+    } else { 
         newItem.Upgrades = GUM_NO_UPGRADES;
+    }
 
-    g_aPlayerItems.PushArray(newItem, sizeof(newItem));
-
-    g_iRegisteredPlayerItems++;
+    // Exclude items that are insta-usage
+    if (newItem.Keep != itemKeepNone) {
+        g_aPlayerItems.PushArray(newItem, sizeof(newItem));
+        g_iRegisteredPlayerItems++;
+    }
     // TODO forward on added item
 }
 
@@ -739,6 +746,22 @@ bool CanBuyItem(int client, char[] info) {
         if (!CheckAdminFlagsByString(client, item.AdminFlags))
             return false;
     }
+
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+
+    bool foundrebuy = false;
+    ShopPlayerRebuy currentrebuy;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopPlayerRebuy tempItemRebuy;
+        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        if (StrEqual(tempItemRebuy.ItemUnique, info) && StrEqual(tempItemRebuy.SteamID, szKey)) {
+            currentrebuy = tempItemRebuy;
+            foundrebuy = true;
+            break;
+        }
+    }
+    if (foundrebuy && !currentrebuy.CanBuy()) return false;
 
     Action result = Plugin_Continue;
     Call_StartForward(g_hForwardOnPreBuyItem);

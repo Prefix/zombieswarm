@@ -37,15 +37,21 @@ enum struct ShopPlayerRebuy {
         return true;
     }
     bool Buy() {
+        PrintToChatAll("Rebuy item %s #1", this.ItemUnique);
         if (this.CanBuy()) {
+            PrintToChatAll("Rebuy item %s #2", this.ItemUnique);
             if (this.RebuyType == itemRebuy) {
+                PrintToChatAll("Rebuy item %s was %i", this.ItemUnique, this.RebuyTimes);
                 this.RebuyTimes--;
+                PrintToChatAll("Rebuy item %s now %i", this.ItemUnique, this.RebuyTimes);
                 return true;
             }
             if (this.RebuyType == itemBuyUnlimited) {
+                PrintToChatAll("Rebuy item %s #3", this.ItemUnique);
                 return true;
             }
         }
+        PrintToChatAll("Rebuy item %s #4", this.ItemUnique);
         return false;
     }
 }

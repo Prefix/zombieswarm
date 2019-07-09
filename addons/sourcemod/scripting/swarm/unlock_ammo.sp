@@ -30,7 +30,9 @@ public void GUMShop_OnLoaded() {
     );
     small_ammopack.LevelRequired = 1;
     small_ammopack.XPCost = 10;
-    small_ammopack.RebuyTimes = itemBuyOnceRound;
+    small_ammopack.RebuyTimes = itemRebuy;
+    small_ammopack.Keep = itemKeepNone;
+    small_ammopack.RebuyTimes = 3;
 
     medium_ammopack = GumItem(
         "medium_ammopack",
@@ -40,7 +42,9 @@ public void GUMShop_OnLoaded() {
     );
     medium_ammopack.XPCost = 20;
     medium_ammopack.RebornRequired = 5;
-    medium_ammopack.RebuyTimes = itemBuyOnceRound;
+    medium_ammopack.RebuyTimes = itemBuyUnlimited;
+    medium_ammopack.Keep = itemKeepNone;
+    medium_ammopack.RebuyTimes = 0;
 
     large_ammopack = GumItem(
         "large_ammopack",
@@ -51,6 +55,8 @@ public void GUMShop_OnLoaded() {
     large_ammopack.XPCost = 30;
     large_ammopack.EvolutionRequired = 1;
     large_ammopack.RebuyTimes = itemBuyOnceRound;
+    large_ammopack.Keep = itemKeepNone;
+    large_ammopack.RebuyTimes = 0;
 }
 
 public Action GUMShop_OnBuyItem(int client, int item) {
