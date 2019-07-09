@@ -13,6 +13,7 @@ enum struct ShopPlayerItem {
     int ItemID;
     char ItemUnique[GUM_MAX_ITEM_UNIQUE];
     int RebuyID;
+    g_eItemKeep Keep; // For less rebuys
     int Upgrades; // With those later
 }
 
@@ -39,6 +40,9 @@ enum struct ShopPlayerRebuy {
         if (this.CanBuy()) {
             if (this.RebuyType == itemRebuy) {
                 this.RebuyTimes--;
+                return true;
+            }
+            if (this.RebuyType == itemBuyUnlimited) {
                 return true;
             }
         }

@@ -37,11 +37,50 @@ public void OnPluginStart()
     LoadShopConfig();
     // Database
     databaseInit();
+    HookEvent("round_end", Event_OnRoundEnd);
 }
 
-public void databaseInit()
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    Database.Connect(databaseConnectionCallback);
+    InitMethodMaps();
+    InitForwards();
+    // Register mod library
+    RegPluginLibrary("gum_shop");
+
+    return APLRes_Success;
+}
+
+public void OnAllPluginsLoaded() {
+    g_aItems.Clear();
+    g_aPlayerItems.Clear();
+    g_aPlayerItemsRebuy.Clear();
+    g_iRegisteredItems = 0;
+    g_iRegisteredPlayerItems = 0;
+    g_iRegisteredPlayerRebuy = 0;
+    Call_StartForward(g_hForwardOnShopLoaded);
+    Call_Finish();
+}
+
+public void OnMapEnd() {
+    for (int client = 1; client <= MaxClients; client++) 
+    {
+        if (UTIL_IsValidClient(client)) {
+            RemovePlayerItemsKeepExcept(client, itemKeepNone);
+            RemovePlayerRebuyExcept(client, itemBuyOnce);
+        }
+    }
+}
+
+public void Event_OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    for (int client = 1; client <= MaxClients; client++) 
+    {
+        if (UTIL_IsValidClient(client)) {
+            RemovePlayerItemsKeep(client, itemKeepRound);
+            RemovePlayerRebuy(client, itemBuyOnceRound);
+        }
+    }
 }
 
 public void OnClientPutInServer(int client)
@@ -52,6 +91,22 @@ public void OnClientPutInServer(int client)
         loadDataFromRebuy(client);
     }
 }
+
+public void OnClientDisconnect(int client)
+{
+    if ( IsClientInGame(client) )
+    {
+        if (!IsFakeClient(client)) {
+            RemovePlayerItems(client);
+        }
+    }
+}
+
+public void databaseInit()
+{
+    Database.Connect(databaseConnectionCallback);
+}
+
 
 public void loadData(int client)
 {
@@ -102,14 +157,13 @@ public void querySelectDataCallback(Database db, DBResultSet results, const char
 
 public void loadDataFromRebuy(int client) 
 {
-
     if (!UTIL_IsValidClient(client))
         return;
 
     char szKey[64];
     GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
 
-    for (int i = 0; i < g_aItems.Length; i++) {
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++) {
         ShopPlayerRebuy tempItemRebuy;
         g_aPlayerItemsRebuy.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
         if (StrEqual(tempItemRebuy.SteamID, szKey)) {
@@ -188,11 +242,13 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
             newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
         }
         newItem.Upgrades = upgrade_points;
+        newItem.Keep = item.Keep; // For less cycles
         if (newItem.RebuyID != GUM_NO_REBUY) {
             newItemRebuy.ID = g_iRegisteredPlayerRebuy;
             g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
             g_iRegisteredPlayerRebuy++;
         }
+        
     } else {
         newItem.RebuyID = currentrebuy.ID;
         newItem.Upgrades = upgrade_points;
@@ -209,15 +265,7 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
     // TODO forward on added item
 }
 
-public void OnClientDisconnect(int client)
-{
-    if ( IsClientInGame(client) )
-    {
-        if (!IsFakeClient(client)) {
-            RemovePlayerItems(client);
-        }
-    }
-}
+
 
 public void RemovePlayerItems(int client)
 {
@@ -231,6 +279,96 @@ public void RemovePlayerItems(int client)
         g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
         if(tempItem.Client == client) {
             g_aPlayerItems.Erase(i--);
+        }
+    }
+}
+
+
+public void RemovePlayerRebuyExcept(int client, g_eItemBuy type)
+{
+    if (!UTIL_IsValidClient(client))
+        return;
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++)
+    {
+        if (i == g_aPlayerItemsRebuy.Length)
+            break;
+        ShopPlayerRebuy tempItem;
+        g_aPlayerItemsRebuy.GetArray(i, tempItem, sizeof(tempItem));
+        if(StrEqual(szKey, tempItem.SteamID) && tempItem.RebuyType != type) {
+            g_aPlayerItemsRebuy.Erase(i--);
+        }
+    }
+}
+
+public void RemovePlayerRebuy(int client, g_eItemBuy type)
+{
+    if (!UTIL_IsValidClient(client))
+        return;
+    char szKey[64];
+    GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++)
+    {
+        if (i == g_aPlayerItemsRebuy.Length)
+            break;
+        ShopPlayerRebuy tempItem;
+        g_aPlayerItemsRebuy.GetArray(i, tempItem, sizeof(tempItem));
+        if(StrEqual(szKey, tempItem.SteamID) && tempItem.RebuyType == type) {
+            g_aPlayerItemsRebuy.Erase(i--);
+        }
+    }
+}
+
+public void RemovePlayerItemsKeepExcept(int client, g_eItemKeep type)
+{
+    if (!UTIL_IsValidClient(client))
+        return;
+    for (int i = 0; i < g_aPlayerItems.Length; i++)
+    {
+        if (i == g_aPlayerItems.Length)
+            break;
+        ShopPlayerItem tempItem;
+        g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
+        if(tempItem.Client == client && tempItem.Keep != type) {
+            if (tempItem.RebuyID != GUM_NO_REBUY_MAP) {
+                RemoveRebuyByID(tempItem.RebuyID);
+            }
+            g_aPlayerItems.Erase(i--);
+        }
+    }
+}
+
+public void RemovePlayerItemsKeep(int client, g_eItemKeep type)
+{
+    if (!UTIL_IsValidClient(client))
+        return;
+    for (int i = 0; i < g_aPlayerItems.Length; i++)
+    {
+        if (i == g_aPlayerItems.Length)
+            break;
+        ShopPlayerItem tempItem;
+        g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
+        if(tempItem.Client == client && tempItem.Keep == type) {
+            if (tempItem.RebuyID != GUM_NO_REBUY_MAP) {
+                RemoveRebuyByID(tempItem.RebuyID);
+            }
+            g_aPlayerItems.Erase(i--);
+        }
+    }
+}
+
+public void RemoveRebuyByID(int id)
+{
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++)
+    {
+        if (i == g_aPlayerItemsRebuy.Length)
+            break;
+        ShopPlayerRebuy tempItem;
+        g_aPlayerItemsRebuy.GetArray(i, tempItem, sizeof(tempItem));
+        if(tempItem.ID == id) {
+            g_aPlayerItemsRebuy.Erase(i--);
+            break;
         }
     }
 }
@@ -349,27 +487,6 @@ public void QueryCreateTable(Database db, DBResultSet results, const char[] erro
         
         return;
     } 
-}
-
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
-{
-    InitMethodMaps();
-    InitForwards();
-    // Register mod library
-    RegPluginLibrary("gum_shop");
-
-    return APLRes_Success;
-}
-
-public void OnAllPluginsLoaded() {
-    g_aItems.Clear();
-    g_aPlayerItems.Clear();
-    g_aPlayerItemsRebuy.Clear();
-    g_iRegisteredItems = 0;
-    g_iRegisteredPlayerItems = 0;
-    g_iRegisteredPlayerRebuy = 0;
-    Call_StartForward(g_hForwardOnShopLoaded);
-    Call_Finish();
 }
 
 public Action Command_Shop(int client, int args)
