@@ -19,7 +19,6 @@
 // No need to rebuy (saved on sql)
 #define GUM_NO_REBUY -1
 // No need to rebuy whole map
-#define GUM_
 #define GUM_NO_REBUY_ROUND -3
 #define GUM_NO_REBUY_MAP -2
 #define GUM_NO_UPGRADES -1

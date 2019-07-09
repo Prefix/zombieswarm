@@ -144,49 +144,69 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
     char szKey[64];
     GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
 
-    ShopPlayerItem newItem;
-    ShopPlayerRebuy newItemRebuy;
+    bool foundrebuy = false;
+    ShopPlayerRebuy currentrebuy;
+    for (int i = 0; i < g_aItems.Length; i++) {
+        ShopPlayerRebuy tempItemRebuy;
+        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        if (StrEqual(tempItemRebuy.ItemUnique, item_name) && StrEqual(tempItemRebuy.SteamID, szKey)) {
+            currentrebuy = tempItemRebuy;
+            foundrebuy = true;
+            break;
+        }
+    }
 
+    if (foundrebuy && !currentrebuy.CanBuy()) return;
+
+    ShopPlayerItem newItem;
+    
     newItem.ID = g_iRegisteredPlayerItems;
     newItem.Client = client;
     newItem.ItemID = item.ID;
     strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
+    if (!foundrebuy) {
+        ShopPlayerRebuy newItemRebuy;
+        strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
+        strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
+        newItemRebuy.ItemID = item.ID;
 
-    strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
-    strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
-    newItemRebuy.ItemID = item.ID;
-
-    if (item.Rebuy == itemBuyOnceMap) {
-        newItem.RebuyID = GUM_NO_REBUY_MAP;
-        newItemRebuy.RebuyTimes = GUM_NO_REBUY_MAP;
-    } else if ( item.Rebuy == itemBuyOnce) {
-        // Save to sql
-        // SavePlayerShopItem(client, item.Unique);
-        newItemRebuy.RebuyTimes = GUM_NO_REBUY;
-        newItem.RebuyID = GUM_NO_REBUY;
-    } else if ( item.Rebuy == itemBuyOnceRound) {
-        // Clear such items after round
-        newItem.RebuyID = g_iRegisteredPlayerRebuy;
-        newItemRebuy.RebuyTimes = GUM_NO_REBUY_ROUND;
-    } else if ( item.Rebuy == itemRebuy) {
-        // Clear such items after round
-        newItem.RebuyID = g_iRegisteredPlayerRebuy;
-        newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
+        if (item.Rebuy == itemBuyOnceMap) {
+            newItem.RebuyID = GUM_NO_REBUY_MAP;
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY_MAP;
+        } else if ( item.Rebuy == itemBuyOnce) {
+            // Save to sql
+            SavePlayerShopItem(client, item.Unique);
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY;
+            newItem.RebuyID = GUM_NO_REBUY;
+        } else if ( item.Rebuy == itemBuyOnceRound) {
+            // Clear such items after round
+            newItem.RebuyID = g_iRegisteredPlayerRebuy;
+            newItemRebuy.RebuyTimes = GUM_NO_REBUY_ROUND;
+        } else if ( item.Rebuy == itemRebuy) {
+            // Clear such items after round
+            newItem.RebuyID = g_iRegisteredPlayerRebuy;
+            newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
+        }
+        newItem.Upgrades = upgrade_points;
+        if (newItem.RebuyID != GUM_NO_REBUY) {
+            newItemRebuy.ID = g_iRegisteredPlayerRebuy;
+            g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
+            g_iRegisteredPlayerRebuy++;
+        }
+    } else {
+        newItem.RebuyID = currentrebuy.ID;
+        newItem.Upgrades = upgrade_points;
+        currentrebuy.Buy();
     }
     if (item.Upgradeable)
         newItem.Upgrades = 0;
     else 
         newItem.Upgrades = GUM_NO_UPGRADES;
-    newItemRebuy.ID = g_iRegisteredPlayerRebuy;
-    if (newItem.RebuyID != GUM_NO_REBUY) {
-        g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
-        g_iRegisteredPlayerRebuy++;
-    }
+
     g_aPlayerItems.PushArray(newItem, sizeof(newItem));
 
     g_iRegisteredPlayerItems++;
-    LogMessage("[ Gum Shop ] Player %N loaded item name %s with %i upgrade points", item_name, upgrade_points);
-    // TODO forward on loaded profile
+    // TODO forward on added item
 }
 
 public void OnClientDisconnect(int client)
@@ -214,6 +234,72 @@ public void RemovePlayerItems(int client)
         }
     }
 }
+
+void SavePlayerShopItem(int client, char[] unique, upgrade_points = 0) {
+    if ( IsClientInGame(client) )
+    {
+        if (!IsFakeClient(client)) {
+            char sQuery[256];
+            char sKey[32], oName[32], pName[60];
+            GetClientAuthId( client, AuthId_SteamID64, sKey, sizeof(sKey) );
+            
+            GetClientName(client, oName, sizeof(oName));
+            conDatabase.Escape(oName, pName, sizeof(pName));
+        
+            Format( sQuery, sizeof( sQuery ), "SELECT * FROM `gumshop_items` WHERE  `player_id` = '%s' AND `item_name` = '%s", sKey, unique);
+            
+            DataPack dp = new DataPack();
+            
+            dp.WriteString(sKey);
+            dp.WriteString(pName);
+            dp.WriteString(unique);
+            dp.WriteCell(upgrade_points);
+            
+            conDatabase.Query( querySelectSavedDataCallback, sQuery, dp);
+        }
+    }
+}
+
+public void querySelectSavedDataCallback(Database db, DBResultSet results, const char[] error, DataPack pack)
+{ 
+    if ( db != null )
+    {
+        int resultRows = results.RowCount;
+        
+        char sKey[32], pName[32], unique[GUM_MAX_ITEM_UNIQUE];
+        
+        pack.Reset();
+        pack.ReadString(sKey, sizeof(sKey));
+        pack.ReadString(pName, sizeof(pName));
+        pack.ReadString(unique, sizeof(unique));
+        int upgrade_points = pack.ReadCell();
+
+        char sQuery[256];
+        
+        if (resultRows > 0) {
+            Format( sQuery, sizeof( sQuery ), "UPDATE `gumshop_items` SET `player_name` = '%s',`upgrade_points` = '%i' WHERE `player_id` = '%s' AND `item_name` = '%s';", pName, upgrade_points, sKey, unique );
+        } else {
+            Format( sQuery, sizeof( sQuery ), "INSERT INTO `gumshop_items` (`player_id`, `player_name`, `item_name`, `upgrade_points`) VALUES ('%s', '%s', '%d', '%i');", sKey, pName, unique, upgrade_points );
+        }
+        conDatabase.Query( querySetDataCallback, sQuery);
+    } 
+    else
+    {
+        LogError( "%s", error ); 
+        
+        return;
+    }
+}
+
+public querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
+{ 
+    if ( db == null )
+    {
+        LogError( "%s", error ); 
+        
+        return;
+    } 
+} 
 
 public void databaseConnectionCallback(Database db, const char[] error, any data)
 {
@@ -643,46 +729,7 @@ bool BuyItem(int client, char[] info) {
     }
     else 
     {
-        ShopPlayerItem newItem;
-        ShopPlayerRebuy newItemRebuy;
-
-        newItem.ID = g_iRegisteredPlayerItems;
-        newItem.Client = client;
-        newItem.ItemID = item.ID;
-        strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
-
-        strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
-        strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
-        newItemRebuy.ItemID = item.ID;
-
-        if (item.Rebuy == itemBuyOnceMap) {
-            newItem.RebuyID = GUM_NO_REBUY_MAP;
-            newItemRebuy.RebuyTimes = GUM_NO_REBUY_MAP;
-        } else if ( item.Rebuy == itemBuyOnce) {
-            // Save to sql
-            // SavePlayerShopItem(client, item.Unique);
-            newItemRebuy.RebuyTimes = GUM_NO_REBUY;
-            newItem.RebuyID = GUM_NO_REBUY;
-        } else if ( item.Rebuy == itemBuyOnceRound) {
-            // Clear such items after round
-            newItem.RebuyID = g_iRegisteredPlayerRebuy;
-            newItemRebuy.RebuyTimes = GUM_NO_REBUY_ROUND;
-        } else if ( item.Rebuy == itemRebuy) {
-            // Clear such items after round
-            newItem.RebuyID = g_iRegisteredPlayerRebuy;
-            newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
-        }
-        if (item.Upgradeable)
-            newItem.Upgrades = 0;
-        else 
-            newItem.Upgrades = GUM_NO_UPGRADES;
-        newItemRebuy.ID = g_iRegisteredPlayerRebuy;
-        if (newItem.RebuyID != GUM_NO_REBUY) {
-            g_iRegisteredPlayerRebuy++;
-        }
-        g_aPlayerItems.PushArray(newItem, sizeof(newItem));
-
-        g_iRegisteredPlayerItems++;
+        AddItemToPlayer(client, info);
     }
 
     return true;
