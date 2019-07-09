@@ -235,7 +235,7 @@ public void RemovePlayerItems(int client)
     }
 }
 
-void SavePlayerShopItem(int client, char[] unique, upgrade_points = 0) {
+void SavePlayerShopItem(int client, char[] unique, int upgrade_points = 0) {
     if ( IsClientInGame(client) )
     {
         if (!IsFakeClient(client)) {
@@ -291,7 +291,7 @@ public void querySelectSavedDataCallback(Database db, DBResultSet results, const
     }
 }
 
-public querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
+public void querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
 { 
     if ( db == null )
     {
