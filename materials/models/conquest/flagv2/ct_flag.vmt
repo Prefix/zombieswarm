@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture"	"models/conquest/flagv2/ct_flag"
+	"$nocull" "1"
+}
