@@ -61,8 +61,11 @@ int rememberPrimary[MAXPLAYERS + 1], rememberSecondary[MAXPLAYERS + 1];
 
 char modConfig[PLATFORM_MAX_PATH];
 
+#define GUM_ChatPrefix "[ GUM ]"
+
 public void OnPluginStart()
 {
+    LoadTranslations("gum.phrases");
     CreateConVar("gum_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 
     cvarSaveType = CreateConVar("gum_savetype", "0", "Save Data Type : 0 = SteamID, 1 = IP, 2 = Name.");
@@ -106,7 +109,7 @@ public void OnPluginStart()
     // Console commands
     RegConsoleCmd("say", sayCommand);
     
-    RegAdminCmd("gum_unlocks", setAdminUnlocks, ADMFLAG_ROOT);
+    RegAdminCmd("sm_gum_setxp", setAdminUnlocks, ADMFLAG_ROOT);
     
     // Translations
     LoadTranslations("common.phrases");
@@ -376,7 +379,7 @@ public Action setAdminUnlocks(int client, int args)
 
     if(args < 2) 
     {
-        ReplyToCommand(client, "[SM] Use: gum_unlocks <#userid|name> [amount]");
+        ReplyToCommand(client, "%t", "Command: sm_gum_setxp Description");
         return Plugin_Handled;
     }
 
@@ -403,7 +406,7 @@ public Action setAdminUnlocks(int client, int args)
         int tClient = targetList[i]; 
         if (UTIL_IsValidClient(tClient)) 
         {
-            CPrintToChat(tClient, "[ GUM ] Admin {blue}%N {default}has set you {green}%i {default}unlocks", client, amount);
+            CPrintToChat(tClient, "%t", "Command: sm_gum_setxp Message", client, amount);
             setPlayerUnlocks(tClient, amount);
         } 
     } 
@@ -460,7 +463,7 @@ public Action sayCommand(int client, int args)
     
         if ( !weaponSelected[client] )
         {
-            CPrintToChat(client, "[ GUM ]{green} Menu successfully re-opened!" );
+            CPrintToChat(client, "{green} Menu successfully re-opened!" );
             menuTimer[client] = CreateTimer( GetConVarFloat(cvarMenuDelay), mainMenu, client, TIMER_FLAG_NO_MAPCHANGE );
         }
         
@@ -594,11 +597,13 @@ public Action mainMenu(Handle timer, any client)
 public void mainWeaponMenu(int client)
 {
     Menu menu = new Menu(WeaponMenuHandler);
+    char buffer[64];
+    menu.SetTitle("%t","Menu Title: Gun XP Mod Weapons");
 
-    menu.SetTitle("Level Weapons");
-
-    menu.AddItem("selectionId", "Choose Weapon");
-    menu.AddItem("selectionId", "Last Selected Weapons");
+    Format(buffer,sizeof(buffer),"%t","Menu option: Choose Weapon");
+    menu.AddItem("selectionId", buffer);
+    Format(buffer,sizeof(buffer),"%t","Menu option: Last Selected Weapons");
+    menu.AddItem("selectionId", buffer);
 
     menu.ExitButton = true;
     
@@ -652,7 +657,7 @@ public void secondaryWeaponMenu(int client)
     Menu menu = new Menu(secondaryWeaponMenuHandler);
 
     char szMsg[60], szItems[60], arrWeaponString[32];
-    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
+    Format(szMsg, sizeof( szMsg ), "%t", "Menu Title: Level", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
     
     menu.SetTitle(szMsg);
 
@@ -661,13 +666,13 @@ public void secondaryWeaponMenu(int client)
         weaponNames.GetString(itemId, arrWeaponString, sizeof(arrWeaponString));
         if ( playerLevel[client] >= itemId )
         {
-            Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s (Lvl %d)", arrWeaponString, itemId);
 
             menu.AddItem("selectionId", szItems);
         }
         else
         {
-            Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s (Lvl %d)", arrWeaponString, itemId);
             
             menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED);
         }
@@ -718,7 +723,7 @@ public void primaryWeaponMenu(int client)
     Menu menu = new Menu(primaryWeaponMenuHandler);
 
     char szMsg[60], szItems[60], arrWeaponString[32];
-    Format(szMsg, sizeof( szMsg ), "Level %d [%i / %i]", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
+    Format(szMsg, sizeof( szMsg ), "%t", "Menu Title: Level", playerLevel[client], pUnlocks[client], getMaxPlayerUnlocksByLevel(playerLevel[client]));
     
     menu.SetTitle(szMsg);
 
@@ -847,7 +852,7 @@ public void setPlayerUnlocksLogics(int client, int value)
 
     if(levelByUnlocks > playerLevel[client])
     {
-        CPrintToChat(client, "[ GUM ] Level up to {green}%d{default}!", levelByUnlocks);
+        CPrintToChat(client, "%t", "Chat: Level up", levelByUnlocks);
         
         if (GetConVarInt(cvarWeaponMenu)) {
             menuTimer[client] = CreateTimer( GetConVarFloat(cvarMenuDelay), mainMenu, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1183,7 +1188,7 @@ public void queryShowTopTableCallback(Database db, DBResultSet results, const ch
             ReplaceString(name, sizeof(name), "&#61;", "=");
             ReplaceString(name, sizeof(name), "&#42;", "*");
             
-            Format( szInfo, sizeof( szInfo ), "%s - Level %d [ %d / %d ]", name, level, unlocks, getMaxPlayerUnlocksByLevel(level) );
+            Format( szInfo, sizeof( szInfo ), "%t", "Menu option: Player format", name, level, unlocks, getMaxPlayerUnlocksByLevel(level) );
 
             panel.AddItem("panel_info", szInfo);
         }
@@ -1208,7 +1213,7 @@ public int top10PanelHandler(Menu menu, MenuAction action, int client, int item)
 /* Since cs:go likes to use items_game prefabs instead of weapon files on newly added weapons */
 public void GetWeaponClassname(int weapon, char[] buffer, int size) {
     switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")) {
-        case 23: Format(buffer, size, "weapon_mp5sd")); 
+        case 23: Format(buffer, size, "weapon_mp5sd"); 
         case 60: Format(buffer, size, "weapon_m4a1_silencer");
         case 61: Format(buffer, size, "weapon_usp_silencer");
         case 63: Format(buffer, size, "weapon_cz75a");

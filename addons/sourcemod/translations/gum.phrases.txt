@@ -1,0 +1,31 @@
+"Phrases"
+{
+	"Menu Title: Gun XP Mod Weapons"
+	{
+		"en"	"Gun XP Mod Weapons"
+	}
+	"Menu option: Choose Weapon"
+	{
+		"en"	"Choose weapon"
+	}
+	"Menu option: Last Selected Weapons"
+	{
+		"en"	"Last Selected Weapons"
+	}
+	"Command: sm_gum_setxp Description"
+	{
+		"en"	"Use: sm_gum_setxp <#userid|name> [amount]"
+	}
+	"Command: sm_gum_setxp Message"
+	{
+		"#format"	"{1:N},{2:d}"
+		"en"	"Admin {blue}{1} {default}has set you {green}{2} {default}unlocks"
+	}
+	
+	[SM] Use: sm_gum_setxp <#userid|name> [amount]
+	"You selected"
+	{
+		"#format"	"{1:s}"
+		"en"	"You selected: {red}{1}"
+	}
+}
