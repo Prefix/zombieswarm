@@ -4,6 +4,11 @@
 	{
 		"en"	"Gun XP Mod Weapons"
 	}
+	"Menu Title: Level"
+	{
+		"#format"	"{1:i},{2:i},{3:i}"
+		"en"	"Level {1} [{2} / {3}]"
+	}
 	"Menu option: Choose Weapon"
 	{
 		"en"	"Choose weapon"
@@ -18,14 +23,25 @@
 	}
 	"Command: sm_gum_setxp Message"
 	{
-		"#format"	"{1:N},{2:d}"
-		"en"	"Admin {blue}{1} {default}has set you {green}{2} {default}unlocks"
+		"#format"	"{1:N},{2:i}"
+		"en"	"Admin {blue}{1} {default}has set you {green}{2} {default}xp."
 	}
-	
-	[SM] Use: sm_gum_setxp <#userid|name> [amount]
-	"You selected"
+	"Chat: Gun Menu Reopen"
 	{
-		"#format"	"{1:s}"
-		"en"	"You selected: {red}{1}"
+		"en"	"{green} Menu successfully re-opened!"
+	}
+	"Chat: Level up"
+	{
+		"#format"	"{1:i}"
+		"en"	"Level up to {green}{1}{default}!"
+	}
+	"Menu title: Top 10 players"
+	{
+		"en"	"Top 10 Players"
+	}
+	"Menu option: Player format"
+	{
+		"#format"	"{1:s},{2:i},{3:i},{4:i}"
+		"en"	"{1} - Level {2} [ {3} / {4} ]"
 	}
 }

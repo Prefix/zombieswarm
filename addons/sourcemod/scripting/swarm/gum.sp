@@ -463,7 +463,7 @@ public Action sayCommand(int client, int args)
     
         if ( !weaponSelected[client] )
         {
-            CPrintToChat(client, "{green} Menu successfully re-opened!" );
+            CPrintToChat(client, "%t", "Chat: Gun Menu Reopen" );
             menuTimer[client] = CreateTimer( GetConVarFloat(cvarMenuDelay), mainMenu, client, TIMER_FLAG_NO_MAPCHANGE );
         }
         
