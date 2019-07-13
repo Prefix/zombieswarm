@@ -1208,6 +1208,7 @@ public int top10PanelHandler(Menu menu, MenuAction action, int client, int item)
 /* Since cs:go likes to use items_game prefabs instead of weapon files on newly added weapons */
 public void GetWeaponClassname(int weapon, char[] buffer, int size) {
     switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")) {
+        case 23: Format(buffer, size, "weapon_mp5sd")); 
         case 60: Format(buffer, size, "weapon_m4a1_silencer");
         case 61: Format(buffer, size, "weapon_usp_silencer");
         case 63: Format(buffer, size, "weapon_cz75a");
