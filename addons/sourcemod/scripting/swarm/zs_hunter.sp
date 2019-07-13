@@ -43,7 +43,7 @@ public void OnPluginStart() {
 public void ZS_OnLoaded() {
     // We are registering zombie
     Zombie = ZombieClass("hunter");
-    Zombie.SetName("Zombie Hunter", MAX_CLASS_NAME_SIZE);
+    Zombie.SetName("Hunter", MAX_CLASS_NAME_SIZE);
     Zombie.SetDesc("While ducking can make high leap", MAX_CLASS_DESC_SIZE);
     Zombie.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
     Zombie.Health = zHP.IntValue;

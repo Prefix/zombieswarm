@@ -46,7 +46,7 @@ public void OnPluginStart() {
 public void ZS_OnLoaded() {
     // We are registering zombie
     Zombie = ZombieClass("phantom");
-    Zombie.SetName("Zombie Phantom", MAX_CLASS_NAME_SIZE);
+    Zombie.SetName("Phantom", MAX_CLASS_NAME_SIZE);
     Zombie.SetDesc("Can be invisible (ATTACK button)", MAX_CLASS_DESC_SIZE);
     Zombie.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
     Zombie.Health = zHP.IntValue;
