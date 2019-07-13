@@ -23,7 +23,7 @@ public Plugin myinfo =
 ZombieClass Zombie;
 ZombieAbility abilityLeap;
 
-int hunterNumLeapSounds[MAXPLAYERS + 1];
+//int hunterNumLeapSounds[MAXPLAYERS + 1];
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zLeep;
 
@@ -153,13 +153,13 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     
     TeleportEntity( client, NULL_VECTOR, NULL_VECTOR, cVelocity);
     
-    hunterNumLeapSounds[client]++;
+    //hunterNumLeapSounds[client]++;
     
-    if (hunterNumLeapSounds[client] >= 3 ) {
+    //if (hunterNumLeapSounds[client] >= 3 ) {
     
-        EmitSoundToAll(SOUND_LEAP, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-        
-        hunterNumLeapSounds[client] = 0;
-    }
+    EmitSoundToAll(SOUND_LEAP, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    
+    //hunterNumLeapSounds[client] = 0;
+    //}
 }
 
