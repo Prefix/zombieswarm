@@ -152,7 +152,7 @@ public void OnClientDisconnect(int client)
 
 public Action Timer_UpdateHudHint(Handle timer, any client)
 {
-    static char szText[254];
+    static char szText[1024];
     szText[0] = '\0';
 
     // Dealing with a client who is in the game and playing.
@@ -182,7 +182,7 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
 
 void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if(!UTIL_IsValidClient(client)) return;
-    char temp_string[512];
+    char temp_string[1024];
     ZMPlayer player = ZMPlayer(client);
     PrestigePlayer prestige = PrestigePlayer(client);
     char rank_name[32];
