@@ -9,6 +9,11 @@
 		"#format"	"{1:i},{2:i},{3:i}"
 		"en"	"Level {1} [{2} / {3}]"
 	}
+	"Gun Menu: Level format"
+	{
+		"#format"	"{1:i}"
+		"en"	"( Level {1} )"
+	}
 	"Menu option: Choose Weapon"
 	{
 		"en"	"Choose weapon"

@@ -666,13 +666,13 @@ public void secondaryWeaponMenu(int client)
         weaponNames.GetString(itemId, arrWeaponString, sizeof(arrWeaponString));
         if ( playerLevel[client] >= itemId )
         {
-            Format(szItems, sizeof( szItems ), "%s (Lvl %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s %t", arrWeaponString, "Gun Menu: Level format", itemId);
 
             menu.AddItem("selectionId", szItems);
         }
         else
         {
-            Format(szItems, sizeof( szItems ), "%s (Lvl %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s %t", arrWeaponString, "Gun Menu: Level format", itemId);
             
             menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED);
         }
@@ -732,13 +732,13 @@ public void primaryWeaponMenu(int client)
         weaponNames.GetString(itemId, arrWeaponString, sizeof(arrWeaponString));
         if ( playerLevel[client] >= itemId )
         {
-            Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s %t", arrWeaponString, "Gun Menu: Level format", itemId);
 
             menu.AddItem("selectionId", szItems);
         }
         else
         {
-            Format(szItems, sizeof( szItems ), "%s (Lv %d)", arrWeaponString, itemId);
+            Format(szItems, sizeof( szItems ), "%s %t", arrWeaponString, "Gun Menu: Level format", itemId);
             
             menu.AddItem("selectionId", szItems, ITEMDRAW_DISABLED);
         }
@@ -1169,7 +1169,7 @@ public void queryShowTopTableCallback(Database db, DBResultSet results, const ch
         int level, unlocks;
 
         Menu panel = new Menu(top10PanelHandler);
-        panel.SetTitle( "Top 10 Players" );
+        panel.SetTitle( "%t", "Menu title: Top 10 players" );
 
         while ( results.FetchRow() )
         {
