@@ -92,7 +92,7 @@ public void OnPluginStart()
     
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
-public void OnAllPluginsLoaded() {
+public void OnConfigsExecuted() {
     g_aZombieClass.Clear();
     g_aZombieAbility.Clear();
     g_aPlayerAbility.Clear();
