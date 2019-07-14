@@ -1,0 +1,126 @@
+"Phrases"
+{
+	"Main: About Player"
+	{
+		"#format"	"{1:N}"
+		"en"	"About: {1}"
+	}
+	"Main: Reborns"
+	{
+		"#format"	"{1:i},{2:i}"
+		"en"	"Reborns: [ {1} / {2} ]"
+	}
+	"Main: Evolutions"
+	{
+		"#format"	"{1:i},{2:i}"
+		"en"	"Evolutions: [ {1} / {2} ]"
+	}
+	"Main: Nirvanas"
+	{
+		"#format"	"{1:i},{2:i}"
+		"en"	"Nirvanas: [ {1} ]"
+	}
+	"Main: Level"
+	{
+		"#format"	"{1:i},{2:i}"
+		"en"	"Level: [ {1} / {2} ]"
+	}
+	"Main: XP"
+	{
+		"#format"	"{1:i},{2:i}"
+		"en"	"XP: [ {1} / {2} ]"
+	}
+	"Main: Rank"
+	{
+		"#format"	"{1:s}"
+		"en"	"Rank: [ {1} ]"
+	}
+	"Abilities: Title"
+	{
+		"en"	"Abilities"
+	}
+	"Ability state: Ready to use"
+	{
+		"en"	"Ready to use"
+	}
+	"Ability format: Ready to use"
+	{
+		"#format"	"{1:s},{2:s},{3:s}"
+		"en"	"Name: {1}\nState: {2}\nClick ( {3} ) to activate"
+	}
+	"Ability state: Activated"
+	{
+		"en"	"Activated"
+	}
+	"Ability format: Activated"
+	{
+		"#format"	"{1:s},{2:s},{3:.1f}"
+		"en"	"Name: {1}\nState: {2}\nTime until cooldown: {3}"
+	}
+	"Ability state: On cooldown"
+	{
+		"en"	"On cooldown"
+	}
+	"Ability format: On cooldown"
+	{
+		"#format"	"{1:s},{2:s},{3:.1f}"
+		"en"	"Name: {1}\nState: {2}\nTime until ready: {3}"
+	}
+	"Ability state: Disabled"
+	{
+		"en"	"Disabled"
+	}
+	"Ability format: Disabled"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"	"Name: {1}\nState: {2}"
+	}
+	"Button: Mouse1"
+	{
+		"en"	"MOUSE 1"
+	}
+	"Button: Jump"
+	{
+		"en"	"JUMP"
+	}
+	"Button: Jump"
+	{
+		"en"	"JUMP"
+	}
+	"Button: Duck"
+	{
+		"en"	"DUCK"
+	}
+	"Button: W (Forward)"
+	{
+		"en"	"W"
+	}
+	"Button: S (Back)"
+	{
+		"en"	"S"
+	}
+	"Button: S (Back)"
+	{
+		"en"	"S"
+	}
+	"Button: E (USE)"
+	{
+		"en"	"E"
+	}
+	"Button: A (MOVE LEFT)"
+	{
+		"en"	"A"
+	}
+	"Button: D (MOVE RIGHT)"
+	{
+		"en"	"D"
+	}
+	"Button: Right mouse click"
+	{
+		"en"	"RIGHT MOUSE"
+	}
+	"Button: R (Reload)"
+	{
+		"en"	"RIGHT MOUSE"
+	}
+}
