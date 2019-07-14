@@ -809,7 +809,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
             g_hTimerGhostHint[client] = CreateTimer( 1.0, ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
             
             Menu menu = new Menu(ZombieClassMenuHandler);
-            menu.SetTitle("%T","Select zombie class");
+            menu.SetTitle("%t","Select zombie class");
             
             char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS_ID];
             int temp_checker[g_eZombieClass];
