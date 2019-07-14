@@ -379,8 +379,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
         
     SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
 
-    char sPath[PLATFORM_MAX_PATH];
-    EmitSoundToAll(sPath, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
         
     pullTarget[client] = target; 
 }
