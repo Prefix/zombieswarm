@@ -83,10 +83,6 @@
 	{
 		"en"	"JUMP"
 	}
-	"Button: Jump"
-	{
-		"en"	"JUMP"
-	}
 	"Button: Duck"
 	{
 		"en"	"DUCK"
@@ -94,10 +90,6 @@
 	"Button: W (Forward)"
 	{
 		"en"	"W"
-	}
-	"Button: S (Back)"
-	{
-		"en"	"S"
 	}
 	"Button: S (Back)"
 	{
@@ -121,6 +113,6 @@
 	}
 	"Button: R (Reload)"
 	{
-		"en"	"RIGHT MOUSE"
+		"en"	"R"
 	}
 }
