@@ -599,7 +599,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
     // Apply custom zombie damage
     if (GetClientTeam(attacker) == CS_TEAM_T && GetClientTeam(victim) == CS_TEAM_CT) {
-        float zmdamage = view_as<int>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataDamage)));
+        float zmdamage = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[attacker]), view_as<int>(dataDamage)));
         damage *= zmdamage;
         return Plugin_Changed;
     }
