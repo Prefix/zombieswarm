@@ -27,14 +27,15 @@ ZombieAbility abilityInvisibility;
 
 bool hasInvisibility[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zInvisibility;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zInvisibility, zAttackSpeed;
 
 public void OnPluginStart() {                 
     HookEvent("player_spawn", eventPlayerSpawn);
     
     zHP = CreateConVar("zs_phantom_hp", "120", "Zombie Phantom HP");
     zDamage = CreateConVar("zs_phantom_damage","15.0","Zombie Phantom done damage");
-    zSpeed = CreateConVar("zs_phantom_speed","0.85","Zombie Phantom speed");
+    zAttackSpeed = CreateConVar("zs_hunter_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = CreateConVar("zs_phantom_speed","0.85","Zombie Phantom walk speed");
     zGravity = CreateConVar("zs_phantom_gravity","0.8","Zombie Phantom gravity");
     zExcluded = CreateConVar("zs_phantom_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = CreateConVar("zs_phantom_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
@@ -51,6 +52,7 @@ public void ZS_OnLoaded() {
     Zombie.SetModel("models/player/custom_player/caleon1/mummy/mummy", MAX_CLASS_MODEL_SIZE);
     Zombie.Health = zHP.IntValue;
     Zombie.Damage = zDamage.FloatValue;
+    Zombie.AttackSpeed = zAttackSpeed.FloatValue;
     Zombie.Speed = zSpeed.FloatValue;
     Zombie.Gravity = zGravity.FloatValue;
     Zombie.Excluded = zExcluded.BoolValue;

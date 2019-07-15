@@ -35,7 +35,7 @@ Handle timerNextTank;
 
 #define SPAWNTIME 90.0
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zAttackSpeed, zCooldown, zDuration;
 
 public void OnPluginStart()
 {                  
@@ -46,6 +46,7 @@ public void OnPluginStart()
     
     zHP = CreateConVar("zs_tank_hp", "215", "Zombie Tank HP");
     zDamage = CreateConVar("zs_tank_damage","30.0","Zombie Tank done damage");
+    zAttackSpeed = CreateConVar("zs_tank_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
     zSpeed = CreateConVar("zs_tank_speed","0.8","Zombie Tank speed");
     zGravity = CreateConVar("zs_tank_gravity","0.8","Zombie Tank gravity");
     zExcluded = CreateConVar("zs_tank_excluded","1","1 - Excluded, 0 - Not excluded");
@@ -63,6 +64,7 @@ public void ZS_OnLoaded() {
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
     registeredClass.Speed = zSpeed.FloatValue;
+    registeredClass.AttackSpeed = zAttackSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
     // Abilities

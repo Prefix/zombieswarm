@@ -34,13 +34,14 @@ static const char colors[][]        = {"R", "G", "B", "A"};
 int g_iColor[4];
 int g_iColorAbility[4];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration, zVomitDurationDeath;
+ConVar zHP, zDamage, zSpeed, zGravity, zAttackSpeed, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration, zVomitDurationDeath;
 
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
     
     zHP = CreateConVar("zs_boomer_hp", "150", "Zombie Boomer HP");
     zDamage = CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
+    zAttackSpeed = CreateConVar("zs_boomer_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
     zSpeed = CreateConVar("zs_boomer_speed","0.8","Zombie Boomer speed");
     zGravity = CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");
     zExcluded = CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
@@ -76,6 +77,7 @@ public void ZS_OnLoaded() {
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
     registeredClass.Speed = zSpeed.FloatValue;
+    registeredClass.AttackSpeed = zAttackSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;
 

@@ -29,7 +29,7 @@ int LaserCache;
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed;
 
 public void OnPluginStart() {                   
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -39,6 +39,7 @@ public void OnPluginStart() {
     
     zHP = CreateConVar("zs_smoker_hp", "130", "Zombie Smoker HP");
     zDamage = CreateConVar("zs_smoker_damage","15.0","Zombie Smoker done damage");
+    zAttackSpeed = CreateConVar("zs_smoker_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
     zSpeed = CreateConVar("zs_smoker_speed","0.9","Zombie Smoker speed");
     zGravity = CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
     zExcluded = CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
@@ -55,6 +56,7 @@ public void ZS_OnLoaded() {
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/smoker", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
+    registeredClass.AttackSpeed = zAttackSpeed.FloatValue;
     registeredClass.Speed = zSpeed.FloatValue;
     registeredClass.Gravity = zGravity.FloatValue;
     registeredClass.Excluded = zExcluded.BoolValue;

@@ -70,6 +70,7 @@ public void OnPluginStart()
     HookEvent("player_team", eventTeamChange, EventHookMode_Pre);
     HookEvent("player_death", eventPlayerDeath);
     HookEvent("round_end", eventRoundEnd);
+    HookEvent("weapon_fire", eventWeaponFire);
     
     AddCommandListener( blockKill, "kill");
     AddCommandListener( blockKill, "spectate");
@@ -92,6 +93,7 @@ public void OnPluginStart()
     
     AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
+
 public void OnConfigsExecuted() {
     g_aZombieClass.Clear();
     g_aZombieAbility.Clear();
@@ -102,6 +104,12 @@ public void OnConfigsExecuted() {
     Call_StartForward(g_hForwardZSOnLoaded);
     Call_Finish();
 }
+
+public void eventWeaponFire(Event event, char[] name, bool dbc)
+{
+    RequestFrame(FirePostFrame, event.GetInt("userid"));
+}
+
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
     if (convar == g_cFog) {
         g_cFog.SetInt(StringToInt(newValue));
@@ -1513,4 +1521,44 @@ stock void UTIL_LoadSound(char[] sound) {
         LogError("Cannot locate sounds file: '%s'", soundsPath);
     }
 
+}
+
+public void FirePostFrame(int userid)
+{
+    int client = GetClientOfUserId(userid);
+    if(!client)
+        return;
+    if (!UTIL_IsValidAlive(client))
+        return;
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    int weapon = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+    if (!IsValidEntity(weapon))
+        return;
+
+    char sWeapon[32];
+    GetWeaponClassname(weapon, sWeapon, sizeof(sWeapon));
+    if (StrContains(sWeapon, "knife") == -1)
+        return;
+
+    float curtime = GetGameTime();
+    float nexttime = GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack");
+    nexttime -= curtime;
+    float speed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataAttackSpeed)));
+    nexttime *= 1.0/speed; // 4.0 - multiplier
+    nexttime += curtime;
+    SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", nexttime);
+    SetEntPropFloat(client, Prop_Send, "m_flNextAttack", 0.0);
+}  
+
+/* Since cs:go likes to use items_game prefabs instead of weapon files on newly added weapons */
+public void GetWeaponClassname(int weapon, char[] buffer, int size) {
+    switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")) {
+        case 23: Format(buffer, size, "weapon_mp5sd"); 
+        case 60: Format(buffer, size, "weapon_m4a1_silencer");
+        case 61: Format(buffer, size, "weapon_usp_silencer");
+        case 63: Format(buffer, size, "weapon_cz75a");
+        case 64: Format(buffer, size, "weapon_revolver");
+        default: GetEdictClassname(weapon, buffer, size);
+    }
 }

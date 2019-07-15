@@ -6,6 +6,7 @@ enum g_eZombieClass {
     Float:dataSpeed,
     Float:dataGravity,
     Float:dataDamage,
+    Float:dataAttackSpeed,
     String:dataName[MAX_CLASS_NAME_SIZE],
     String:dataDescription[MAX_CLASS_DESC_SIZE],
     String:dataModel[MAX_CLASS_DESC_SIZE],

@@ -39,6 +39,8 @@ public void InitMethodMaps() {
     CreateNative("ZombieClass.Health.set", Native_ZombieClass_HealthSet);
     CreateNative("ZombieClass.Speed.get", Native_ZombieClass_SpeedGet);
     CreateNative("ZombieClass.Speed.set", Native_ZombieClass_SpeedSet);
+    CreateNative("ZombieClass.AttackSpeed.get", Native_ZombieClass_AttackSpeedGet);
+    CreateNative("ZombieClass.AttackSpeed.set", Native_ZombieClass_AttackSpeedSet);
     CreateNative("ZombieClass.Gravity.get", Native_ZombieClass_GravityGet);
     CreateNative("ZombieClass.Gravity.set", Native_ZombieClass_GravitySet);
     CreateNative("ZombieClass.Damage.get", Native_ZombieClass_DamageGet);
@@ -405,6 +407,7 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 
     temp_class[dataHP] = view_as<int>(DEFAULT_ZM_HEALTH);
     temp_class[dataDamage] = view_as<float>(DEFAULT_ZM_DAMAGE);
+    temp_class[dataAttackSpeed] = view_as<float>(DEFAULT_ZM_ATTACKSPEED);
     temp_class[dataSpeed] = view_as<float>(DEFAULT_ZM_SPEED);
     temp_class[dataGravity] = view_as<float>(DEFAULT_ZM_GRAVITY);
     temp_class[dataExcluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
@@ -447,8 +450,22 @@ public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
     float speed = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, speed, dataSpeed);  
+    g_aZombieClass.Set(class_id, speed < 0.1 ? 0.1 : speed, dataSpeed);  
 }
+
+public int Native_ZombieClass_AttackSpeedGet(Handle plugin, int numParams)
+{
+    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
+    return view_as<int>(g_aZombieClass.Get(class_id, dataAttackSpeed));
+}
+
+public int Native_ZombieClass_AttackSpeedSet(Handle plugin, int numParams)
+{
+    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
+    float speed = GetNativeCell(2);
+    g_aZombieClass.Set(class_id, speed < 0.1 ? 0.1 : speed, dataAttackSpeed);  
+}
+
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
 {

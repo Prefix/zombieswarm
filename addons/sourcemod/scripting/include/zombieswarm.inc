@@ -94,6 +94,10 @@ methodmap ZombieClass {
         public native get();
         public native set(const float val);
     }
+    property float AttackSpeed {
+        public native get();
+        public native set(const float val);
+    }
     property float Gravity {
         public native get();
         public native set(const float val);
