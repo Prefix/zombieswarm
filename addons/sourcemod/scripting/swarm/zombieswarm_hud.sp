@@ -23,7 +23,13 @@ int g_iColor[4];
 float g_fPosX,
     g_fPosY;
 
+bool g_bEnabledAbility;
+int g_iColorAbility[4];
+float g_fPosXAbility,
+    g_fPosYAbility;
+
 Handle g_hHudSync[MAXPLAYERS+1] = null;
+Handle g_hHudSyncAbility[MAXPLAYERS+1] = null;
 
 #define PLUGIN_NAME ZS_PLUGIN_NAME ... " - HUD"
 
@@ -53,8 +59,20 @@ public void OnPluginStart()
     HookConVarChange((CVar = CreateConVar("sm_zombieswarm_csgohud_y", "0.05","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_PosY);
     g_fPosY            = CVar.FloatValue;
     if(g_fPosY < 0) g_fPosX = -1.0;
+    // Hud2
+    HookConVarChange((CVar = CreateConVar("sm_zombieswarm_csgohud_ability_enabled","1","Enables the Ability HUD for all players by default.", FCVAR_NONE, true, 0.0, true, 1.0)), CVarChange_Ability_Enabled);
+    g_bEnabledAbility        = CVar.BoolValue;
+    HookConVarChange((CVar = CreateConVar("sm_zombieswarm_csgohud_ability_color", "100 127 255 255","HUD color. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer, true);
+    HookConVarChange((CVar = CreateConVar("sm_zombieswarm_csgohud_ability_x", "0.05" ,"List position X (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosX);
+    g_fPosXAbility            = CVar.FloatValue;
+    if(g_fPosXAbility < 0) g_fPosXAbility = -1.0;
+    HookConVarChange((CVar = CreateConVar("sm_zombieswarm_csgohud_ability_y", "-1.0","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosY);
+    g_fPosYAbility            = CVar.FloatValue;
+    if(g_fPosYAbility < 0) g_fPosYAbility = -1.0;
 
-    AutoExecConfig(true, "plugin.zombieswarm_csgo_hud");
+    AutoExecConfig(true, "plugin.zombieswarm_csgo_hud", "sourcemod/zombieswarm");
     LoadTranslations("zombieswarm_hud.phrases");
 }
 
@@ -85,7 +103,34 @@ public void CVarChange_PosY(ConVar CVar, const char[] oldValue, const char[] new
     if(g_fPosY < 0) g_fPosX = -1.0;
 }
 
-void String2Color(const char[] str)
+public void CVarChange_Ability_Enabled(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    g_bEnabledAbility = CVar.BoolValue;
+
+    if(g_bEnabledAbility) CreateAllHudTimers();
+    else KillAllHudTimers();
+}
+
+public void CVarChange_Ability_Color(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    char sBuffer[16];
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer, true);
+}
+
+public void CVarChange_Ability_PosX(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    g_fPosXAbility = CVar.FloatValue;
+    if(g_fPosX < 0) g_fPosXAbility = -1.0;
+}
+
+public void CVarChange_Ability_PosY(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    g_fPosYAbility = CVar.FloatValue;
+    if(g_fPosY < 0) g_fPosXAbility = -1.0;
+}
+
+void String2Color(const char[] str, bool ability = false)
 {
     static char Splitter[4][16];
     if(ExplodeString(str, " ", Splitter, sizeof(Splitter), sizeof(Splitter[])) > 3)
@@ -94,16 +139,26 @@ void String2Color(const char[] str)
         {
             if(String_IsNumeric(Splitter[i]))
             {
-                g_iColor[i] = StringToInt(Splitter[i]);
-                if(g_iColor[i] < 0 || g_iColor[i] > 255)
-                {
-                    PrintToServer("Zombie Swarm HUD warning: incorrect '%s' color parameter (%i)! Correct: 0 - 255.", colors[i], g_iColor[i]);
-                    g_iColor[i] = 255;
+                if (ability) {
+                    g_iColorAbility[i] = StringToInt(Splitter[i]);
+                    if(g_iColorAbility[i] < 0 || g_iColorAbility[i] > 255)
+                    {
+                        PrintToServer("Zombie Swarm HUD warning: incorrect '%s' color parameter (%i)! Correct: 0 - 255.", colors[i], g_iColorAbility[i]);
+                        g_iColorAbility[i] = 255;
+                    }
+                } else {
+                    g_iColor[i] = StringToInt(Splitter[i]);
+                    if(g_iColor[i] < 0 || g_iColor[i] > 255)
+                    {
+                        PrintToServer("Zombie Swarm HUD warning: incorrect '%s' color parameter (%i)! Correct: 0 - 255.", colors[i], g_iColor[i]);
+                        g_iColor[i] = 255;
+                    }
                 }
             }
             else
             {
-                g_iColor[i] = 255;
+                if (ability) g_iColorAbility[i] = 255;
+                else g_iColor[i] = 255;
                 PrintToServer("Zombie Swarm HUD warning: incorrect '%s' color parameter ('%s' is not numeric)!", colors[i], Splitter[i]);
             }
         }
@@ -152,13 +207,22 @@ public void OnClientDisconnect(int client)
 
 public Action Timer_UpdateHudHint(Handle timer, any client)
 {
-    static char szText[1024];
+    char szText[512];
     szText[0] = '\0';
-
+    char szTextAbility[512];
+    szTextAbility[0] = '\0';
+    int abilities[API_MAX_PLAYER_ABILITIES];
+    int found = 0;
+    bool havefound = false;
     // Dealing with a client who is in the game and playing.
     if(IsPlayerAlive(client))
     {
         GetInformationAboutPlayer(client, szText, sizeof(szText));
+        ZMPlayer player = ZMPlayer(client);
+        havefound = player.GetPlayerAbilities(abilities, found);
+        if (havefound) {
+            GetPlayerAbilityInfo(client, szTextAbility, sizeof(szTextAbility));
+        }
     } else {
 
         int iSpecModeUser = GetEntProp(client, Prop_Send, "m_iObserverMode");
@@ -167,22 +231,35 @@ public Action Timer_UpdateHudHint(Handle timer, any client)
             // Find out who the User is spectating.
             int iTargetUser = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
             GetInformationAboutPlayer(iTargetUser, szText, sizeof(szText));
+            ZMPlayer player = ZMPlayer(iTargetUser);
+            havefound = player.GetPlayerAbilities(abilities, found);
+            if (havefound) {
+                GetPlayerAbilityInfo(iTargetUser, szTextAbility, sizeof(szTextAbility));
+            }
         }
     }
     if (g_hHudSync[client] == null)
     {
         g_hHudSync[client] = CreateHudSynchronizer();
     }
+    if (g_hHudSyncAbility[client] == null)
+    {
+        g_hHudSyncAbility[client] = CreateHudSynchronizer();
+    }
     SetHudTextParams(g_fPosX, g_fPosY, UPDATE_INTERVAL+0.1, g_iColor[0], g_iColor[1], g_iColor[2], g_iColor[3], 0, 0.0, 0.0, 0.0);
-    //ShowHudText(client, -1, szText);
     ShowSyncHudText(client, g_hHudSync[client], szText);
+    if (havefound) {
+        SetHudTextParams(g_fPosXAbility, g_fPosYAbility, UPDATE_INTERVAL+0.1, g_iColorAbility[0], g_iColorAbility[1], g_iColorAbility[2], g_iColorAbility[3], 0, 0.0, 0.0, 0.0);
+        ShowSyncHudText(client, g_hHudSyncAbility[client], szTextAbility);
+    }
 
     return Plugin_Continue;
 }
 
 void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if(!UTIL_IsValidClient(client)) return;
-    char temp_string[1024];
+    char temp_string[512];
+    temp_string[0] = '\0';
     ZMPlayer player = ZMPlayer(client);
     PrestigePlayer prestige = PrestigePlayer(client);
     char rank_name[32];
@@ -199,44 +276,50 @@ void GetInformationAboutPlayer(int client, char[] str, int maxlength) {
     if (bytes > 0) {
         Format(temp_string, sizeof(temp_string), "%s  %t\n \n", temp_string, "Main: Rank", rank_name);
     }
+    strcopy(str, maxlength, temp_string);
+}
+
+void GetPlayerAbilityInfo(int client, char[] str, int maxlength) {
+    if(!UTIL_IsValidClient(client)) return;
+    char temp_string[512];
     int abilities[API_MAX_PLAYER_ABILITIES];
     int found = 0;
+    ZMPlayer player = ZMPlayer(client);
     bool havefound = player.GetPlayerAbilities(abilities, found);
-    if (havefound) {
-        Format(temp_string, sizeof(temp_string), "%s%t\n\n",temp_string,"Abilities: Title");
-        for (int i = 0; i < found; i++) {
-            if (abilities[i] < 0) {
-                continue;
-            }
-            int ability_index = player.GetAbilityByID(abilities[i]);
-            if (ability_index < 0)
-                continue;
+    if(!havefound) return;
+    Format(temp_string, sizeof(temp_string), "%t\n\n","Abilities: Title");
+    for (int i = 0; i < found; i++) {
+        if (abilities[i] < 0) {
+            continue;
+        }
+        int ability_index = player.GetAbilityByID(abilities[i]);
+        if (ability_index < 0)
+            continue;
 
-            PlayerAbility ability = view_as<PlayerAbility>(abilities[i]);
-            char sState[32];
-            if (ability.State == stateIdle) {
-                Format(sState, sizeof(sState), "%t", "Ability state: Ready to use");
-                char buttons[64];
-                UTIL_DEBUG_PrintButtons(ability.Buttons, buttons);
-                char name[MAX_ABILITY_NAME_SIZE];
-                ability.GetName(name, sizeof(name));
-                Format(temp_string, sizeof(temp_string), "\n%s%t\n",temp_string, "Ability format: Ready to use", name, sState, buttons);
-            } else if (ability.State == stateRunning) {
-                Format(sState, sizeof(sState), "%t", "Ability state: Activated");
-                char name[MAX_ABILITY_NAME_SIZE];
-                ability.GetName(name, sizeof(name));
-                Format(temp_string, sizeof(temp_string), "\n%s%t\n",temp_string, "Ability format: Activated", name, sState, ability.CurrentDuration);
-            } else if (ability.State == stateCooldown) {
-                Format(sState, sizeof(sState), "%t", "Ability state: On cooldown");
-                char name[MAX_ABILITY_NAME_SIZE];
-                ability.GetName(name, sizeof(name));
-                Format(temp_string, sizeof(temp_string), "\n%s%t\n",temp_string, "Ability format: On cooldown", name, sState, ability.CurrentCooldown);
-            } else if (ability.State == stateDisabled) {
-                Format(sState, sizeof(sState), "%t", "Ability state: Disabled");
-                char name[MAX_ABILITY_NAME_SIZE];
-                ability.GetName(name, sizeof(name));
-                Format(temp_string, sizeof(temp_string), "\n%s%t\n",temp_string, "Ability format: Disabled", name);
-            }
+        PlayerAbility ability = view_as<PlayerAbility>(abilities[i]);
+        char sState[32];
+        if (ability.State == stateIdle) {
+            Format(sState, sizeof(sState), "%t", "Ability state: Ready to use");
+            char buttons[64];
+            UTIL_DEBUG_PrintButtons(ability.Buttons, buttons);
+            char name[MAX_ABILITY_NAME_SIZE];
+            ability.GetName(name, sizeof(name));
+            Format(temp_string, sizeof(temp_string), "%s%t\n",temp_string, "Ability format: Ready to use", name, sState, buttons);
+        } else if (ability.State == stateRunning) {
+            Format(sState, sizeof(sState), "%t", "Ability state: Activated");
+            char name[MAX_ABILITY_NAME_SIZE];
+            ability.GetName(name, sizeof(name));
+            Format(temp_string, sizeof(temp_string), "%s%t\n",temp_string, "Ability format: Activated", name, sState, ability.CurrentDuration);
+        } else if (ability.State == stateCooldown) {
+            Format(sState, sizeof(sState), "%t", "Ability state: On cooldown");
+            char name[MAX_ABILITY_NAME_SIZE];
+            ability.GetName(name, sizeof(name));
+            Format(temp_string, sizeof(temp_string), "%s%t\n",temp_string, "Ability format: On cooldown", name, sState, ability.CurrentCooldown);
+        } else if (ability.State == stateDisabled) {
+            Format(sState, sizeof(sState), "%t", "Ability state: Disabled");
+            char name[MAX_ABILITY_NAME_SIZE];
+            ability.GetName(name, sizeof(name));
+            Format(temp_string, sizeof(temp_string), "%s%t\n",temp_string, "Ability format: Disabled", name);
         }
     }
     strcopy(str, maxlength, temp_string);
@@ -258,6 +341,11 @@ void KillHudHintTimer(int client)
     {
         delete g_hHudSync[client];
         g_hHudSync[client] = null;
+    }
+    if(g_hHudSyncAbility[client] != null)
+    {
+        delete g_hHudSyncAbility[client];
+        g_hHudSyncAbility[client] = null;
     }
 }
 
