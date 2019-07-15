@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Ability [smoker_pull] Display Name"
+	{
+		"en"	"Pull"
+	}
+	"Zombie Ability [smoker_pull] Description"
+	{
+		"en"	"Can pull humans with tongue."
+	}
+}

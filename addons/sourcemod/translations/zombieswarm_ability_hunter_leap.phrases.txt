@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Ability [hunter_leap] Display Name"
+	{
+		"en"	"Leap"
+	}
+	"Zombie Ability [hunter_leap] Description"
+	{
+		"en"	"While ducking can make high leap."
+	}
+}

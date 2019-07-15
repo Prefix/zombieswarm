@@ -389,8 +389,16 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
         }
     }
     int temp_class[g_eZombieClass];
-    Format(temp_class[dataName], MAX_CLASS_NAME_SIZE, "%s", DEFAULT_ZM_NAME);
-    Format(temp_class[dataDescription], MAX_CLASS_DESC_SIZE, "%s", DEFAULT_ZM_DESC);
+
+    // Load translations
+    char translate_file[64];
+    Format(translate_file, sizeof(translate_file), TRANSLATION_CLASS_FILE, temp_unique);
+    LoadTranslations(translate_file);
+
+    Format(translate_file, sizeof(translate_file), TRANSLATION_CLASS_DISPLAY, temp_unique);
+    Format(temp_class[dataName], MAX_CLASS_NAME_SIZE, "%t", translate_file);
+    Format(translate_file, sizeof(translate_file), TRANSLATION_CLASS_DESC, temp_unique);
+    Format(temp_class[dataDescription], MAX_CLASS_DESC_SIZE, "%t", translate_file);
     Format(temp_class[dataModel], MAX_CLASS_MODEL_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
     Format(temp_class[dataArms], MAX_CLASS_ARMS_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
     Format(temp_class[dataUniqueName], MAX_CLASS_UNIQUE_NAME_SIZE, "%s", temp_unique);
@@ -623,8 +631,15 @@ public int Native_ZombieAbility_Constructor(Handle plugin, int numParams)
         }
     }
     int temp_ability[g_eZombieAbility];
-    Format(temp_ability[abilityName], MAX_ABILITY_NAME_SIZE, "%s", DEFAULT_ABILITY_NAME);
-    Format(temp_ability[abilityDescription], MAX_ABILITY_DESC_SIZE, "%s", DEFAULT_ABILITY_DESC);
+    // Load translations
+    char translate_file[64];
+    Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_FILE, temp_unique);
+    LoadTranslations(translate_file);
+
+    Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_DISPLAY, temp_unique);
+    Format(temp_ability[abilityName], MAX_ABILITY_NAME_SIZE, "%t", translate_file);
+    Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_DESC, temp_unique);
+    Format(temp_ability[abilityDescription], MAX_ABILITY_DESC_SIZE, "%t", translate_file);
     Format(temp_ability[abilityUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
 
     temp_ability[abilityButtons] = view_as<int>(DEFAULT_ABILITY_BUTTONS);

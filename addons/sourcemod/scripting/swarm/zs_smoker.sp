@@ -50,8 +50,8 @@ public void OnPluginStart() {
 public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("smoker");
-    registeredClass.SetName("Smoker", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Can drag other people (E button)", MAX_CLASS_DESC_SIZE);
+    //registeredClass.SetName("Smoker", MAX_CLASS_NAME_SIZE);
+    //registeredClass.SetDesc("Can drag other people (E button)", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/smoker", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
@@ -63,8 +63,8 @@ public void ZS_OnLoaded() {
     abilityPull.Duration = zDuration.FloatValue;
     abilityPull.Cooldown = zCooldown.FloatValue;
     abilityPull.Buttons = IN_USE;
-    abilityPull.SetName("Pull", MAX_ABILITY_NAME_SIZE);
-    abilityPull.SetDesc("Can pull humans with tongue.", MAX_ABILITY_DESC_SIZE);
+    //abilityPull.SetName("Pull", MAX_ABILITY_NAME_SIZE);
+    //abilityPull.SetDesc("Can pull humans with tongue.", MAX_ABILITY_DESC_SIZE);
 }
 
 public void OnClientPutInServer(int client)

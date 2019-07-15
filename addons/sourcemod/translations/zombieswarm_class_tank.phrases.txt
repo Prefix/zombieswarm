@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Class [tank] Display Name"
+	{
+		"en"	"Fury [TANK]"
+	}
+	"Zombie Class [tank] Description"
+	{
+		"en"	"Can rage (E button) with Iron skin"
+	}
+}

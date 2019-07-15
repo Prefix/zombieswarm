@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Ability [phantom_invisibility] Display Name"
+	{
+		"en"	"Invisibility"
+	}
+	"Zombie Ability [phantom_invisibility] Description"
+	{
+		"en"	"Becomes invisible for few seconds."
+	}
+}

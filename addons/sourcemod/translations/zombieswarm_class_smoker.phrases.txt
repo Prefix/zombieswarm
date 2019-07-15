@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Class [smoker] Display Name"
+	{
+		"en"	"Smoker"
+	}
+	"Zombie Class [smoker] Description"
+	{
+		"en"	"Can drag other people (E button)"
+	}
+}

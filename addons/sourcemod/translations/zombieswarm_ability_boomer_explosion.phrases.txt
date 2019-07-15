@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Ability [boomer_explosion] Display Name"
+	{
+		"en"	"Vomit"
+	}
+	"Zombie Ability [boomer_explosion] Description"
+	{
+		"en"	"Vomit humans causes them to go blind."
+	}
+}

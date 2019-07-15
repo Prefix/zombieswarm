@@ -25,3 +25,11 @@
 #define DEFAULT_ABILITY_COOLDOWN 5.0
 #define DEFAULT_ABILITY_BUTTONS 0
 #define DEFAULT_ABILITY_EXCLUDED false
+
+#define TRANSLATION_CLASS_FILE "zombieswarm_class_%s.phrases"
+#define TRANSLATION_CLASS_DISPLAY "Zombie Class [%s] Display Name"
+#define TRANSLATION_CLASS_DESC "Zombie Class [%s] Description"
+
+#define TRANSLATION_ABILITY_FILE "zombieswarm_ability_%s.phrases"
+#define TRANSLATION_ABILITY_DISPLAY "Zombie Ability [%s] Display Name"
+#define TRANSLATION_ABILITY_DESC "Zombie Ability [%s] Description"

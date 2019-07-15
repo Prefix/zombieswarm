@@ -23,8 +23,6 @@ public Plugin myinfo =
 ZombieClass Zombie;
 ZombieAbility abilityLeap;
 
-//int hunterNumLeapSounds[MAXPLAYERS + 1];
-
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zLeep;
 
 public void OnPluginStart() {                   
@@ -43,8 +41,8 @@ public void OnPluginStart() {
 public void ZS_OnLoaded() {
     // We are registering zombie
     Zombie = ZombieClass("hunter");
-    Zombie.SetName("Hunter", MAX_CLASS_NAME_SIZE);
-    Zombie.SetDesc("While ducking can make high leap", MAX_CLASS_DESC_SIZE);
+    //Zombie.SetName("Hunter", MAX_CLASS_NAME_SIZE);
+    //Zombie.SetDesc("While ducking can make high leap", MAX_CLASS_DESC_SIZE);
     Zombie.SetModel("models/player/custom/hunter/hunter", MAX_CLASS_MODEL_SIZE);
     Zombie.Health = zHP.IntValue;
     Zombie.Damage = zDamage.FloatValue;
@@ -56,8 +54,8 @@ public void ZS_OnLoaded() {
     abilityLeap.Duration = ABILITY_NO_DURATION; // This is for classes who has no durations on skills
     abilityLeap.Cooldown = zCooldown.FloatValue;
     abilityLeap.Buttons = IN_ATTACK;
-    abilityLeap.SetName("Leap", MAX_ABILITY_NAME_SIZE);
-    abilityLeap.SetDesc("While ducking can make high leap", MAX_ABILITY_DESC_SIZE);
+    //abilityLeap.SetName("Leap", MAX_ABILITY_NAME_SIZE);
+    //abilityLeap.SetDesc("While ducking can make high leap", MAX_ABILITY_DESC_SIZE);
 }
 
 public void OnMapStart() {
@@ -153,13 +151,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     
     TeleportEntity( client, NULL_VECTOR, NULL_VECTOR, cVelocity);
     
-    //hunterNumLeapSounds[client]++;
-    
-    //if (hunterNumLeapSounds[client] >= 3 ) {
-    
     EmitSoundToAll(SOUND_LEAP, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-    
-    //hunterNumLeapSounds[client] = 0;
-    //}
+
 }
 

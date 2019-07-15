@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Class [phantom] Display Name"
+	{
+		"en"	"Phantom"
+	}
+	"Zombie Class [phantom] Description"
+	{
+		"en"	"Can be invisible (ATTACK button)."
+	}
+}

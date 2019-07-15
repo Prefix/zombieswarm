@@ -1,0 +1,11 @@
+"Phrases"
+{
+	"Zombie Class [boomer] Display Name"
+	{
+		"en"	"Boomer"
+	}
+	"Zombie Class [boomer] Description"
+	{
+		"en"	"Vomits humans and explodes on death."
+	}
+}

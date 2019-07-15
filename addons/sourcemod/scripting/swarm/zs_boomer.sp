@@ -32,7 +32,7 @@ int explosionSprite;
 #define CLASS_DESCRIPTION "Vomits humans and explodes on death"
 
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration;
 
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
@@ -46,6 +46,7 @@ public void OnPluginStart() {
     zRadius = CreateConVar("zs_boomer_radius","250.0","Explosion radius");
     zCooldown = CreateConVar("zs_boomer_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
     zDuration = CreateConVar("zs_boomer_duration","2.0","How long in second Boomer using his ability");
+    zVomitDuration = CreateConVar("zs_boomer_vomit_duration","2.0","For how many seconds humans are blinded");
     
     AutoExecConfig(true, "zombie.boomer", "sourcemod/zombieswarm");
 }
@@ -53,8 +54,8 @@ public void ZS_OnLoaded() {
 
     // We are registering zombie
     registeredClass = ZombieClass("boomer");
-    registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc(CLASS_DESCRIPTION, MAX_CLASS_DESC_SIZE);
+    //registeredClass.SetName("Boomer", MAX_CLASS_NAME_SIZE);
+    //registeredClass.SetDesc(CLASS_DESCRIPTION, MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/borodatm.ru/l4d2/boomer", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
@@ -63,8 +64,8 @@ public void ZS_OnLoaded() {
     registeredClass.Excluded = zExcluded.BoolValue;
 
     abilityVomit = ZombieAbility(registeredClass, ABILITY_UNIQUE_EXPLODE);
-    abilityVomit.SetName(ABILITY_NAME, MAX_ABILITY_NAME_SIZE);
-    abilityVomit.SetDesc(ABILITY_DESCRIPTION, MAX_ABILITY_DESC_SIZE);
+    //abilityVomit.SetName(ABILITY_NAME, MAX_ABILITY_NAME_SIZE);
+    //abilityVomit.SetDesc(ABILITY_DESCRIPTION, MAX_ABILITY_DESC_SIZE);
     abilityVomit.Duration = zDuration.FloatValue;
     abilityVomit.Cooldown = zCooldown.FloatValue;
     abilityVomit.Buttons = IN_USE;
@@ -232,8 +233,8 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
         distanceBetween = GetVectorDistance ( targetOrigin, location );
         
         if (( distanceBetween <= zRadius.FloatValue)) {
-            
-            UTIL_Fade(enemy, 2, 3, {0, 133, 33, 210});
+            int seconds = zVomitDuration.IntValue;
+            UTIL_Fade(enemy, seconds, seconds+1, {0, 133, 33, 210});
             UTIL_ShakeScreen(enemy);
         }
     }

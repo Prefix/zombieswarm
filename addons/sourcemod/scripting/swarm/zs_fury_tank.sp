@@ -57,8 +57,8 @@ public void OnPluginStart()
 public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("tank");
-    registeredClass.SetName("Fury [TANK]", MAX_CLASS_NAME_SIZE);
-    registeredClass.SetDesc("Can rage (E button) with Iron skin", MAX_CLASS_DESC_SIZE);
+    //registeredClass.SetName("Fury [TANK]", MAX_CLASS_NAME_SIZE);
+    //registeredClass.SetDesc("Can rage (E button) with Iron skin", MAX_CLASS_DESC_SIZE);
     registeredClass.SetModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank", MAX_CLASS_MODEL_SIZE);
     registeredClass.Health = zHP.IntValue;
     registeredClass.Damage = zDamage.FloatValue;
@@ -70,8 +70,8 @@ public void ZS_OnLoaded() {
     abilityRage.Duration = zDuration.FloatValue;
     abilityRage.Cooldown = zCooldown.FloatValue;
     abilityRage.Buttons = IN_USE;
-    abilityRage.SetName("Fury", MAX_ABILITY_NAME_SIZE);
-    abilityRage.SetDesc("Can rage with Iron skin.", MAX_ABILITY_DESC_SIZE);
+    //abilityRage.SetName("Fury", MAX_ABILITY_NAME_SIZE);
+    //abilityRage.SetDesc("Can rage with Iron skin.", MAX_ABILITY_DESC_SIZE);
 }
 public void onZCSelected(int client, int classId)
 {
