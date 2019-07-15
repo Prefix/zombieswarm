@@ -30,9 +30,11 @@ int explosionSprite;
 #define ABILITY_NAME "Vomit"
 #define ABILITY_DESCRIPTION "Vomit humans"
 #define CLASS_DESCRIPTION "Vomits humans and explodes on death"
+static const char colors[][]        = {"R", "G", "B", "A"};
+int g_iColor[4];
+int g_iColorAbility[4];
 
-
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration, zVomitDurationDeath;
 
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
@@ -46,10 +48,24 @@ public void OnPluginStart() {
     zRadius = CreateConVar("zs_boomer_radius","250.0","Explosion radius");
     zCooldown = CreateConVar("zs_boomer_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
     zDuration = CreateConVar("zs_boomer_duration","2.0","How long in second Boomer using his ability");
-    zVomitDuration = CreateConVar("zs_boomer_vomit_duration","2.0","For how many seconds humans are blinded");
+    zVomitDuration = CreateConVar("zs_boomer_vomit_duration_ability","3.0","For how many seconds humans are blinded when used ability");
+    zVomitDurationDeath = CreateConVar("zs_boomer_vomit_duration_death","4.0","For how many seconds humans are blinded when zombie died");
     
+    ConVar CVar;
+    char sBuffer[16];
+    HookConVarChange((CVar = CreateConVar("zs_boomer_vomit_color_ability", "0 133 33 210","Vomit color when blinded [Ability]. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer, true);
+
+    HookConVarChange((CVar = CreateConVar("zs_boomer_vomit_color_death", "0 133 33 210","Vomit color when blinded [Death]. Set by RGBA (0 - 255).")), CVarChange_Color);
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer);
+
     AutoExecConfig(true, "zombie.boomer", "sourcemod/zombieswarm");
 }
+
+
+
 public void ZS_OnLoaded() {
 
     // We are registering zombie
@@ -126,7 +142,8 @@ stock void explodePlayer(int client)
         if (( distanceBetween <= zRadius.FloatValue)) {
             SDKHooks_TakeDamage(enemy, client, client, zExplodeDamage.FloatValue, DMG_BLAST, -1, NULL_VECTOR, NULL_VECTOR);
             
-            UTIL_Fade(enemy, 5, 6, {0, 133, 33, 210});
+            int seconds = zVomitDurationDeath.IntValue;
+            UTIL_Fade(enemy, seconds, seconds+1, g_iColor);
             UTIL_ShakeScreen(enemy);
         }
     }
@@ -234,10 +251,75 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
         
         if (( distanceBetween <= zRadius.FloatValue)) {
             int seconds = zVomitDuration.IntValue;
-            UTIL_Fade(enemy, seconds, seconds+1, {0, 133, 33, 210});
+            UTIL_Fade(enemy, seconds, seconds+1, g_iColorAbility);
             UTIL_ShakeScreen(enemy);
         }
     }
     GetClientAbsOrigin(client, location);
     boomSound("swarm/vomiting.mp3", location);
+}
+
+public void CVarChange_Color(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    char sBuffer[16];
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer);
+}
+
+public void CVarChange_Ability_Color(ConVar CVar, const char[] oldValue, const char[] newValue)
+{
+    char sBuffer[16];
+    CVar.GetString(sBuffer, sizeof(sBuffer));
+    String2Color(sBuffer, true);
+}
+
+
+void String2Color(const char[] str, bool ability = false)
+{
+    static char Splitter[4][16];
+    if(ExplodeString(str, " ", Splitter, sizeof(Splitter), sizeof(Splitter[])) > 3)
+    {
+        for(int i; i < 4; i++)
+        {
+            if(String_IsNumeric(Splitter[i]))
+            {
+                if (ability) {
+                    g_iColorAbility[i] = StringToInt(Splitter[i]);
+                    if(g_iColorAbility[i] < 0 || g_iColorAbility[i] > 255)
+                    {
+                        PrintToServer("[Boomer] ability warning: incorrect '%s' color parameter (%i)! Correct: 0 - 255.", colors[i], g_iColorAbility[i]);
+                        g_iColorAbility[i] = 255;
+                    }
+                } else {
+                    g_iColor[i] = StringToInt(Splitter[i]);
+                    if(g_iColor[i] < 0 || g_iColor[i] > 255)
+                    {
+                        PrintToServer("[Boomer] death warning: incorrect '%s' color parameter (%i)! Correct: 0 - 255.", colors[i], g_iColor[i]);
+                        g_iColor[i] = 255;
+                    }
+                }
+            }
+            else
+            {
+                if (ability) g_iColorAbility[i] = 255;
+                else g_iColor[i] = 255;
+                PrintToServer("[Boomer] %s warning: incorrect '%s' color parameter ('%s' is not numeric)!", ability ? "Ability" : "Death" , colors[i], Splitter[i]);
+            }
+        }
+    }
+    else PrintToServer("[Boomer] %s warning: not all parameters of color are specified ('%s' < 'R G B A')!",  ability ? "Ability" : "Death", str);
+}
+
+bool String_IsNumeric(const char[] str)
+{
+    int x, numbersFound;
+
+    while (str[x] != '\0')
+    {
+        if(IsCharNumeric(str[x])) numbersFound++;
+        else return false;
+        x++;
+    }
+
+    return view_as<bool>(numbersFound);
 }
