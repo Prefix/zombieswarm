@@ -31,7 +31,7 @@ int LaserCache;
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed, zPullSpeed;
 
 public void OnPluginStart() {                   
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -48,6 +48,7 @@ public void OnPluginStart() {
     zExcluded = AutoExecConfig_CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = AutoExecConfig_CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
     zDuration = AutoExecConfig_CreateConVar("zs_smoker_duration","30.0","Time in seconds for maximum pulling duration",_,true,1.0);
+    zPullSpeed = AutoExecConfig_CreateConVar("zs_smoker_pullspeed","360.0","Smoker pull force, edit if you know what are you doing.",_,true,1.0);
     ZS_EndConfig();
 }
 public void ZS_OnLoaded() {
@@ -252,8 +253,7 @@ public Action BeamTimer(Handle timer, any client)
     
     
     if ( distancebetween > 70.0 ) {
-        // Original was 170 after all
-        float fl_Time = distancebetween / 170.0;
+        float fl_Time = distancebetween / zPullSpeed.FloatValue;
 
         fl_Velocity[0] = (Origin[0] - targetorigin[0]) / fl_Time;
         fl_Velocity[1] = (Origin[1] - targetorigin[1]) / fl_Time;
