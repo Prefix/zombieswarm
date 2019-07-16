@@ -31,7 +31,7 @@ int LaserCache;
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed, zPullSpeed, zPullColorRed, zPullColorGreen, zPullColorBlue, zPullColorAlpha, zPullRopeWidth;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed, zPullSpeed, zPullColorRed, zPullColorGreen, zPullColorBlue, zPullColorAlpha, zPullRopeWidth, zPullRopeChance;
 
 public void OnPluginStart() {                   
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -54,6 +54,7 @@ public void OnPluginStart() {
     zPullColorBlue = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_blue","55","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
     zPullColorAlpha = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_alpha","90","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
     zPullRopeWidth = AutoExecConfig_CreateConVar("zs_smoker_rope_width","5.0","Smoker pull force, edit if you know what are you doing.",_,true,1.0);
+    zPullRopeChance = AutoExecConfig_CreateConVar("zs_smoker_rope_sound_chance","20","Every 0.1s chance to play tongue sound. More numbers, harder is chance",_,true,2.0);
     ZS_EndConfig();
 }
 public void ZS_OnLoaded() {
@@ -293,7 +294,9 @@ public Action BeamTimer(Handle timer, any client)
     if (alpha > 255) alpha = 255;
     BeamColor[3] = alpha;
     
-    if (GetRandomInt(1, 5) == 1) EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    int chance = zPullRopeChance.IntValue;
+    if (chance < 2) chance = 2;
+    if (GetRandomInt(1, chance) == 1) EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 
     TE_SetupBeamPoints( Origin2, targetorigin2, LaserCache, 0, 0, 0, 0.11, zPullRopeWidth.FloatValue, zPullRopeWidth.FloatValue, 0, 0.0, BeamColor, 0);
     TE_SendToAll();
