@@ -20,4 +20,10 @@ before_script:
   - chmod +x spcomp
 
 script:
-  - ./compile.sh swarm/*.sp
+  - ./compile.sh zs_*.sp
+  - ./compile.sh zombieswarm*.sp
+  - ./compile.sh unlock_*.sp
+  - ./compile.sh gum*.sp  
+  - ./compile.sh grenade_effects.sp
+  - ./compile.sh prestige.sp
+  - ./compile.sh map_missions.sp
