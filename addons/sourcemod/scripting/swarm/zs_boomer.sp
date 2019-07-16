@@ -105,18 +105,18 @@ public void OnMapStart()
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
 
     PrecacheSound( "swarm/skills/boomer_ability_1.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_ability_1.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_1.mp3" );
     PrecacheSound( "swarm/skills/boomer_ability_2.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_ability_2.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_2.mp3" );
     PrecacheSound( "swarm/skills/boomer_ability_3.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_ability_3.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_3.mp3" );
     PrecacheSound( "swarm/skills/boomer_ability_4.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_ability_4.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_4.mp3" );
 
     PrecacheSound( "swarm/skills/boomer_death_ability_1.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_death_ability_1.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_1.mp3" );
     PrecacheSound( "swarm/skills/boomer_death_ability_2.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/boomer_death_ability_2.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_2.mp3" );
 }
 
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
