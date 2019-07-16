@@ -273,7 +273,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     GetClientAbsOrigin(client, location);
     int randomnumber = GetRandomInt(1, MAX_ABILITY_SOUNDS);
     char randomsound[PLATFORM_MAX_PATH];
-    Format(randomsound, sizeof(randomsound), "swarm/skills/boomer_death_ability_%i.mp3", randomnumber);
+    Format(randomsound, sizeof(randomsound), "swarm/skills/boomer_ability_%i.mp3", randomnumber);
     boomSound(randomsound, location);
 }
 
