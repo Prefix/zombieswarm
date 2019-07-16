@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <autoexecconfig>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -31,17 +32,17 @@ ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zInvisibility, zAtt
 
 public void OnPluginStart() {                 
     HookEvent("player_spawn", eventPlayerSpawn);
-    
-    zHP = CreateConVar("zs_phantom_hp", "120", "Zombie Phantom HP");
-    zDamage = CreateConVar("zs_phantom_damage","15.0","Zombie Phantom done damage");
-    zAttackSpeed = CreateConVar("zs_hunter_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
-    zSpeed = CreateConVar("zs_phantom_speed","0.85","Zombie Phantom walk speed");
-    zGravity = CreateConVar("zs_phantom_gravity","0.8","Zombie Phantom gravity");
-    zExcluded = CreateConVar("zs_phantom_excluded","0","1 - Excluded, 0 - Not excluded");
-    zCooldown = CreateConVar("zs_phantom_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
-    zInvisibility = CreateConVar("zs_phantom_invisibility","3.0","Time in second until Phantom invisible");
-    
-    AutoExecConfig(true, "zombie.phantom", "sourcemod/zombieswarm");
+
+    ZS_StartConfig("zombie.phantom");
+    zHP = AutoExecConfig_CreateConVar("zs_phantom_hp", "120", "Zombie Phantom HP");
+    zDamage = AutoExecConfig_CreateConVar("zs_phantom_damage","15.0","Zombie Phantom done damage");
+    zAttackSpeed = AutoExecConfig_CreateConVar("zs_hunter_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = AutoExecConfig_CreateConVar("zs_phantom_speed","0.85","Zombie Phantom walk speed");
+    zGravity = AutoExecConfig_CreateConVar("zs_phantom_gravity","0.8","Zombie Phantom gravity");
+    zExcluded = AutoExecConfig_CreateConVar("zs_phantom_excluded","0","1 - Excluded, 0 - Not excluded");
+    zCooldown = AutoExecConfig_CreateConVar("zs_phantom_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
+    zInvisibility = AutoExecConfig_CreateConVar("zs_phantom_invisibility","3.0","Time in second until Phantom invisible");
+    ZS_EndConfig();
 }
 
 public void ZS_OnLoaded() {

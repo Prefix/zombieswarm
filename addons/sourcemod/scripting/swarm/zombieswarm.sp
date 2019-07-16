@@ -6,6 +6,7 @@
 #include <cstrike>
 #include <colorvariables>
 #include <overlays>
+#include <autoexecconfig>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -17,6 +18,7 @@
 #include "swarm/core/enums.sp"
 #include "swarm/core/globals.sp"
 #include "swarm/core/natives.sp"
+#include "swarm/core/cvars.sp"
 
 #include <swarm/utils>
 
@@ -33,38 +35,10 @@ public void OnPluginStart()
 {   
     LoadTranslations("zombieswarm.phrases");
 
-    g_cGhostMode = CreateConVar("zm_enable_ghostmode", "0", "1 - Enable ghost mode, 0 - Disable",_,true,0.0,true,1.0);
+    ZS_StartConfig("zombieswarm");
+    InitCvars();
+    ZS_EndConfig();
 
-    g_cRespawnTimeZ = CreateConVar("zm_respawn_time_t", "3.0", "Vip players respawn time after team join or death");
-    g_cRespawnTimeZVip = CreateConVar("zm_respawn_time_t_vip", "3.0", "Vip players respawn time after team join or death");
-    g_cRespawnTimeS = CreateConVar("zm_respawn_time_ct", "60.0", "Players respawn time after team join or death");
-    g_cRespawnTimeSVip = CreateConVar("zm_respawn_time_ct_vip", "55.0", "Vip players respawn time after team join or death");
-    g_cRoundStartZombies = CreateConVar("zm_round_start_zombies", "5", "Round start zombies");
-    g_cRoundKillsTeamJoinHumans = CreateConVar("zm_round_kills_teamjoin_humans", "25", "Human can join team after he is connected depends on round kills");
-    
-    // Added, but disabled by default
-    g_cFog = CreateConVar("zm_env_fog", "0", "1 - Enable fog, 0 - Disable",_,true,0.0,true,1.0);
-    g_cFogDensity = CreateConVar("zm_env_fogdensity", "0.65", "Toggle the density of the fog effects", _ , true, 0.0, true, 1.0);
-    g_cFogStartDist = CreateConVar("zm_env_fogstart", "0", "Toggle how far away the fog starts", _ , true, 0.0, true, 8000.0);
-    g_cFogEndDist = CreateConVar("zm_env_fogend", "500", "Toggle how far away the fog is at its peak", _ , true, 0.0, true, 8000.0);
-    g_cFogColor = CreateConVar("zm_env_fogcolor", "200 200 200", "Modify the color of the fog" );
-    g_cFogZPlane = CreateConVar("zm_env_zplane", "8000", "Change the Z clipping plane", _ , true, 0.0, true, 8000.0);
-    // End of Fog CVARS
-    g_cCountDown = CreateConVar("zm_countdown", "10", "Time then zombies will take class",_,true,1.0,true,10.0);
-    g_cOverlayEnable = CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
-    g_cOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
-    g_cOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
-    g_cHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
-    g_cPainFrequency = CreateConVar("zm_sounds_pain_frequency","1.25","How frequent pain sound. 1.25 - default",_,true,0.1);
-    g_cFootstepFrequency = CreateConVar("zm_sounds_footstep_frequency","0.75","How frequent footstep sound. 0.75 - default",_,true,0.1);
-    g_cIdleMinFrequency = CreateConVar("zm_sounds_idle_min_frequency","4.0","Min frequency of idle sound.",_,true,0.1);
-    g_cIdleMaxFrequency = CreateConVar("zm_sounds_idle_max_frequency","12.0","Max frequency of idle sound.",_,true,0.1);
-
-    g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
-    g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
-    g_aPlayerAbility = new ArrayList(view_as<int>(g_ePlayerAbility));
-    g_aZombieSounds = new ArrayList(sizeof(ZombieSounds));
-    
     HookConVarChange(g_cFog, OnConVarChange);
     
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -76,6 +50,8 @@ public void OnPluginStart()
     HookEvent("round_end", eventRoundEnd);
     HookEvent("weapon_fire", eventWeaponFire);
     HookEvent("player_footstep", eventFootstep);
+
+    AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
     
     AddCommandListener( blockKill, "kill");
     AddCommandListener( blockKill, "spectate");
@@ -84,19 +60,18 @@ public void OnPluginStart()
     AddCommandListener( blockKill, "explodevector");
     AddCommandListener( blockKill, "killvector");
     AddCommandListener( joinTeam, "jointeam");
+
+    g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
+    g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
+    g_aPlayerAbility = new ArrayList(view_as<int>(g_ePlayerAbility));
+    g_aZombieSounds = new ArrayList(sizeof(ZombieSounds));
     
     g_iCollisionOffset = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
     
     g_cAlpha = FindConVar("sv_disable_immunity_alpha");
     
-    if(g_cAlpha != null) SetConVarInt(g_cAlpha, 1);
+    if(g_cAlpha != null) SetConVarInt(g_cAlpha, 1);   
     
-    // Configs
-    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/swarm/zm_downloads.txt");
-    AutoExecConfig(true, "zombieswarm", "sourcemod/zombieswarm");
-    CreateConVar("sm_zombieswarm_version", ZS_PLUGIN_VERSION, ZS_PLUGIN_NAME, FCVAR_NONE|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-    
-    AddNormalSoundHook(view_as<NormalSHook>(Event_SoundPlayed));
 }
 
 public void OnConfigsExecuted() {
@@ -259,6 +234,7 @@ public void OnMapEnd() {
 }
 public void OnMapStart()
 {
+    BuildPath(Path_SM, g_sDownloadFilesPath, sizeof(g_sDownloadFilesPath), "configs/swarm/zm_downloads.txt");
     gI_Players = 0;
     g_aZombieSounds.Clear();
     g_bRoundEnded = false;

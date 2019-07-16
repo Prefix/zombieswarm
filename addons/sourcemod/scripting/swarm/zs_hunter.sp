@@ -2,6 +2,7 @@
 #include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
+#include <autoexecconfig>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -25,18 +26,18 @@ ZombieAbility abilityLeap;
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zLeep, zAttackSpeed;
 
-public void OnPluginStart() {                   
-    
-    zHP = CreateConVar("zs_hunter_hp", "120", "Zombie Hunter HP");
-    zDamage = CreateConVar("zs_hunter_damage","17.0","Zombie Hunter done damage");
-    zAttackSpeed = CreateConVar("zs_hunter_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
-    zSpeed = CreateConVar("zs_hunter_speed","0.85","Zombie Hunter walk speed");
-    zGravity = CreateConVar("zs_hunter_gravity","0.8","Zombie Hunter gravity");
-    zExcluded = CreateConVar("zs_hunter_excluded","0","1 - Excluded, 0 - Not excluded");
-    zCooldown = CreateConVar("zs_hunter_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
-    zLeep = CreateConVar("zs_hunter_leap","500.0","How dar Hunter can jump");
-    
-    AutoExecConfig(true, "zombie.hunter", "sourcemod/zombieswarm");
+public void OnPluginStart() {        
+               
+    ZS_StartConfig("zombie.hunter");
+    zHP = AutoExecConfig_CreateConVar("zs_hunter_hp", "120", "Zombie Hunter HP");
+    zDamage = AutoExecConfig_CreateConVar("zs_hunter_damage","17.0","Zombie Hunter done damage");
+    zAttackSpeed = AutoExecConfig_CreateConVar("zs_hunter_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = AutoExecConfig_CreateConVar("zs_hunter_speed","0.85","Zombie Hunter walk speed");
+    zGravity = AutoExecConfig_CreateConVar("zs_hunter_gravity","0.8","Zombie Hunter gravity");
+    zExcluded = AutoExecConfig_CreateConVar("zs_hunter_excluded","0","1 - Excluded, 0 - Not excluded");
+    zCooldown = AutoExecConfig_CreateConVar("zs_hunter_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
+    zLeep = AutoExecConfig_CreateConVar("zs_hunter_leap","500.0","How dar Hunter can jump");
+    ZS_EndConfig();
 }
 
 public void ZS_OnLoaded() {

@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <autoexecconfig>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -44,16 +45,16 @@ public void OnPluginStart()
     HookEvent("round_start", eventRoundStart); 
     HookEvent("round_end", eventRoundEnd);
     
-    zHP = CreateConVar("zs_tank_hp", "215", "Zombie Tank HP");
-    zDamage = CreateConVar("zs_tank_damage","30.0","Zombie Tank done damage");
-    zAttackSpeed = CreateConVar("zs_tank_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
-    zSpeed = CreateConVar("zs_tank_speed","0.8","Zombie Tank speed");
-    zGravity = CreateConVar("zs_tank_gravity","0.8","Zombie Tank gravity");
-    zExcluded = CreateConVar("zs_tank_excluded","1","1 - Excluded, 0 - Not excluded");
-    zCooldown = CreateConVar("zs_tank_cooldown","12.0","Time in seconds for cooldown",_,true,1.0);
-    zDuration = CreateConVar("zs_tank_duration","4.0","How long in second Tank using his ability");
-    
-    AutoExecConfig(true, "zombie.tank", "sourcemod/zombieswarm");
+    ZS_StartConfig("zombie.tank");
+    zHP = AutoExecConfig_CreateConVar("zs_tank_hp", "215", "Zombie Tank HP");
+    zDamage = AutoExecConfig_CreateConVar("zs_tank_damage","30.0","Zombie Tank done damage");
+    zAttackSpeed = AutoExecConfig_CreateConVar("zs_tank_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = AutoExecConfig_CreateConVar("zs_tank_speed","0.8","Zombie Tank speed");
+    zGravity = AutoExecConfig_CreateConVar("zs_tank_gravity","0.8","Zombie Tank gravity");
+    zExcluded = AutoExecConfig_CreateConVar("zs_tank_excluded","1","1 - Excluded, 0 - Not excluded");
+    zCooldown = AutoExecConfig_CreateConVar("zs_tank_cooldown","12.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = AutoExecConfig_CreateConVar("zs_tank_duration","4.0","How long in second Tank using his ability");
+    ZS_EndConfig();
 }
 public void ZS_OnLoaded() {
     // We are registering zombie

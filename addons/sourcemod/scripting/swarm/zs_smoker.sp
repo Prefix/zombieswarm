@@ -2,6 +2,7 @@
 #include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
+#include <autoexecconfig>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -37,16 +38,16 @@ public void OnPluginStart() {
     HookEvent("round_start", eventRoundStart, EventHookMode_Pre);
     HookEvent("round_end", eventRoundEnd);
     
-    zHP = CreateConVar("zs_smoker_hp", "130", "Zombie Smoker HP");
-    zDamage = CreateConVar("zs_smoker_damage","15.0","Zombie Smoker done damage");
-    zAttackSpeed = CreateConVar("zs_smoker_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
-    zSpeed = CreateConVar("zs_smoker_speed","0.9","Zombie Smoker speed");
-    zGravity = CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
-    zExcluded = CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
-    zCooldown = CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
-    zDuration = CreateConVar("zs_smoker_duration","30.0","Time in seconds for maximum pulling duration",_,true,1.0);
-    
-    AutoExecConfig(true, "zombie.smoker", "sourcemod/zombieswarm");
+    ZS_StartConfig("zombie.smoker");
+    zHP = AutoExecConfig_CreateConVar("zs_smoker_hp", "130", "Zombie Smoker HP");
+    zDamage = AutoExecConfig_CreateConVar("zs_smoker_damage","15.0","Zombie Smoker done damage");
+    zAttackSpeed = AutoExecConfig_CreateConVar("zs_smoker_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = AutoExecConfig_CreateConVar("zs_smoker_speed","0.9","Zombie Smoker speed");
+    zGravity = AutoExecConfig_CreateConVar("zs_smoker_gravity","0.8","Zombie Smoker gravity");
+    zExcluded = AutoExecConfig_CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
+    zCooldown = AutoExecConfig_CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = AutoExecConfig_CreateConVar("zs_smoker_duration","30.0","Time in seconds for maximum pulling duration",_,true,1.0);
+    ZS_EndConfig();
 }
 public void ZS_OnLoaded() {
     // We are registering zombie

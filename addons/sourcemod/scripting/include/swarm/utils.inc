@@ -5,6 +5,19 @@
 
 #define DISTANCE_BEFORE 3000.0
 
+stock void ZS_StartConfig(char[] filename, char[] directory = "zombieswarm")
+{
+    AutoExecConfig_SetCreateDirectory(true);
+    AutoExecConfig_SetCreateFile(true);
+    AutoExecConfig_SetFile(filename, directory);
+}
+
+stock void ZS_EndConfig()
+{
+    AutoExecConfig_ExecuteFile();
+    AutoExecConfig_CleanFile();
+}
+
 stock void UTIL_Fade(int client, int duration = 5, int hold = 300, int color[4]= {0, 0, 0, 255}) {
 
     Handle message = StartMessageOne("Fade", client, USERMSG_RELIABLE);

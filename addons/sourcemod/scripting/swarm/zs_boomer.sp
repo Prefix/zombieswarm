@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <zombieswarm>
+#include <autoexecconfig>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -41,30 +42,30 @@ ConVar zHP, zDamage, zSpeed, zGravity, zAttackSpeed, zExcluded, zExplodeDamage, 
 public void OnPluginStart() {                 
     HookEventEx("player_death", eventPlayerDeath, EventHookMode_Pre);
     
-    zHP = CreateConVar("zs_boomer_hp", "150", "Zombie Boomer HP");
-    zDamage = CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
-    zAttackSpeed = CreateConVar("zs_boomer_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
-    zSpeed = CreateConVar("zs_boomer_speed","0.8","Zombie Boomer speed");
-    zGravity = CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");
-    zExcluded = CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
-    zExplodeDamage = CreateConVar("zs_boomer_explode_damage","30.0","Zombie Boomer damage done then he explode");
-    zRadius = CreateConVar("zs_boomer_radius","250.0","Explosion radius");
-    zCooldown = CreateConVar("zs_boomer_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
-    zDuration = CreateConVar("zs_boomer_duration","2.0","How long in second Boomer using his ability");
-    zVomitDuration = CreateConVar("zs_boomer_vomit_duration_ability","3.0","For how many seconds humans are blinded when used ability");
-    zVomitDurationDeath = CreateConVar("zs_boomer_vomit_duration_death","4.0","For how many seconds humans are blinded when zombie died");
+    ZS_StartConfig("zombie.boomer");
+    zHP = AutoExecConfig_CreateConVar("zs_boomer_hp", "150", "Zombie Boomer HP");
+    zDamage = AutoExecConfig_CreateConVar("zs_boomer_damage","20.0","Zombie Boomer done damage");
+    zAttackSpeed = AutoExecConfig_CreateConVar("zs_boomer_attackspeed","1.0","Attack speed scale %. 1.0 = Default (Normal speed)",_,true,0.1);
+    zSpeed = AutoExecConfig_CreateConVar("zs_boomer_speed","0.8","Zombie Boomer speed");
+    zGravity = AutoExecConfig_CreateConVar("zs_boomer_gravity","0.8","Zombie Boomer gravity");
+    zExcluded = AutoExecConfig_CreateConVar("zs_boomer_excluded","0","1 - Excluded, 0 - Not excluded");
+    zExplodeDamage = AutoExecConfig_CreateConVar("zs_boomer_explode_damage","30.0","Zombie Boomer damage done then he explode");
+    zRadius = AutoExecConfig_CreateConVar("zs_boomer_radius","250.0","Explosion radius");
+    zCooldown = AutoExecConfig_CreateConVar("zs_boomer_cooldown","8.0","Time in seconds for cooldown",_,true,1.0);
+    zDuration = AutoExecConfig_CreateConVar("zs_boomer_duration","2.0","How long in second Boomer using his ability");
+    zVomitDuration = AutoExecConfig_CreateConVar("zs_boomer_vomit_duration_ability","3.0","For how many seconds humans are blinded when used ability");
+    zVomitDurationDeath = AutoExecConfig_CreateConVar("zs_boomer_vomit_duration_death","4.0","For how many seconds humans are blinded when zombie died");
     
     ConVar CVar;
     char sBuffer[16];
-    HookConVarChange((CVar = CreateConVar("zs_boomer_vomit_color_ability", "0 133 33 210","Vomit color when blinded [Ability]. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_boomer_vomit_color_ability", "0 133 33 210","Vomit color when blinded [Ability]. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
     CVar.GetString(sBuffer, sizeof(sBuffer));
     String2Color(sBuffer, true);
 
-    HookConVarChange((CVar = CreateConVar("zs_boomer_vomit_color_death", "0 133 33 210","Vomit color when blinded [Death]. Set by RGBA (0 - 255).")), CVarChange_Color);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_boomer_vomit_color_death", "0 133 33 210","Vomit color when blinded [Death]. Set by RGBA (0 - 255).")), CVarChange_Color);
     CVar.GetString(sBuffer, sizeof(sBuffer));
     String2Color(sBuffer);
-
-    AutoExecConfig(true, "zombie.boomer", "sourcemod/zombieswarm");
+    ZS_EndConfig();
 }
 
 
