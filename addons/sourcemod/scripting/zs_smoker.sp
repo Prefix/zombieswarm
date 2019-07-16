@@ -31,7 +31,7 @@ int LaserCache;
 Handle SmokerTimer[MAXPLAYERS + 1] = {null, ...};
 int pullTarget[MAXPLAYERS + 1];
 
-ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed, zPullSpeed;
+ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zCooldown, zDuration, zAttackSpeed, zPullSpeed, zPullColorRed, zPullColorGreen, zPullColorBlue, zPullColorAlpha, zPullRopeWidth;
 
 public void OnPluginStart() {                   
     HookEvent("player_spawn", eventPlayerSpawn);
@@ -48,7 +48,12 @@ public void OnPluginStart() {
     zExcluded = AutoExecConfig_CreateConVar("zs_smoker_excluded","0","1 - Excluded, 0 - Not excluded");
     zCooldown = AutoExecConfig_CreateConVar("zs_smoker_cooldown","4.0","Time in seconds for cooldown",_,true,1.0);
     zDuration = AutoExecConfig_CreateConVar("zs_smoker_duration","30.0","Time in seconds for maximum pulling duration",_,true,1.0);
-    zPullSpeed = AutoExecConfig_CreateConVar("zs_smoker_pullspeed","360.0","Smoker pull force, edit if you know what are you doing.",_,true,1.0);
+    zPullSpeed = AutoExecConfig_CreateConVar("zs_smoker_pullspeed","360.0","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
+    zPullColorRed = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_red","155","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
+    zPullColorGreen = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_green","155","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
+    zPullColorBlue = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_blue","55","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
+    zPullColorAlpha = AutoExecConfig_CreateConVar("zs_smoker_pullcolor_alpha","90","Smoker pull force, edit if you know what are you doing.",_,true,1.0,true,255.0);
+    zPullRopeWidth = AutoExecConfig_CreateConVar("zs_smoker_rope_width","5.0","Smoker pull force, edit if you know what are you doing.",_,true,1.0);
     ZS_EndConfig();
 }
 public void ZS_OnLoaded() {
@@ -241,13 +246,13 @@ public Action BeamTimer(Handle timer, any client)
     GetClientAbsOrigin ( client, Origin );
     GetClientAbsOrigin ( target, targetorigin );
     
-    /*Origin2[0] = Origin[0];
+    Origin2[0] = Origin[0];
     Origin2[1] = Origin[1];
     Origin2[2] = Origin[2] + 50.0;
     
     targetorigin2[0] = targetorigin[0];
     targetorigin2[1] = targetorigin[1];
-    targetorigin2[2] = targetorigin[2] + 50.0;*/
+    targetorigin2[2] = targetorigin[2] + 50.0;
     
     distancebetween = GetVectorDistance ( targetorigin, Origin );
     
@@ -266,9 +271,31 @@ public Action BeamTimer(Handle timer, any client)
     
     TeleportEntity( target, NULL_VECTOR, NULL_VECTOR, fl_Velocity);
     
-    int BeamColor[4] = {25, 25, 25, 200};
+    int BeamColor[4];
+
+    int red = zPullColorRed.IntValue;
+    if (red < 0) red = 0;
+    if (red > 255) red = 255;
+    BeamColor[0] = red;
+
+    int green = zPullColorGreen.IntValue;
+    if (green < 0) green = 0;
+    if (green > 255) green = 255;
+    BeamColor[1] = green;
+
+    int blue = zPullColorBlue.IntValue;
+    if (blue < 0) blue = 0;
+    if (blue > 255) blue = 255;
+    BeamColor[2] = blue;
+
+    int alpha = zPullColorAlpha.IntValue;
+    if (alpha < 0) alpha = 0;
+    if (alpha > 255) alpha = 255;
+    BeamColor[3] = alpha;
     
-    TE_SetupBeamPoints( Origin2, targetorigin2, LaserCache, 0, 0, 0, 0.1, 5.0, 5.0, 0, 0.0, BeamColor, 0);
+    if (GetRandomInt(1, 5) == 1) EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+
+    TE_SetupBeamPoints( Origin2, targetorigin2, LaserCache, 0, 0, 0, 0.11, zPullRopeWidth.FloatValue, zPullRopeWidth.FloatValue, 0, 0.0, BeamColor, 0);
     TE_SendToAll();
     
     SmokerTimer[client] = CreateTimer(0.1, BeamTimer, client);
