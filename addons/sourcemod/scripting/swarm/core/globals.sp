@@ -64,6 +64,13 @@ ConVar g_cFootstepFrequency;
 ConVar g_cIdleMinFrequency;
 ConVar g_cIdleMaxFrequency;
 ConVar g_cGhostMode;
+
+ConVar g_cSoundsDeathEnable;
+ConVar g_cSoundsFootsteps;
+ConVar g_cSoundsHit;
+ConVar g_cSoundsMiss;
+ConVar g_cSoundsPain;
+ConVar g_cSoundsIdle;
 // Server ConVars
 Handle g_cAlpha;
 // Misc

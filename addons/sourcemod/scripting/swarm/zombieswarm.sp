@@ -92,14 +92,16 @@ public void eventWeaponFire(Event event, char[] name, bool dbc)
 
 public Action eventFootstep(Event event, char[] name, bool dbc)
 {
-   int client = event.GetInt("userid");
-   if (UTIL_IsValidAlive(client) && GetClientTeam(client) == CS_TEAM_T) {
-       if (g_fNextFootstep[client] < GetGameTime()) {
-           PlayFootstepSound(client);
-           return Plugin_Stop;
-       }
-   }
-   return Plugin_Continue;
+    if (!g_cSoundsFootsteps.BoolValue) return Plugin_Continue;
+    
+    int client = event.GetInt("userid");
+    if (UTIL_IsValidAlive(client) && GetClientTeam(client) == CS_TEAM_T) {
+        if (g_fNextFootstep[client] < GetGameTime()) {
+            PlayFootstepSound(client);
+            return Plugin_Stop;
+        }
+    }
+    return Plugin_Continue;
 }
 
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
@@ -391,16 +393,18 @@ public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char
             return Plugin_Continue;
         if (GetClientTeam(owner) != CS_TEAM_T)
             return Plugin_Continue;
+        if (g_cGhostMode.BoolValue && g_bGhost[owner])
+            return Plugin_Stop;
         char sWeapon[64];
         GetWeaponClassname(entity, sWeapon, sizeof(sWeapon));
         if (StrContains(sWeapon, "knife") == -1)
             return Plugin_Continue;
 
-        if (StrContains(sample, "knife/knife_hit", false) >= 0) {
+        if (g_cSoundsHit.BoolValue && StrContains(sample, "knife/knife_hit", false) >= 0) {
             PlayHitSound(owner);
             return Plugin_Stop;
         }
-        if (StrContains(sample, "knife/knife_slash", false) >= 0) {
+        if (g_cSoundsMiss.BoolValue && StrContains(sample, "knife/knife_slash", false) >= 0) {
             PlayMissSound(owner);
             return Plugin_Stop;
         }
@@ -658,7 +662,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
         damage *= 0.33;
         changed = true;
     }
-    if (GetGameTime() >= g_fNextPain[victim] && GetClientTeam(victim) == CS_TEAM_T) PlayPainSound(victim);
+    if (GetGameTime() >= g_fNextPain[victim] && GetClientTeam(victim) == CS_TEAM_T && g_cSoundsPain.BoolValue) PlayPainSound(victim);
     return changed ? Plugin_Changed : Plugin_Continue;
 
 }
@@ -824,7 +828,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
         g_iZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(g_cRespawnTimeSVip) : GetConVarInt(g_cRespawnTimeS);
         g_hTimerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
     } else if (GetClientTeam(victim) == CS_TEAM_T) {
-        PlayDeathZombieSound(victim);
+        if (g_cSoundsDeathEnable.BoolValue) PlayDeathZombieSound(victim);
         g_iZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(g_cRespawnTimeZVip) : GetConVarInt(g_cRespawnTimeZ);
         g_hTimerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
         
@@ -1211,7 +1215,7 @@ public Action ghostHint(Handle timer, any client)
         Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker[dataName], temp_checker[dataDescription]);
         
         UTIL_ShowHintMessage(client, sHintText);
-        if (GetTime() > g_fNextIdle[client]) {
+        if (g_cSoundsIdle.BoolValue && GetTime() > g_fNextIdle[client]) {
             PlayIdleSound(client);
         }
     }
@@ -1709,6 +1713,12 @@ public int FindZombieSoundsIndex(char[] unique) {
 
 void PlayDeathZombieSound(int client) 
 {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsDeathEnable.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1750,6 +1760,12 @@ void PlayDeathZombieSound(int client)
 
 
 public void PlayPainSound(int client) {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsPain.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1794,6 +1810,12 @@ public void PlayPainSound(int client) {
 }
 
 public void PlayFootstepSound(int client) {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsFootsteps.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1838,6 +1860,12 @@ public void PlayFootstepSound(int client) {
 }
 
 public void PlayHitSound(int client) {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsHit.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1880,6 +1908,12 @@ public void PlayHitSound(int client) {
 }
 
 public void PlayMissSound(int client) {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsMiss.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1922,6 +1956,12 @@ public void PlayMissSound(int client) {
 }
 
 public void PlayIdleSound(int client) {
+    if (GetClientTeam(client) != CS_TEAM_T)
+        return;
+    if (g_cGhostMode.BoolValue && g_bGhost[client])
+        return;
+    if (!g_cSoundsIdle.BoolValue)
+        return;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 

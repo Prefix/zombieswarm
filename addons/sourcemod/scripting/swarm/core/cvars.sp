@@ -20,6 +20,13 @@ void InitCvars()
     g_cOverlayCTWin = AutoExecConfig_CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
     g_cOverlayTWin = AutoExecConfig_CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
     g_cHumanGravity = AutoExecConfig_CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
+    // Sounds
+    g_cSoundsDeathEnable = AutoExecConfig_CreateConVar("zm_sounds_death_enable", "1", "1 - Enable Death sounds, 0 - Disable",_,true,0.0,true,1.0);
+    g_cSoundsFootsteps = AutoExecConfig_CreateConVar("zm_sounds_footsteps_enable", "1", "1 - Enable Footstep sounds, 0 - Disable",_,true,0.0,true,1.0);
+    g_cSoundsHit = AutoExecConfig_CreateConVar("zm_sounds_hit_enable", "1", "1 - Enable Hit sounds, 0 - Disable",_,true,0.0,true,1.0);
+    g_cSoundsMiss = AutoExecConfig_CreateConVar("zm_sounds_miss_enable", "1", "1 - Enable Miss sounds, 0 - Disable",_,true,0.0,true,1.0);
+    g_cSoundsPain = AutoExecConfig_CreateConVar("zm_sounds_pain_enable", "1", "1 - Enable Pain sounds, 0 - Disable",_,true,0.0,true,1.0);
+    g_cSoundsIdle = AutoExecConfig_CreateConVar("zm_sounds_idle_enable", "0", "1 - Enable Idle sounds, 0 - Disable",_,true,0.0,true,1.0);
     g_cPainFrequency = AutoExecConfig_CreateConVar("zm_sounds_pain_frequency","1.25","How frequent pain sound. 1.25 - default",_,true,0.1);
     g_cFootstepFrequency = AutoExecConfig_CreateConVar("zm_sounds_footstep_frequency","0.75","How frequent footstep sound. 0.75 - default",_,true,0.1);
     g_cIdleMinFrequency = AutoExecConfig_CreateConVar("zm_sounds_idle_min_frequency","30.0","Min frequency of idle sound.",_,true,0.1);
