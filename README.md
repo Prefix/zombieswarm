@@ -1,5 +1,5 @@
 # Zombie Swarm
-Original author xbatista (https://forums.alliedmods.net/member.php?u=35716)
+Original author xbatista (https://forums.alliedmods.net/member.php?u=35716)<br/>
 Resourses (models/materials/sounds) can be downloaded there: https://mega.nz/#!eyZjRawJ!HSM9aaWq0mMyKl7MRwT87qUThZMiHVqLdai6TErgw3A
 ## Description
 
