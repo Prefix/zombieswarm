@@ -58,7 +58,7 @@ stock bool UTIL_IsValidAlive(int client)
 }
 stock void UTIL_PlaySoundToClient(int client, char[] sound, float volume = 0.8) {
     ClientCommand(client, "playgamesound Music.StopAllMusic");
-    EmitSoundToClient(client, sound, _, _, _, _, volume);
+    EmitSoundToClientAny(client, sound, _, _, _, _, volume);
 }
 stock bool UTIL_IsClientInTargetView(int client, int target)
 {

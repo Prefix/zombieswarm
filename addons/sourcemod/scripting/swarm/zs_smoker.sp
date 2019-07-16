@@ -3,6 +3,7 @@
 #include <sdktools>
 #include <zombieswarm>
 #include <autoexecconfig>
+#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -278,7 +279,7 @@ public Action BeamTimer(Handle timer, any client)
 
 public void OnMapStart()
 {
-    PrecacheSound( SOUND_TONGUE );
+    PrecacheSoundAny( SOUND_TONGUE, true);
     LaserCache = PrecacheModel("materials/sprites/laserbeam.vmt");
     
     // Format sound
@@ -382,7 +383,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
         
     SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
 
-    EmitSoundToAll(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
         
     pullTarget[client] = target; 
 }

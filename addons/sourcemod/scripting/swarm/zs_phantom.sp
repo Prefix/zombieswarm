@@ -4,6 +4,7 @@
 #include <sdkhooks>
 #include <zombieswarm>
 #include <autoexecconfig>
+#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -79,7 +80,7 @@ public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcas
 
 public void OnMapStart()
 {
-    PrecacheSound( SOUND_INVISIBILITY );
+    PrecacheSoundAny( SOUND_INVISIBILITY, true );
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -211,7 +212,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     // Make invisible zombie
     hasInvisibility[client] = true;  
     
-    EmitSoundToAll(SOUND_INVISIBILITY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAllAny(SOUND_INVISIBILITY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 }
 
 public void ZS_OnCooldownStarted(int client, int ability_id) {

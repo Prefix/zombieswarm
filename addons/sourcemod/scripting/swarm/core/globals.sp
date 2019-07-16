@@ -100,3 +100,4 @@ int defaultsoundindex = -1;
 float g_fNextFootstep[MAXPLAYERS + 1] = 0.0;
 float g_fNextIdle[MAXPLAYERS + 1] = 0.0;
 float g_fNextPain[MAXPLAYERS + 1] = 0.0;
+bool g_bDidHit[MAXPLAYERS + 1] = false;

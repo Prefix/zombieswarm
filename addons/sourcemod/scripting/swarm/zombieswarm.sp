@@ -7,6 +7,7 @@
 #include <colorvariables>
 #include <overlays>
 #include <autoexecconfig>
+#include <emitsoundany>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -245,8 +246,8 @@ public void OnMapStart()
     
     PrecacheModel(DEFAULT_ARMS);
     
-    PrecacheSound("radio/terwin.wav");
-    PrecacheSound("radio/ctwin.wav");
+    PrecacheSoundAny("radio/terwin.wav", true);
+    PrecacheSoundAny("radio/ctwin.wav", true);
     
     char overlay_ct[125], overlay_t[125];
     g_cOverlayTWin.GetString(overlay_t,sizeof(overlay_t));
@@ -401,7 +402,10 @@ public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char
             return Plugin_Continue;
 
         if (g_cSoundsHit.BoolValue && StrContains(sample, "knife/knife_hit", false) >= 0) {
-            PlayHitSound(owner);
+            if (g_bDidHit[owner])
+                PlayHitSound(owner);
+            else 
+                PlayMissSound(owner);
             return Plugin_Stop;
         }
         if (g_cSoundsMiss.BoolValue && StrContains(sample, "knife/knife_slash", false) >= 0) {
@@ -649,9 +653,11 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     
     if (g_cGhostMode.BoolValue && (g_bGhost[victim] || g_bGhost[attacker]))
         return Plugin_Handled;
+
     bool changed = false;
     // Apply custom zombie damage
     if (GetClientTeam(attacker) == CS_TEAM_T && GetClientTeam(victim) == CS_TEAM_CT) {
+        g_bDidHit[attacker] = true;
         float zmdamage = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[attacker]), view_as<int>(dataDamage)));
         damage = zmdamage;
         changed = true;
@@ -1647,7 +1653,7 @@ stock void UTIL_LoadSound(char[] sound) {
     char soundsPath[PLATFORM_MAX_PATH];
     Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
     if (FileExists(soundsPath)) {
-        PrecacheSound(sound);
+        PrecacheSoundAny(sound, true);
         AddFileToDownloadsTable(soundsPath);
     }
     else {
@@ -1754,7 +1760,7 @@ void PlayDeathZombieSound(int client)
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client, SNDCHAN_VOICE);
+        EmitSoundToAllAny(playsound, client, SNDCHAN_VOICE);
     }
 }
 
@@ -1804,7 +1810,7 @@ public void PlayPainSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client, SNDCHAN_ITEM);
+        EmitSoundToAllAny(playsound, client, SNDCHAN_ITEM);
         g_fNextPain[client] = GetGameTime() + g_cPainFrequency.FloatValue;
     }
 }
@@ -1854,7 +1860,7 @@ public void PlayFootstepSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client);
+        EmitSoundToAllAny(playsound, client);
         g_fNextFootstep[client] = GetGameTime() + g_cFootstepFrequency.FloatValue;
     }
 }
@@ -1866,6 +1872,7 @@ public void PlayHitSound(int client) {
         return;
     if (!g_cSoundsHit.BoolValue)
         return;
+    g_bDidHit[client] = false;
     ZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
@@ -1903,7 +1910,7 @@ public void PlayHitSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client);
+        EmitSoundToAllAny(playsound, client);
     }
 }
 
@@ -1951,7 +1958,7 @@ public void PlayMissSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client);
+        EmitSoundToAllAny(playsound, client);
     }
 }
 
@@ -2000,7 +2007,7 @@ public void PlayIdleSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAll(playsound, client);
+        EmitSoundToAllAny(playsound, client);
         float nextidle = GetRandomFloat(g_cIdleMinFrequency.FloatValue, g_cIdleMaxFrequency.FloatValue);
         g_fNextIdle[client] = GetGameTime() + nextidle;
     }
