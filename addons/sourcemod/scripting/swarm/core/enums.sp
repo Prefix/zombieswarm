@@ -1,3 +1,12 @@
+enum struct ZombieSounds {
+    char Unique[64]; // Zombie Unique name.
+    ArrayList DeathSounds; // When Zombie Dies
+    ArrayList Footsteps; // When Zombie Walks
+    ArrayList Hit; // When zombie hits person
+    ArrayList Miss; // When zombie hits nothing (miss)
+    ArrayList Pain; // When zombie gets hurt
+    ArrayList Idle; // Sound every x seconds
+}
 enum g_eZombieClass {
     dataID,
     dataHP,

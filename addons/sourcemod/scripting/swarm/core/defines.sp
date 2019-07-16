@@ -34,3 +34,5 @@
 #define TRANSLATION_ABILITY_FILE "zombieswarm_ability_%s.phrases"
 #define TRANSLATION_ABILITY_DISPLAY "Zombie Ability [%s] Display Name"
 #define TRANSLATION_ABILITY_DESC "Zombie Ability [%s] Description"
+
+#define DEFAULT_SOUND_PACK "default"

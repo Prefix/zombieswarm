@@ -19,7 +19,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_TONGUE "swarm/smoker_tongue.mp3"
+#define SOUND_TONGUE "swarm/skills/smoker_ability_1.mp3"
 
 ZombieClass registeredClass;
 ZombieAbility abilityPull;

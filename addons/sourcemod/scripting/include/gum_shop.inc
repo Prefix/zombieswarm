@@ -36,7 +36,8 @@ enum g_eItemBuy {
     itemBuyOnceMap,
     itemBuyOnceRound,
     itemBuyUnlimited, // keep = none only?
-    itemRebuy
+    itemRebuy, // limited rebuys & round
+    itemRebuyMap // limited rebuys & map
 }
 
 enum g_eItemKeep {

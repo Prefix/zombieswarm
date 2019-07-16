@@ -34,6 +34,8 @@ static const char colors[][]        = {"R", "G", "B", "A"};
 int g_iColor[4];
 int g_iColorAbility[4];
 
+#define MAX_ABILITY_SOUNDS 4
+
 ConVar zHP, zDamage, zSpeed, zGravity, zAttackSpeed, zExcluded, zExplodeDamage, zRadius, zCooldown, zDuration, zVomitDuration, zVomitDurationDeath;
 
 public void OnPluginStart() {                 
@@ -101,10 +103,20 @@ public void OnMapStart()
     explosionSprite = PrecacheModel( "sprites/sprite_fire01.vmt" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vtf" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
-    PrecacheSound( "ambient/explosions/explode_8.mp3" );
-    AddFileToDownloadsTable( "sound/ambient/explosions/explode_8.mp3" );
-    PrecacheSound( "swarm/vomiting.mp3" );
-    AddFileToDownloadsTable( "sound/swarm/vomiting.mp3" );
+
+    PrecacheSound( "swarm/skills/boomer_ability_1.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_ability_1.mp3" );
+    PrecacheSound( "swarm/skills/boomer_ability_2.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_ability_2.mp3" );
+    PrecacheSound( "swarm/skills/boomer_ability_3.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_ability_3.mp3" );
+    PrecacheSound( "swarm/skills/boomer_ability_4.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_ability_4.mp3" );
+
+    PrecacheSound( "swarm/skills/boomer_death_ability_1.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_death_ability_1.mp3" );
+    PrecacheSound( "swarm/skills/boomer_death_ability_2.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/boomer_death_ability_2.mp3" );
 }
 
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -158,7 +170,7 @@ public void explode1(float vec[3])
 {
     int color[4] = {188,220,255,200};
     
-    boomSound("ambient/explosions/explode_8.mp3", vec);
+    boomSound("swarm/skills/boomer_death_ability_1.mp3", vec);
     
     TE_SetupExplosion(vec, explosionSprite, 10.0, 1, 0, 400, 5000);
     TE_SendToAll();
@@ -170,7 +182,7 @@ public void explode2(float vec[3])
 {
     vec[2] += 10;
     
-    boomSound("ambient/explosions/explode_8.mp3", vec);
+    boomSound("swarm/skills/boomer_death_ability_2.mp3", vec);
     
     TE_SetupExplosion(vec, explosionSprite, 10.0, 1, 0, 400, 5000);
     TE_SendToAll();
@@ -258,7 +270,10 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
         }
     }
     GetClientAbsOrigin(client, location);
-    boomSound("swarm/vomiting.mp3", location);
+    int randomnumber = GetRandomInt(1, MAX_ABILITY_SOUNDS);
+    char randomsound[PLATFORM_MAX_PATH];
+    Format(randomsound, sizeof(randomsound), "swarm/skills/boomer_death_ability_%i.mp3", randomnumber);
+    boomSound(randomsound, location);
 }
 
 public void CVarChange_Color(ConVar CVar, const char[] oldValue, const char[] newValue)

@@ -19,7 +19,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_FURY "swarm/fury.mp3"
+#define SOUND_FURY "swarm/skills/tank_ability_1.mp3"
 
 ZombieClass registeredClass;
 ZombieAbility abilityRage;

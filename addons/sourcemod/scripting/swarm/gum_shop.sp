@@ -174,10 +174,9 @@ public void loadDataFromRebuy(int client)
 
 void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0) 
 {
-
     if (!UTIL_IsValidClient(client))
         return;
-    
+    PrintToChatAll("AddItemToPlayer #1");
     // Check if such item exist
     ShopItem item;
     bool found = false;
@@ -191,18 +190,20 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
         }
     }
     
+    
     if (!found) return;
-
+    PrintToChatAll("AddItemToPlayer #2");
     if (PlayerHasItem(client, item_name)) return;
+    PrintToChatAll("AddItemToPlayer #3");
 
     char szKey[64];
     GetClientAuthId( client, AuthId_SteamID64, szKey, sizeof(szKey) );
 
     bool foundrebuy = false;
     ShopPlayerRebuy currentrebuy;
-    for (int i = 0; i < g_aItems.Length; i++) {
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++) {
         ShopPlayerRebuy tempItemRebuy;
-        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        g_aPlayerItemsRebuy.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
         if (StrEqual(tempItemRebuy.ItemUnique, item_name) && StrEqual(tempItemRebuy.SteamID, szKey)) {
             currentrebuy = tempItemRebuy;
             foundrebuy = true;
@@ -211,6 +212,7 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
     }
 
     if (foundrebuy && !currentrebuy.CanBuy()) return;
+    PrintToChatAll("AddItemToPlayer #4");
 
     ShopPlayerItem newItem;
     
@@ -219,6 +221,7 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
     newItem.ItemID = item.ID;
     strcopy(newItem.ItemUnique, sizeof(ShopPlayerItem::ItemUnique), item.Unique);
     if (!foundrebuy) {
+        PrintToChatAll("AddItemToPlayer #5 !foundrebuy");
         ShopPlayerRebuy newItemRebuy;
         strcopy(newItemRebuy.SteamID, sizeof(ShopPlayerRebuy::SteamID), szKey);
         strcopy(newItemRebuy.ItemUnique, sizeof(ShopPlayerRebuy::ItemUnique), item.Unique);
@@ -241,17 +244,19 @@ void AddItemToPlayer(int client, char[] item_name, int upgrade_points = 0)
             newItem.RebuyID = g_iRegisteredPlayerRebuy;
             newItemRebuy.RebuyTimes = item.RebuyTimes; // 0 for infinitive buys
         } else if ( item.Rebuy == itemBuyUnlimited) {
-            // Clear such items after round
             newItemRebuy.RebuyTimes = GUM_NO_REBUY;
             newItem.RebuyID = GUM_NO_REBUY;
         }
         if (item.Rebuy != itemBuyOnce && item.Rebuy != itemBuyUnlimited) {
+            PrintToChatAll("AddItemToPlayer #6 Adding (%i)", g_aPlayerItemsRebuy.Length);
             newItemRebuy.ID = g_iRegisteredPlayerRebuy;
             g_aPlayerItemsRebuy.PushArray(newItemRebuy, sizeof(newItemRebuy));
             g_iRegisteredPlayerRebuy++;
+            PrintToChatAll("AddItemToPlayer #6 (%i)", g_aPlayerItemsRebuy.Length);
         }
         
     } else {
+        PrintToChatAll("AddItemToPlayer #5 foundrebuy");
         newItem.RebuyID = currentrebuy.ID;
         currentrebuy.Buy();
     }
@@ -752,15 +757,17 @@ bool CanBuyItem(int client, char[] info) {
 
     bool foundrebuy = false;
     ShopPlayerRebuy currentrebuy;
-    for (int i = 0; i < g_aItems.Length; i++) {
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++) {
         ShopPlayerRebuy tempItemRebuy;
-        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        g_aPlayerItemsRebuy.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
         if (StrEqual(tempItemRebuy.ItemUnique, info) && StrEqual(tempItemRebuy.SteamID, szKey)) {
             currentrebuy = tempItemRebuy;
             foundrebuy = true;
             break;
         }
     }
+    
+    PrintToChatAll("currentrebuy.RebuyTimes = %i", currentrebuy.RebuyTimes);
     if (foundrebuy && !currentrebuy.CanBuy()) return false;
 
     Action result = Plugin_Continue;
@@ -847,28 +854,33 @@ bool BuyItem(int client, char[] info) {
     
     bool foundrebuy = false;
     ShopPlayerRebuy currentrebuy;
-    for (int i = 0; i < g_aItems.Length; i++) {
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++) {
         ShopPlayerRebuy tempItemRebuy;
-        g_aItems.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
+        g_aPlayerItemsRebuy.GetArray(i, tempItemRebuy, sizeof(tempItemRebuy));
         if (StrEqual(tempItemRebuy.ItemUnique, info) && StrEqual(tempItemRebuy.SteamID, szKey)) {
             currentrebuy = tempItemRebuy;
             foundrebuy = true;
             break;
         }
     }
+    PrintToChatAll("[BuyItem] Pre foundrebuy");
     if (foundrebuy) 
     {
+        PrintToChatAll("[BuyItem] foundrebuy");
         if (!currentrebuy.CanBuy())
             return false;
-
+        PrintToChatAll("[BuyItem] foundrebuy #1");
         if (currentrebuy.Buy()) {
+            PrintToChatAll("[BuyItem] foundrebuy Buy");
             return true;
         } else {
+            PrintToChatAll("[BuyItem] foundrebuy Cantbuy");
             return false;
         }
     }
     else 
     {
+        PrintToChatAll("[BuyItem] foundrebuy AddItem");
         AddItemToPlayer(client, info);
     }
 

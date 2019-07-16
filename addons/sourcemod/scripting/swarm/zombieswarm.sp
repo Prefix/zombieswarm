@@ -55,11 +55,15 @@ public void OnPluginStart()
     g_cOverlayCTWin = CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
     g_cOverlayTWin = CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
     g_cHumanGravity = CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
-    
+    g_cPainFrequency = CreateConVar("zm_sounds_pain_frequency","1.25","How frequent pain sound. 1.25 - default",_,true,0.1);
+    g_cFootstepFrequency = CreateConVar("zm_sounds_footstep_frequency","0.75","How frequent footstep sound. 0.75 - default",_,true,0.1);
+    g_cIdleMinFrequency = CreateConVar("zm_sounds_idle_min_frequency","4.0","Min frequency of idle sound.",_,true,0.1);
+    g_cIdleMaxFrequency = CreateConVar("zm_sounds_idle_max_frequency","12.0","Max frequency of idle sound.",_,true,0.1);
+
     g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
     g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
     g_aPlayerAbility = new ArrayList(view_as<int>(g_ePlayerAbility));
-    
+    g_aZombieSounds = new ArrayList(sizeof(ZombieSounds));
     
     HookConVarChange(g_cFog, OnConVarChange);
     
@@ -71,6 +75,7 @@ public void OnPluginStart()
     HookEvent("player_death", eventPlayerDeath);
     HookEvent("round_end", eventRoundEnd);
     HookEvent("weapon_fire", eventWeaponFire);
+    HookEvent("player_footstep", eventFootstep);
     
     AddCommandListener( blockKill, "kill");
     AddCommandListener( blockKill, "spectate");
@@ -108,6 +113,18 @@ public void OnConfigsExecuted() {
 public void eventWeaponFire(Event event, char[] name, bool dbc)
 {
     RequestFrame(FirePostFrame, event.GetInt("userid"));
+}
+
+public Action eventFootstep(Event event, char[] name, bool dbc)
+{
+   int client = event.GetInt("userid");
+   if (UTIL_IsValidAlive(client) && GetClientTeam(client) == CS_TEAM_T) {
+       if (g_fNextFootstep[client] < GetGameTime()) {
+           PlayFootstepSound(client);
+           return Plugin_Stop;
+       }
+   }
+   return Plugin_Continue;
 }
 
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue) {
@@ -242,6 +259,8 @@ public void OnMapEnd() {
 }
 public void OnMapStart()
 {
+    gI_Players = 0;
+    g_aZombieSounds.Clear();
     g_bRoundEnded = false;
     
     g_iCountdownNumber = g_cCountDown.IntValue > 10?10:g_cCountDown.IntValue;
@@ -294,6 +313,8 @@ public void OnMapStart()
     FogEnable(g_cFog.BoolValue);
     
     UTIL_LoadSounds();
+    UTIL_LoadZombieSounds();
+    defaultsoundindex = FindZombieSoundsIndex(DEFAULT_SOUND_PACK);
     
     // Initialize some chars
     char zBuffer[PLATFORM_MAX_PATH];
@@ -388,17 +409,58 @@ public void OnMapStart()
     }
 }
 public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char[] sample, int &entity, int &iChannel, float &flVolume, int &iLevel, int &iPitch, int &iFlags) {
-   
-    if (!g_cGhostMode.BoolValue)
-        return Plugin_Continue;
-    if (entity && entity <= MaxClients && (StrContains(sample, "physics") != -1 || StrContains(sample, "footsteps") != -1)) {
-        if (UTIL_IsValidAlive(entity) && g_bGhost[entity]){
+    if (IsValidWeapon(entity)) {
+        int owner = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
+        if (!UTIL_IsValidAlive(owner))
+            return Plugin_Continue;
+        if (GetClientTeam(owner) != CS_TEAM_T)
+            return Plugin_Continue;
+        char sWeapon[64];
+        GetWeaponClassname(entity, sWeapon, sizeof(sWeapon));
+        if (StrContains(sWeapon, "knife") == -1)
+            return Plugin_Continue;
+
+        if (StrContains(sample, "knife/knife_hit", false) >= 0) {
+            PlayHitSound(owner);
             return Plugin_Stop;
         }
+        if (StrContains(sample, "knife/knife_slash", false) >= 0) {
+            PlayMissSound(owner);
+            return Plugin_Stop;
+        }
+    }
+    if (UTIL_IsValidAlive(entity) && GetClientTeam(entity) == CS_TEAM_T) {
+        if (g_cGhostMode.BoolValue && g_bGhost[entity]) return Plugin_Stop;
+        if (defaultsoundindex == -1) return Plugin_Continue;
+        if (
+            StrContains(sample, "player/death", false) >= 0 ||
+            StrContains(sample, "physics/flesh", false) >= 0 ||
+            StrContains(sample, "player/footstep", false) >= 0 ||
+            StrContains(sample, "player/headshot", false) >= 0 ||
+            StrContains(sample, "player/kevlar", false) >= 0
+        ) return Plugin_Stop;
     }
     
     return Plugin_Continue;
 }
+
+// https://github.com/kgns/weapons/blob/2e4a949335b683b680d97fd8a4c7f0a0bc8c4f76/addons/sourcemod/scripting/weapons/helpers.sp#L146-L161
+stock bool IsValidWeapon(int weaponEntity)
+{
+	if (weaponEntity > 4096 && weaponEntity != INVALID_ENT_REFERENCE) {
+		weaponEntity = EntRefToEntIndex(weaponEntity);
+	}
+	
+	if (!IsValidEdict(weaponEntity) || !IsValidEntity(weaponEntity) || weaponEntity == -1) {
+		return false;
+	}
+	
+	char weaponClass[64];
+	GetEdictClassname(weaponEntity, weaponClass, sizeof(weaponClass));
+	
+	return StrContains(weaponClass, "weapon_") == 0;
+}
+
 void CreateFog() {
     if(g_iFogIndex != -1)  {
         float FogDensity = GetConVarFloat(g_cFogDensity);
@@ -481,10 +543,13 @@ public void OnGameFrame()
     }
 }
 
-/*public void OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
-
-}*/
+	if(++gI_Players == 1)
+	{
+		CS_TerminateRound(3.0, CSRoundEnd_Draw);
+	}
+}
 
 public void OnClientPostAdminCheck(int client)
 {
@@ -604,21 +669,21 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     
     if (g_cGhostMode.BoolValue && (g_bGhost[victim] || g_bGhost[attacker]))
         return Plugin_Handled;
-
+    bool changed = false;
     // Apply custom zombie damage
     if (GetClientTeam(attacker) == CS_TEAM_T && GetClientTeam(victim) == CS_TEAM_CT) {
         float zmdamage = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[attacker]), view_as<int>(dataDamage)));
         damage = zmdamage;
-        return Plugin_Changed;
+        changed = true;
     }
 
     // If both players in tunnel (ducking), lets give zombie some advantage by making human dmg lower.
     if (GetClientTeam(victim) == CS_TEAM_T && GetClientTeam(attacker) == CS_TEAM_CT && GetEntityFlags(victim) & FL_DUCKING && GetEntityFlags(attacker) & FL_DUCKING) {
         damage *= 0.33;
-        return Plugin_Changed;
+        changed = true;
     }
-    
-    return Plugin_Continue;
+    if (GetGameTime() >= g_fNextPain[victim] && GetClientTeam(victim) == CS_TEAM_T) PlayPainSound(victim);
+    return changed ? Plugin_Changed : Plugin_Continue;
 
 }
 
@@ -783,6 +848,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
         g_iZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(g_cRespawnTimeSVip) : GetConVarInt(g_cRespawnTimeS);
         g_hTimerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
     } else if (GetClientTeam(victim) == CS_TEAM_T) {
+        PlayDeathZombieSound(victim);
         g_iZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(g_cRespawnTimeZVip) : GetConVarInt(g_cRespawnTimeZ);
         g_hTimerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
         
@@ -1169,6 +1235,9 @@ public Action ghostHint(Handle timer, any client)
         Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker[dataName], temp_checker[dataDescription]);
         
         UTIL_ShowHintMessage(client, sHintText);
+        if (GetTime() > g_fNextIdle[client]) {
+            PlayIdleSound(client);
+        }
     }
     
     g_hTimerGhostHint[client] = CreateTimer( g_fHintSpeed[client], ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -1510,6 +1579,90 @@ void UTIL_RegisterSound(const char[] sectionname, const char[] key) {
     }
 }
 
+stock void UTIL_LoadZombieSounds() {
+	char DirectoryPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, DirectoryPath, sizeof(DirectoryPath), "configs/swarm/zombiesounds");
+	DirectoryListing list = OpenDirectory(DirectoryPath, false);
+	if (list != null) {
+		char buffer[128];
+		FileType filetype;
+		while (list.GetNext(buffer, sizeof(buffer), filetype)) {
+            if (filetype != FileType_File) 
+                continue;
+            // get unique
+            char unique[128];
+            strcopy(unique, sizeof(unique), buffer);
+            ReplaceString(unique, sizeof(unique), ".cfg", "", false);
+            // Load file
+            char SoundPath[PLATFORM_MAX_PATH];
+            Format(SoundPath, sizeof(SoundPath), "%s/%s", DirectoryPath, buffer);
+            KeyValues Sounds = new KeyValues("ZombieSounds");
+            if (!Sounds.ImportFromFile(SoundPath)) {
+                LogError("Couldn't import: \"%s\"", SoundPath);
+                return;
+            }
+
+            if (!Sounds.GotoFirstSubKey()) {
+                LogError("No sounds in: \"%s\"", SoundPath);
+                return;
+            }
+            // Make new enum Struct
+
+            ZombieSounds newSound;
+            strcopy(newSound.Unique, sizeof(ZombieSounds::Unique), unique);
+            newSound.DeathSounds = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+            newSound.Footsteps = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+            newSound.Hit = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+            newSound.Miss = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+            newSound.Pain = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+            newSound.Idle = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+
+            char sectionname[PLATFORM_MAX_PATH];
+            char soundbuffer[PLATFORM_MAX_PATH];
+            do
+            {
+                Sounds.GetSectionName(sectionname, sizeof(sectionname));
+                bool scatter = false;
+                int i = 0;
+                while (!scatter) {
+                    char key[10];
+                    IntToString(i, key, sizeof(key));
+                    Sounds.GetString(key, soundbuffer, sizeof(soundbuffer), "notexists");
+                    if (StrEqual(soundbuffer, "notexists")) {
+                        break;
+                    }
+                    bool found_section = true;
+                    if (StrEqual(sectionname, "DeathSounds", false)) {
+                        newSound.DeathSounds.PushString(soundbuffer);
+                    } else if (StrEqual(sectionname, "Footsteps", false)) {
+                        newSound.Footsteps.PushString(soundbuffer);
+                    } else if (StrEqual(sectionname, "Hit", false)) {
+                        newSound.Hit.PushString(soundbuffer);
+                    } else if (StrEqual(sectionname, "Miss", false)) {
+                        newSound.Miss.PushString(soundbuffer);
+                    } else if (StrEqual(sectionname, "Pain", false)) {
+                        newSound.Pain.PushString(soundbuffer);
+                    } else if (StrEqual(sectionname, "Idle", false)) {
+                        newSound.Idle.PushString(soundbuffer);
+                    } else {
+                        found_section = false;
+                        LogMessage("Unknown sound category: %s", sectionname);
+                    }
+                    if (found_section) {
+                        UTIL_LoadSound(soundbuffer);
+                    }
+
+                    i++;
+                }
+                
+            } while (Sounds.GotoNextKey());
+            g_aZombieSounds.PushArray(newSound, sizeof(newSound)); 
+            delete Sounds;
+		}
+	}
+	delete list;
+}
+
 stock void UTIL_LoadSound(char[] sound) {
     char soundsPath[PLATFORM_MAX_PATH];
     Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
@@ -1560,5 +1713,279 @@ public void GetWeaponClassname(int weapon, char[] buffer, int size) {
         case 63: Format(buffer, size, "weapon_cz75a");
         case 64: Format(buffer, size, "weapon_revolver");
         default: GetEdictClassname(weapon, buffer, size);
+    }
+}
+
+public int FindZombieSoundsIndex(char[] unique) {
+    int found = -1;
+    for (int i = 0; i < g_aZombieSounds.Length; i++)
+    {
+        ZombieSounds tempItem;
+        g_aZombieSounds.GetArray(i, tempItem, sizeof(tempItem)); 
+        if (StrEqual(tempItem.Unique, unique, false))
+        {
+            found = i;
+            break;
+        }
+    }
+    return found;
+}
+
+void PlayDeathZombieSound(int client) 
+{
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+    
+    char playsound[PLATFORM_MAX_PATH];
+    bool gotsound = false;
+    if (DefaultSoundPack.DeathSounds.Length == 0 && (zombieid == -1 || ZMSoundPack.DeathSounds.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.DeathSounds.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.DeathSounds.Length-1);
+        
+        ZMSoundPack.DeathSounds.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.DeathSounds.Length == 1) {
+        ZMSoundPack.DeathSounds.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.DeathSounds.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.DeathSounds.Length-1);
+        DefaultSoundPack.DeathSounds.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.DeathSounds.Length == 1) {
+        DefaultSoundPack.DeathSounds.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client, SNDCHAN_VOICE);
+    }
+}
+
+
+public void PlayPainSound(int client) {
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+
+    float currentgtime = GetGameTime();
+    
+    char playsound[PLATFORM_MAX_PATH];
+
+    if (currentgtime < g_fNextPain[client]) return;
+    bool gotsound = false;
+    if (DefaultSoundPack.Pain.Length == 0 && (zombieid == -1 || ZMSoundPack.Pain.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.Pain.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.Pain.Length-1);
+        ZMSoundPack.Pain.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.Pain.Length == 1) {
+        ZMSoundPack.Pain.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Pain.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.Pain.Length-1);
+        DefaultSoundPack.Pain.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Pain.Length == 1) {
+        DefaultSoundPack.Pain.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client, SNDCHAN_ITEM);
+        g_fNextPain[client] = GetGameTime() + g_cPainFrequency.FloatValue;
+    }
+}
+
+public void PlayFootstepSound(int client) {
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+
+    float currentgtime = GetGameTime();
+    
+    char playsound[PLATFORM_MAX_PATH];
+
+    if (currentgtime < g_fNextFootstep[client]) return;
+    bool gotsound = false;
+    if (DefaultSoundPack.Footsteps.Length == 0 && (zombieid == -1 || ZMSoundPack.Footsteps.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.Footsteps.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.Footsteps.Length-1);
+        ZMSoundPack.Footsteps.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.Footsteps.Length == 1) {
+        ZMSoundPack.Footsteps.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Footsteps.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.Footsteps.Length-1);
+        DefaultSoundPack.Footsteps.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Footsteps.Length == 1) {
+        DefaultSoundPack.Footsteps.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client);
+        g_fNextFootstep[client] = GetGameTime() + g_cFootstepFrequency.FloatValue;
+    }
+}
+
+public void PlayHitSound(int client) {
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+
+    //float currentgtime = GetGameTime();
+    
+    char playsound[PLATFORM_MAX_PATH];
+
+    bool gotsound = false;
+    if (DefaultSoundPack.Hit.Length == 0 && (zombieid == -1 || ZMSoundPack.Hit.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.Hit.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.Hit.Length-1);
+        ZMSoundPack.Hit.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.Hit.Length == 1) {
+        ZMSoundPack.Hit.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Hit.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.Hit.Length-1);
+        DefaultSoundPack.Hit.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Hit.Length == 1) {
+        DefaultSoundPack.Hit.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client);
+    }
+}
+
+public void PlayMissSound(int client) {
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+
+    //float currentgtime = GetGameTime();
+    
+    char playsound[PLATFORM_MAX_PATH];
+
+    bool gotsound = false;
+    if (DefaultSoundPack.Miss.Length == 0 && (zombieid == -1 || ZMSoundPack.Miss.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.Miss.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.Miss.Length-1);
+        ZMSoundPack.Miss.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.Miss.Length == 1) {
+        ZMSoundPack.Miss.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Miss.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.Miss.Length-1);
+        DefaultSoundPack.Miss.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Miss.Length == 1) {
+        DefaultSoundPack.Miss.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client);
+    }
+}
+
+public void PlayIdleSound(int client) {
+    ZombieSounds DefaultSoundPack;
+    g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
+
+    ZombieSounds ZMSoundPack;
+    int temp_class[g_eZombieClass];
+    int zombie_index = FindZombieIndex(g_iZombieClass[client]);
+    if (zombie_index == -1) return;
+    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
+    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    
+    if (zombieid != -1) {
+        g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
+    }
+
+    float currentgtime = GetGameTime();
+    
+    char playsound[PLATFORM_MAX_PATH];
+
+    if (currentgtime < g_fNextIdle[client]) return;
+    bool gotsound = false;
+    if (DefaultSoundPack.Idle.Length == 0 && (zombieid == -1 || ZMSoundPack.Idle.Length == 0))
+        return;
+    if (zombieid != -1 && ZMSoundPack.Idle.Length > 1) {
+        int randomSound = GetRandomInt(0, ZMSoundPack.Idle.Length-1);
+        ZMSoundPack.Idle.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (zombieid != -1 && ZMSoundPack.Idle.Length == 1) {
+        ZMSoundPack.Idle.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Idle.Length > 1) {
+        int randomSound = GetRandomInt(0, DefaultSoundPack.Idle.Length-1);
+        DefaultSoundPack.Idle.GetString(randomSound, playsound, sizeof(playsound));
+        gotsound = true;
+    } else if (DefaultSoundPack.Idle.Length == 1) {
+        DefaultSoundPack.Idle.GetString(0, playsound, sizeof(playsound));
+        gotsound = true;
+    }
+    if (gotsound) {
+        EmitSoundToAll(playsound, client);
+        float nextidle = GetRandomFloat(g_cIdleMinFrequency.FloatValue, g_cIdleMaxFrequency.FloatValue);
+        g_fNextIdle[client] = GetGameTime() + nextidle;
     }
 }

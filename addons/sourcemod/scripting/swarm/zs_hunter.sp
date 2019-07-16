@@ -18,7 +18,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_LEAP "swarm/hunter_leap.mp3"
+#define MAX_ABILITY_SOUNDS 3
 
 ZombieClass Zombie;
 ZombieAbility abilityLeap;
@@ -61,13 +61,12 @@ public void ZS_OnLoaded() {
 }
 
 public void OnMapStart() {
-    PrecacheSound( SOUND_LEAP );
-    
-    // Format sound
-    char sPath[PLATFORM_MAX_PATH];
-    Format(sPath, sizeof(sPath), "sound/%s", SOUND_LEAP);
-    
-    AddFileToDownloadsTable( sPath );
+    PrecacheSound( "swarm/skills/hunter_ability_1.mp3" );
+    PrecacheSound( "swarm/skills/hunter_ability_2.mp3" );
+    PrecacheSound( "swarm/skills/hunter_ability_3.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_1.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_2.mp3" );
+    AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_3.mp3" );
 }
 
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 
@@ -152,8 +151,10 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     }
     
     TeleportEntity( client, NULL_VECTOR, NULL_VECTOR, cVelocity);
-    
-    EmitSoundToAll(SOUND_LEAP, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    int randomnumber = GetRandomInt(1, MAX_ABILITY_SOUNDS);
+    char randomsound[PLATFORM_MAX_PATH];
+    Format(randomsound, sizeof(randomsound), "swarm/skills/hunter_ability_%i.mp3", randomnumber);
+    EmitSoundToAll(randomsound, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 
 }
 

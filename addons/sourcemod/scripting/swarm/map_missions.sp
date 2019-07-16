@@ -10,8 +10,8 @@
 
 #define PLUGIN_VERSION "1.0"
 
-#define SOUND_RED_TAKE "swarm/redflag.mp3"
-#define SOUND_BLUE_TAKE "swarm/blueflag.mp3"
+#define SOUND_RED_TAKE "swarm/mission/redflag.mp3"
+#define SOUND_BLUE_TAKE "swarm/mission/blueflag.mp3"
 
 #define FLAG_NAME 0 // constant
 #define FLAG_POSITION 1 // constant

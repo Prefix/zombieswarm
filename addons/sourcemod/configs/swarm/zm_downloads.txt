@@ -25,3 +25,7 @@ materials/models/player/custom_player/caleon1/mummy/mi_ch_egypt_mummy_01_01.vtf
 materials/models/player/custom_player/caleon1/mummy/mi_ch_egypt_mummy_01_01_n.vtf
 materials/models/player/custom_player/caleon1/mummy/mi_ch_egypt_mummy_01_01.vmt
 
+// Classic zombie
+materials/models/player/kuristaja/zombies/classic/zombie_classic_sheet.vmt
+materials/models/player/kuristaja/zombies/classic/zombie_classic_sheet.vtf
+materials/models/player/kuristaja/zombies/classic/zombie_classic_sheet_normal.vtf

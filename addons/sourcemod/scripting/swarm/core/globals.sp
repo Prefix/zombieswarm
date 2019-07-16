@@ -1,3 +1,4 @@
+ArrayList g_aZombieSounds = null;
 // Zombie class variables
 ArrayList g_aZombieClass = null;
 ArrayList g_aZombieAbility = null;
@@ -58,6 +59,10 @@ ConVar g_cOverlayCTWin;
 ConVar g_cOverlayTWin;
 ConVar g_cOverlayEnable;
 ConVar g_cHumanGravity;
+ConVar g_cPainFrequency;
+ConVar g_cFootstepFrequency;
+ConVar g_cIdleMinFrequency;
+ConVar g_cIdleMaxFrequency;
 ConVar g_cGhostMode;
 // Server ConVars
 Handle g_cAlpha;
@@ -81,3 +86,10 @@ char g_CountdownSounds[64][PLATFORM_MAX_PATH];
 int g_iTotalHumanWinSounds = 0;
 int g_iTotalZombieWinSounds = 0;
 int g_iTotalCountdownSounds = 0;
+// Attempt to fix first round bug?
+int gI_Players = 0;
+int defaultsoundindex = -1;
+
+float g_fNextFootstep[MAXPLAYERS + 1] = 0.0;
+float g_fNextIdle[MAXPLAYERS + 1] = 0.0;
+float g_fNextPain[MAXPLAYERS + 1] = 0.0;

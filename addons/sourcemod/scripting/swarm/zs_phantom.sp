@@ -19,7 +19,7 @@ public Plugin myinfo =
     url = ZS_PLUGIN_URL
 };
 
-#define SOUND_INVISIBILITY "swarm/invisibility.mp3"
+#define SOUND_INVISIBILITY "swarm/skills/phantom_ability_1.mp3"
 #define ABILITY_UNIQUE_INVIS "phantom_invisibility"
 
 ZombieClass Zombie;

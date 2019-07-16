@@ -297,7 +297,7 @@ void GetPlayerAbilityInfo(int client, char[] str, int maxlength) {
             continue;
 
         PlayerAbility ability = view_as<PlayerAbility>(abilities[i]);
-        char sState[32];
+        char sState[128];
         if (ability.State == stateIdle) {
             Format(sState, sizeof(sState), "%t", "Ability state: Ready to use");
             char buttons[64];
