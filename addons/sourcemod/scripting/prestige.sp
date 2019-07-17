@@ -243,11 +243,12 @@ stock void LoadResetConfig() {
         return;
     }
     char sectionname[PLATFORM_MAX_PATH];
+    int xyz = 0;
     do
     {
         ResetKV.GetSectionName(sectionname, sizeof(sectionname));
         char newkey[32];
-        Format(newkey, sizeof(newkey), "%s-%i", sectionname, 0);
+        Format(newkey, sizeof(newkey), "%s-%i", sectionname, xyz);
         ResetKV.JumpToKey(newkey, false);
         do
         {
@@ -286,7 +287,9 @@ stock void LoadResetConfig() {
                     g_aNirvana.PushArray(temp_push[0]);
                 }
             }
+            xyz++;
         } while (ResetKV.GotoNextKey());
+        xyz = 0;
         ResetKV.GoBack();
     } while (ResetKV.GotoNextKey());
 
