@@ -19,7 +19,7 @@ void InitCvars()
     g_cOverlayEnable = AutoExecConfig_CreateConVar("zm_overlay_enable","1","1 - Enable, 0 - Disable",_,true,0.0,true,1.0);
     g_cOverlayCTWin = AutoExecConfig_CreateConVar("zm_overlay_humans_win","overlays/swarm/humans_win","Show overlay then humans win");
     g_cOverlayTWin = AutoExecConfig_CreateConVar("zm_overlay_zombies_win","overlays/swarm/zombies_win","Show overlay then zombies win");
-    g_cHumanGravity = AutoExecConfig_CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default");
+    g_cHumanGravity = AutoExecConfig_CreateConVar("zm_human_gravity","0.8","Gravity for humans. 1.0 - default",_,true,0.1,true,1.0);
     // Sounds
     g_cSoundsDeathEnable = AutoExecConfig_CreateConVar("zm_sounds_death_enable", "1", "1 - Enable Death sounds, 0 - Disable",_,true,0.0,true,1.0);
     g_cSoundsFootsteps = AutoExecConfig_CreateConVar("zm_sounds_footsteps_enable", "1", "1 - Enable Footstep sounds, 0 - Disable",_,true,0.0,true,1.0);

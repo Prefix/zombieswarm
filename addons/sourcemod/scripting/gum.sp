@@ -6,12 +6,19 @@
 #include <cstrike>
 #include <clientprefs>
 #include <colorvariables>
+#include <autoexecconfig>
+#include <emitsoundany>
 
 #undef REQUIRE_PLUGIN
 #tryinclude <zombieplague>
 #tryinclude <zombiereloaded>
 #tryinclude <zombieswarm>
 #define REQUIRE_PLUGIN
+
+// Globals
+#include "swarm/gum/globals.sp"
+#include "swarm/gum/sql.sp"
+#include "swarm/gum/xpconfig.sp"
 
 #define PLUGIN_VERSION "1.0"
 #define PLUGIN_NAME "Gun Unlocks Mod"
@@ -27,65 +34,31 @@ public Plugin myinfo =
     url = "https://github.com/Prefix/zombieswarm"
 };
 
-ArrayList weaponEntities;
-ArrayList weaponUnlocks;
-ArrayList weaponAmmo;
-ArrayList weaponNames;
-ArrayList rankNames;
-
-bool weaponSelected[MAXPLAYERS + 1];
-
-#if defined _zombieplaguemod_included
-bool zpLoaded;
-#endif
-
-#if defined _zr_included
-bool zrLoaded;
-#endif
-
-#if defined _zombieswarm_included
-bool zmLoaded;
-#endif
-
-Handle cvarMenuTime, cvarDamageReward, cvarDamageRewardVIP, cvarDamageDeal, cvarWeaponMenu,
-cvarMenuDelay, cvarMenuReOpen, cvarSaveType, cvarEnableTop10,
-cvarWeaponRestriction, cvarMenuAutoReOpenTime, cvarMaxSecondary, ClientPrimaryCookie = INVALID_HANDLE,
-ClientSecondaryCookie = INVALID_HANDLE;
-
-Database conDatabase = null;
-Handle menuTimer[MAXPLAYERS + 1] = null;
-Handle g_hForwardOnLevelUp;
-
-int playerLevel[MAXPLAYERS + 1], pUnlocks[MAXPLAYERS + 1], pDamageDone[MAXPLAYERS + 1];
-int rememberPrimary[MAXPLAYERS + 1], rememberSecondary[MAXPLAYERS + 1];
-
-char modConfig[PLATFORM_MAX_PATH];
-
 #define GUM_ChatPrefix "[ GUM ]"
 
 public void OnPluginStart()
 {
     LoadTranslations("gum.phrases");
-    CreateConVar("gum_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+    CreateConVar("gum_version", PLUGIN_VERSION, PLUGIN_NAME, FCVAR_NOTIFY|FCVAR_DONTRECORD|FCVAR_REPLICATED);
 
-    cvarSaveType = CreateConVar("gum_savetype", "0", "Save Data Type : 0 = SteamID, 1 = IP, 2 = Name.");
+    AutoExecConfig_SetCreateDirectory(true);
+    AutoExecConfig_SetCreateFile(true);
+    AutoExecConfig_SetFile("gunxpmod", "gunxpmod");
+    cvarSaveType = AutoExecConfig_CreateConVar("gum_savetype", "0", "Save Data Type : 0 = SteamID, 1 = IP, 2 = Name.",_,true,0.0,true,2.0);
+    cvarWeaponRestriction = AutoExecConfig_CreateConVar("gum_restrict_guns", "1", "Restrict weapon picking, based on levels? 1 - Yes, 0 - No.",_,true,0.0,true,1.0);
+    InitExperience();
+    // CVARS: reopen when lvl, dont count bots when calculating dmg
+    // Weapons
+    cvarWeaponMenu = AutoExecConfig_CreateConVar("gum_menu", "1", "Show weapons by menu? 1 - Yes, 0 - Give instantly",_,true,0.0,true,1.0);
+    cvarMenuTime = AutoExecConfig_CreateConVar("gum_menu_time", "30", "Cvar for how many seconds menu is shown");
+    cvarMenuDelay = AutoExecConfig_CreateConVar("gum_menu_delay", "1.0", "Delay to display menu when player spawned");
+    cvarMenuReOpen = AutoExecConfig_CreateConVar("gum_menu_reopen", "1", "Enable menu re-open ? 1 - Yes, 0 - No.",_,true,0.0,true,1.0);
+    cvarMenuAutoReOpenTime = AutoExecConfig_CreateConVar("gum_menu_reopen_auto", "0", ">0 - Amount of time that menu shall open, 0 - Don't reopen.",_,true,0.0,true,1.0);
+    cvarEnableTop10 = AutoExecConfig_CreateConVar("gum_enable_top10", "1", "Enable !top10 ? 1 - Yes, 0 - No.",_,true,0.0,true,1.0);
+    cvarMaxSecondary = AutoExecConfig_CreateConVar("gum_max_secondary", "9", "Max pistols level we have. Make sure you know what you edit here!");
+    AutoExecConfig_ExecuteFile();
+    AutoExecConfig_CleanFile();
 
-    cvarWeaponRestriction = CreateConVar("gum_restrict_guns", "1", "Restrict weapon picking, based on levels? 1 - Yes, 0 - No.");
-
-    cvarDamageDeal = CreateConVar("gum_damage_deal", "150", "Damage deal to get reward");
-    cvarDamageReward = CreateConVar("gum_damage_reward", "3", "Unlocks for damaging enemy");
-    cvarDamageRewardVIP = CreateConVar("gum_damage_reward_vip", "3", "Unlocks for damaging enemy (VIP)");
-    
-    cvarWeaponMenu = CreateConVar("gum_menu", "1", "Show weapons by menu? 1 - Yes, 0 - Give instantly");
-    cvarMenuTime = CreateConVar("gum_menu_time", "30", "Cvar for how many seconds menu is shown");
-    cvarMenuDelay = CreateConVar("gum_menu_delay", "1.0", "Delay to display menu when player spawned");
-    cvarMenuReOpen = CreateConVar("gum_menu_reopen", "1", "Enable menu re-open ? 1 - Yes, 0 - No.");
-    cvarMenuAutoReOpenTime = CreateConVar("gum_menu_reopen_auto", "120.0", ">0 - Amount of time that menu shall open, 0 - Don't reopen.");
-    
-    cvarEnableTop10 = CreateConVar("gum_enable_top10", "1", "Enable !top10 ? 1 - Yes, 0 - No.");
-    
-    cvarMaxSecondary = CreateConVar("gum_max_secondary", "9", "Max pistols level we have.");
-    
     ClientPrimaryCookie = RegClientCookie("GunXPClientPrimary", "Cookie to store client selections from GunXP Primary menu", CookieAccess_Private);
     ClientSecondaryCookie = RegClientCookie("GunXPSecondaryPrimary", "Cookie to store client selections from GunXP Secondary menu", CookieAccess_Private);
     
@@ -101,10 +74,10 @@ public void OnPluginStart()
     HookEvent("player_death", eventPlayerDeath);
     HookEvent("round_start",  eventRoundStart);
     HookEvent("player_hurt",  eventPlayerHurt);
-    
+    HookEvent("player_team",  eventPlayerTeam);
+    HookEvent("round_end", eventRoundEnd, EventHookMode_Post);
     // Configs
-    BuildPath(Path_SM, modConfig, sizeof(modConfig), "configs/gum_weapons.cfg");
-    AutoExecConfig( true, "gum");
+    BuildPath(Path_SM, modConfig, sizeof(modConfig), "configs/gunxpmod/gum_weapons.cfg");
 
     // Console commands
     RegConsoleCmd("say", sayCommand);
@@ -211,7 +184,7 @@ public Action ZP_OnExtraBuyCommand(int client, char[] extraitem_command)
 }
 #endif
 
-public void OnConfigsExecuted()
+public void LoadWeaponConfig()
 {
     weaponEntities = new ArrayList(ByteCountToCells(32));
     weaponUnlocks = new ArrayList(ByteCountToCells(10));
@@ -258,6 +231,14 @@ public void OnMapStart()
     
     // Disable cash awards
     SetConVarInt(FindConVar("mp_playercashawards"), 0);
+    
+    LoadWeaponConfig();
+    ImportEXPConfig();
+}
+
+public void OnMapEnd()
+{
+    ClearSurviveTimers();
 }
 
 public void OnClientPutInServer(int client)
@@ -270,22 +251,26 @@ public void OnClientPutInServer(int client)
             rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
             rememberSecondary[client] = 0;
         }
-        
+        pDamageDone[client] = 0;
+        pKillDone[client] = 0;
         SendConVarValue(client, FindConVar("mp_playercashawards"), "0");
         SendConVarValue(client, FindConVar("mp_teamcashawards"), "0");
     }
     
     SDKHook(client, SDKHook_WeaponCanUse, onWeaponCanUse);
+    CalculatePlayerAmount();
 }
 public void OnClientPostAdminCheck(int client)
 {
-    
+    CalculatePlayerAmount();
 }
 
 public void OnClientDisconnect(int client)
 {
     if ( IsClientInGame(client) )
     {
+        pDamageDone[client] = 0;
+        pKillDone[client] = 0;
         if (!IsFakeClient(client)) {
             SaveClientData(client);
         }
@@ -293,32 +278,10 @@ public void OnClientDisconnect(int client)
         if (menuTimer[client] != null) {
             delete menuTimer[client];
         }
+        //RemoveMultiKill(client);
+        RemoveSurviveTimer(client);
     }
-}
-
-public void SaveClientData(int client) {
-    if ( IsClientInGame(client) )
-    {
-        if (!IsFakeClient(client)) {
-            char sQuery[256];
-            char sKey[32], oName[32], pName[80];
-            getSaveIdentifier( client, sKey, sizeof( sKey ) );
-            
-            GetClientName(client, oName, sizeof(oName));
-            conDatabase.Escape(oName, pName, sizeof(pName));
-        
-            Format( sQuery, sizeof( sQuery ), "SELECT `purchased` FROM `gum` WHERE ( `player_id` = '%s' )", sKey);
-            
-            DataPack dp = new DataPack();
-            
-            dp.WriteCell(playerLevel[client]);
-            dp.WriteCell(pUnlocks[client]);
-            dp.WriteString(sKey);
-            dp.WriteString(pName);
-            
-            conDatabase.Query( querySelectSavedDataCallback, sQuery, dp);
-        }
-    }
+    CalculatePlayerAmount();
 }
 
 public Action CS_OnBuyCommand(int client, const char[] weapon)   
@@ -335,7 +298,7 @@ public Action onWeaponCanUse(int client, int weapon)
     if (IsFakeClient(client) || !GetConVarInt(cvarWeaponRestriction))
         return Plugin_Continue;
         
-    #if defined _zombieplaguemod_included
+    /*#if defined _zombieplaguemod_included
     if (zpLoaded && ZP_IsPlayerZombie(client)) return Plugin_Continue;
     #endif
     
@@ -345,13 +308,16 @@ public Action onWeaponCanUse(int client, int weapon)
     
     #if defined _zombieswarm_included
     if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Continue;
-    #endif
+    #endif*/
 
     char sWeapon[32], arrWeaponString[32];
     GetWeaponClassname(weapon, sWeapon, sizeof(sWeapon));
     
     if (StrContains(sWeapon, "knife")>=0)
         return Plugin_Continue;
+
+    if (PlayerIsZombie(client))
+        return Plugin_Handled;
         
     if (playerLevel[client] + 1 >= weaponEntities.Length)
         return Plugin_Continue;
@@ -436,27 +402,14 @@ public Action sayCommand(int client, int args)
     }
     else if (( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
     {
-        char sQuery[ 256 ]; 
-    
-        Format( sQuery, sizeof( sQuery ), "SELECT `player_name`, `player_level`, `player_unlocks` FROM `gum` ORDER BY `player_unlocks` DESC LIMIT 10;" );
-    
-        conDatabase.Query( queryShowTopTableCallback, sQuery, client);
+        ExecuteTopTen(client);
         
         return Plugin_Handled;
     }
     else if (( StrEqual(sArg1, "!guns") || StrEqual(sArg1, "guns") || StrEqual(sArg1, "/guns")) && GetConVarInt(cvarMenuReOpen) )
     {
-        #if defined _zombieplaguemod_included
-        if (zpLoaded && ZP_IsPlayerZombie(client)) return Plugin_Handled;
-        #endif
-        
-        #if defined _zr_included
-        if (zrLoaded && ZR_IsClientZombie(client)) return Plugin_Handled;
-        #endif
-        
-        #if defined _zombieswarm_included
-        if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Handled;
-        #endif
+        if (PlayerIsZombie(client))
+            return Plugin_Handled;
         
         if (!GetConVarInt(cvarWeaponMenu))
             return Plugin_Continue;
@@ -473,8 +426,28 @@ public Action sayCommand(int client, int args)
     return Plugin_Continue;
 }
 
+bool PlayerIsZombie(int client)
+{
+    #if defined _zombieplaguemod_included
+    if (zpLoaded && ZP_IsPlayerZombie(client)) return true;
+    #endif
+    
+    #if defined _zr_included
+    if (zrLoaded && ZR_IsClientZombie(client)) return true;
+    #endif
+    
+    #if defined _zombieswarm_included
+    if (zmLoaded && ZS_IsClientZombie(client)) return true;
+    #endif
+
+    return false;
+}
+
 public void eventPlayerChangename(Event event, const char[] name, bool dontBroadcast)
 {
+    if (GetConVarInt(cvarSaveType) != 2)
+        return; 
+
     char sNewName[32], sOldName[32];
     int client = GetClientOfUserId( GetEventInt(event,"userid") );
     GetEventString( event, "newname", sNewName, sizeof( sNewName ) );
@@ -483,12 +456,40 @@ public void eventPlayerChangename(Event event, const char[] name, bool dontBroad
     if ( !UTIL_IsValidClient(client) )
         return;
 
-    if ( GetConVarInt(cvarSaveType) == 2 && !StrEqual( sOldName, sNewName )  )
+    if ( !StrEqual( sOldName, sNewName )  )
     {
         setPlayerUnlocks(client, 0);
         
         rememberSecondary[client] = 0;
         rememberPrimary[client] = GetConVarInt(cvarMaxSecondary);
+    }
+}
+public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    int winner = GetEventInt(event, "winner");
+    RemoveSurviveTimer();
+    //RemoveMultiKill();
+    RoundWinnerBonus(winner);
+    MostDamageBonus(winner);
+    ClearSurviveTimers();
+    ResetDamageNKills();
+    HappyHourEndRound(winner);
+}
+
+public void eventPlayerTeam(Event event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(GetEventInt(event, "attacker"));
+    int newteam = GetEventInt(event, "team");
+    int oldteam = GetEventInt(event, "oldteam");
+    //bool disconnect = GetEventBool(event, "disconnect");
+    
+    if (!UTIL_IsValidClient(client))
+        return;
+
+    if (newteam != oldteam)
+    {
+        pDamageDone[client] = 0;
+        pKillDone[client] = 0;
     }
 }
 
@@ -503,32 +504,38 @@ public void eventPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
     if ( attacker == victim )
         return;
-        
-    if (pDamageDone[attacker] >= GetConVarInt(cvarDamageDeal)) {
-        if(IsClientVip(attacker))
-            setPlayerUnlocks(attacker, pUnlocks[attacker] + GetConVarInt(cvarDamageRewardVIP) );
-        else
-            setPlayerUnlocks(attacker, pUnlocks[attacker] + GetConVarInt(cvarDamageReward) );
-        //SaveClientData(attacker);    
-        pDamageDone[attacker] = 0;
-    }
-    
-    pDamageDone[attacker] += damage;
-}
 
-stock bool IsClientVip(int client)
-{
-    if (GetUserFlagBits(client) & ADMFLAG_RESERVATION || GetUserFlagBits(client) & ADMFLAG_ROOT) 
-        return true;
-    return false;
+    pDamageDone[attacker] += damage;
+
+    if (!g_cEXP_Damage.BoolValue) XPonHurt(attacker, victim, damage);
+    if (g_aActiveHappyHours.Length > 0) GiveHappyHourBonus(attacker, configDamage, damage);
 }
 
 public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     /* Reserved */
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
+    int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    RemoveSurviveTimer(client, -1);
+    //RemoveMultiKill(client, -1);
+    if (!UTIL_IsValidClient(attacker))
+        return;
+    if (!UTIL_IsValidClient(client))
+        return;
+    if (client == attacker)
+        return;
+    if (GetClientTeam(client) == GetClientTeam(attacker))
+        return;
+    pKillDone[attacker] += 1;
+    XPonKills(attacker);
+    //DeathMultiKillLogic(attacker);
+
+    if (g_aActiveHappyHours.Length > 0)
+        GiveHappyHourBonus(attacker, configKills);
     if (UTIL_IsValidClient(client))
         SaveClientData(client);
+    if (UTIL_IsValidClient(attacker))
+        SaveClientData(attacker);
 }
 
 public void eventRoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -548,6 +555,9 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     if (menuTimer[client] != null) {
         delete menuTimer[client];
     }
+
+    pDamageDone[client] = 0;
+    pKillDone[client] = 0;
     
     stripPlayerWeapons(client);
     
@@ -558,7 +568,9 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     } else {
         menuTimer[client] = CreateTimer( GetConVarFloat(cvarMenuDelay), mainMenu, client, TIMER_FLAG_NO_MAPCHANGE);
     }
+    StartSurviveTimers(client);
 }
+
 
 // Menus
 public Action mainMenu(Handle timer, any client)
@@ -569,17 +581,8 @@ public Action mainMenu(Handle timer, any client)
         return Plugin_Stop;
     }
     
-    #if defined _zombieplaguemod_included
-    if (zpLoaded && ZP_IsPlayerZombie(client)) return Plugin_Stop;
-    #endif
-    
-    #if defined _zr_included
-    if (zrLoaded && ZR_IsClientZombie(client)) return Plugin_Stop;
-    #endif
-    
-    #if defined _zombieswarm_included
-    if (zmLoaded && ZS_IsClientZombie(client)) return Plugin_Stop;
-    #endif
+    if (PlayerIsZombie(client))
+        return Plugin_Stop;
     
     weaponSelected[client] = false;
     
@@ -594,6 +597,7 @@ public Action mainMenu(Handle timer, any client)
 
     return Plugin_Stop;
 }
+
 public void mainWeaponMenu(int client)
 {
     Menu menu = new Menu(WeaponMenuHandler);
@@ -613,36 +617,27 @@ public int WeaponMenuHandler(Menu menu, MenuAction action, int client, int item)
 {
     if( action == MenuAction_Select )
     {    
-        #if defined _zombieplaguemod_included
-        if (zpLoaded && ZP_IsPlayerZombie(client)) return;
-        #endif
-        
-        #if defined _zr_included
-        if (zrLoaded && ZR_IsClientZombie(client)) return;
-        #endif
-        
-        #if defined _zombieswarm_included
-        if (zmLoaded && ZS_IsClientZombie(client)) return;
-        #endif
-    
-        switch (item)
+        if (!PlayerIsZombie(client)) 
         {
-            case 0: // show pistols
+            switch (item)
             {
-                secondaryWeaponMenu(client);
-            }
-            case 1: // last weapons
-            {
-                weaponSelected[client] = true;
-                
-                if ( playerLevel[client] > GetConVarInt(cvarMaxSecondary) - 1 )
+                case 0: // show pistols
                 {
-                    giveWeaponSelection(client, rememberPrimary[client], 1);
-                    giveWeaponSelection(client, rememberSecondary[client], 0);
+                    secondaryWeaponMenu(client);
                 }
-                else if ( playerLevel[client] < GetConVarInt(cvarMaxSecondary) )
+                case 1: // last weapons
                 {
-                    giveWeaponSelection(client, rememberSecondary[client], 1);
+                    weaponSelected[client] = true;
+                    
+                    if ( playerLevel[client] > GetConVarInt(cvarMaxSecondary) - 1 )
+                    {
+                        giveWeaponSelection(client, rememberPrimary[client], 1);
+                        giveWeaponSelection(client, rememberSecondary[client], 0);
+                    }
+                    else if ( playerLevel[client] < GetConVarInt(cvarMaxSecondary) )
+                    {
+                        giveWeaponSelection(client, rememberSecondary[client], 1);
+                    }
                 }
             }
         }
@@ -686,31 +681,22 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
 {
     if( action == MenuAction_Select )
     {
-        #if defined _zombieplaguemod_included
-        if (zpLoaded && ZP_IsPlayerZombie(client)) return;
-        #endif
-        
-        #if defined _zr_included
-        if (zrLoaded && ZR_IsClientZombie(client)) return;
-        #endif
-        
-        #if defined _zombieswarm_included
-        if (zmLoaded && ZS_IsClientZombie(client)) return;
-        #endif
-    
-        weaponSelected[client] = true;
-        
-        rememberSecondary[client] = item;
-        
-        char value[5];
-        IntToString(rememberSecondary[client],value,sizeof(value));
-        SetClientCookie(client,ClientSecondaryCookie,value);
-
-        giveWeaponSelection(client, item, 1);
-    
-        if ( playerLevel[client] > GetConVarInt(cvarMaxSecondary) - 1 )
+        if (PlayerIsZombie(client))
         {
-            primaryWeaponMenu(client);
+            weaponSelected[client] = true;
+            
+            rememberSecondary[client] = item;
+            
+            char value[5];
+            IntToString(rememberSecondary[client],value,sizeof(value));
+            SetClientCookie(client,ClientSecondaryCookie,value);
+
+            giveWeaponSelection(client, item, 1);
+        
+            if ( playerLevel[client] > GetConVarInt(cvarMaxSecondary) - 1 )
+            {
+                primaryWeaponMenu(client);
+            }
         }
     } 
     else if (action == MenuAction_End)    
@@ -752,25 +738,16 @@ public int primaryWeaponMenuHandler(Menu menu, MenuAction action, int client, in
 {
     if( action == MenuAction_Select )
     {
-        #if defined _zombieplaguemod_included
-        if (zpLoaded && ZP_IsPlayerZombie(client)) return;
-        #endif
+        if (!PlayerIsZombie(client))
+        {
+            rememberPrimary[client] = item + GetConVarInt(cvarMaxSecondary);
+            
+            char value[5];
+            IntToString(rememberPrimary[client],value,sizeof(value));
+            SetClientCookie(client,ClientPrimaryCookie,value);
         
-        #if defined _zr_included
-        if (zrLoaded && ZR_IsClientZombie(client)) return;
-        #endif
-        
-        #if defined _zombieswarm_included
-        if (zmLoaded && ZS_IsClientZombie(client)) return;
-        #endif
-    
-        rememberPrimary[client] = item + GetConVarInt(cvarMaxSecondary);
-        
-        char value[5];
-        IntToString(rememberPrimary[client],value,sizeof(value));
-        SetClientCookie(client,ClientPrimaryCookie,value);
-    
-        giveWeaponSelection(client, item + GetConVarInt(cvarMaxSecondary), 0);
+            giveWeaponSelection(client, item + GetConVarInt(cvarMaxSecondary), 0);
+        }
     } 
     else if (action == MenuAction_End)    
     {
@@ -988,228 +965,6 @@ public void restrictBuyzone() {
     } 
 }
 
-public void getSaveIdentifier( int client, char[] szKey, int maxlen )
-{
-    switch( GetConVarInt( cvarSaveType ) )
-    {
-        case 2:
-        {
-            GetClientName( client, szKey, maxlen );
-
-            ReplaceString( szKey, maxlen, "'", "\'" );
-        }
-
-        case 1:    GetClientIP( client, szKey, maxlen );
-        case 0:    GetClientAuthId( client, AuthId_SteamID64, szKey, maxlen );
-    }
-}
-
-public void databaseInit()
-{
-    Database.Connect(databaseConnectionCallback);
-}
-
-public void saveData(int rowCount, const char[] sKey, const char[] playerName, int level, int unlocks)
-{
-    char sQuery[256];
-    
-    int bufferLength = strlen(playerName) * 2 + 1;
-    char[] newPlayerName = new char[bufferLength];
-    conDatabase.Escape(playerName, newPlayerName, bufferLength);
-    
-    if (rowCount > 0)
-        Format( sQuery, sizeof( sQuery ), "UPDATE `gum` SET `player_name` = '%s', `player_level` = '%d', `player_unlocks` = '%d', `purchased` = '0' WHERE (`player_id` = '%s');", newPlayerName, level, unlocks, sKey );
-    else
-        Format( sQuery, sizeof( sQuery ), "INSERT INTO `gum` (`player_id`, `player_name`, `player_level`, `player_unlocks`) VALUES ('%s', '%s', '%d', '%d');", sKey, newPlayerName, level, unlocks );
-    
-    conDatabase.Query( querySetDataCallback, sQuery);
-}
-public void loadData(int client)
-{
-    char sQuery[ 256 ]; 
-    
-    char szKey[64];
-    getSaveIdentifier( client, szKey, sizeof( szKey ) );
-
-    Format( sQuery, sizeof( sQuery ), "SELECT `player_unlocks` FROM `gum` WHERE ( `player_id` = '%s' );", szKey );
-    
-    conDatabase.Query( querySelectDataCallback, sQuery, client);
-}
-public void databaseConnectionCallback(Database db, const char[] error, any data)
-{
-    if ( db == null )
-    {
-        PrintToServer("Failed to connect: %s", error);
-        LogError( "%s", error ); 
-        
-        return;
-    }
-    
-    conDatabase = db;
-    conDatabase.SetCharset("utf8mb4");
-    
-    char sQuery[512], driverName[16];
-    conDatabase.Driver.GetIdentifier(driverName, sizeof(driverName));
-    
-    if ( StrEqual(driverName, "mysql") )
-    {
-        Format( sQuery, sizeof( sQuery ), "CREATE TABLE IF NOT EXISTS `gum` ( `id` int NOT NULL AUTO_INCREMENT, \
-        `player_id` varchar(32) NOT NULL, \
-        `player_name` varchar(32) default NULL, \
-        `player_level` int default NULL, \
-        `player_unlocks` int default NULL, \
-        `purchased` int NOT NULL default 0, \
-        PRIMARY KEY (`id`), UNIQUE KEY `player_id` (`player_id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;" );
-    }
-    else
-    {
-        Format( sQuery, sizeof( sQuery ), "CREATE TABLE IF NOT EXISTS `gum` ( `id` INTEGER PRIMARY KEY AUTOINCREMENT, \
-        `player_id` TEXT NOT NULL UNIQUE, \
-        `player_name` TEXT DEFAULT NULL, \
-        `player_level` INTEGER DEFAULT NULL, \
-        `player_unlocks` INTEGER DEFAULT NULL, \
-        `purchased` INTEGER NOT NULL DEFAULT 0 \
-         );" );
-    }
-    
-    conDatabase.Query( QueryCreateTable, sQuery);
-}
-public void QueryCreateTable(Database db, DBResultSet results, const char[] error, any data)
-{ 
-    if ( db == null )
-    {
-        LogError( "%s", error ); 
-        
-        return;
-    } 
-}
-public void querySetDataCallback(Database db, DBResultSet results, const char[] error, any data)
-{ 
-    if ( db == null )
-    {
-        LogError( "%s", error ); 
-        
-        return;
-    } 
-} 
-public void querySelectSavedDataCallback(Database db, DBResultSet results, const char[] error, DataPack pack)
-{ 
-    if ( db != null )
-    {
-        int resultRows = results.RowCount;
-        
-        char sKey[32], pName[32];
-        
-        pack.Reset();
-        int level = pack.ReadCell();
-        int unlocks = pack.ReadCell();
-        pack.ReadString(sKey, sizeof(sKey));
-        pack.ReadString(pName, sizeof(pName));
-
-        if (resultRows > 0) {
-            int dbPurchased = 0;
-            while ( results.FetchRow() ) 
-            {
-                int fieldPurchased;
-                results.FieldNameToNum("purchased", fieldPurchased);
-                
-                dbPurchased = results.FetchInt(fieldPurchased);
-            }
-            saveData(resultRows, sKey, pName, level, unlocks + dbPurchased);
-        } else {
-            saveData(resultRows, sKey, pName, level, unlocks);
-        }
-    } 
-    else
-    {
-        LogError( "%s", error ); 
-        
-        return;
-    }
-}
-public void querySelectDataCallback(Database db, DBResultSet results, const char[] error, any client)
-{ 
-    if (error[0] != EOS) {
-        LogError( "Server misfunctioning come back later: %s", error );
-        KickClientEx(client, "Server misfunctioning come back later!");
-        return;
-    }
-    if ( db != null)
-    {
-        int unlocks = 0;
-        if (results.HasResults) {
-            while ( results.FetchRow() ) 
-            {
-                int fieldUnlocks;
-                results.FieldNameToNum("player_unlocks", fieldUnlocks);
-
-                unlocks = results.FetchInt(fieldUnlocks);
-                LogMessage("[ GUM ] Player %N loaded with unlocks: %d", client, unlocks);
-            }
-        } else {
-            // TODO something
-        }
-        setPlayerUnlocks(client, unlocks);
-    } 
-    else
-    {
-        LogError( "%s", error ); 
-        
-        return;
-    }
-}
-public void queryShowTopTableCallback(Database db, DBResultSet results, const char[] error, any client)
-{ 
-    if ( db != null )
-    {
-        if ( !UTIL_IsValidClient(client) )
-            return;
-        
-        char name[64], szInfo[128];
-        int level, unlocks;
-
-        Menu panel = new Menu(top10PanelHandler);
-        panel.SetTitle( "%t", "Menu title: Top 10 players" );
-
-        while ( results.FetchRow() )
-        {
-            int fieldName, fieldLevel, fieldUnlocks;
-            results.FieldNameToNum("player_name", fieldName);
-            results.FieldNameToNum("player_level", fieldLevel);
-            results.FieldNameToNum("player_unlocks", fieldUnlocks);
-            
-            results.FetchString( fieldName, name, sizeof(name) );
-            level = results.FetchInt(fieldLevel);
-            unlocks = results.FetchInt(fieldUnlocks);
-            
-            ReplaceString(name, sizeof(name), "&lt;", "<");
-            ReplaceString(name, sizeof(name), "&gt;", ">");
-            ReplaceString(name, sizeof(name), "&#37;", "%");
-            ReplaceString(name, sizeof(name), "&#61;", "=");
-            ReplaceString(name, sizeof(name), "&#42;", "*");
-            
-            Format( szInfo, sizeof( szInfo ), "%t", "Menu option: Player format", name, level, unlocks, getMaxPlayerUnlocksByLevel(level) );
-
-            panel.AddItem("panel_info", szInfo);
-        }
-
-        panel.ExitButton = true;
-        panel.Display( client, GetConVarInt(cvarMenuTime) );
-    } 
-    else
-    {
-        LogError( "%s", error ); 
-        
-        return;
-    }
-}
-public int top10PanelHandler(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_End)
-    {
-        delete menu;
-    }
-}
 /* Since cs:go likes to use items_game prefabs instead of weapon files on newly added weapons */
 public void GetWeaponClassname(int weapon, char[] buffer, int size) {
     switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")) {
@@ -1228,4 +983,48 @@ stock bool UTIL_IsValidClient(int client)
 stock bool UTIL_IsValidAlive(int client)
 {
     return ( 1 <= client <= MaxClients && IsClientInGame(client) && IsPlayerAlive(client) );
+}
+
+/**
+ * Checks to see if a client has all of the specified admin flags
+ *
+ * @param client        Player's index.
+ * @param flagString    String of flags to check for.
+ * @return                True on admin having all flags, false otherwise.
+ * Original taken from https://forums.alliedmods.net/showpost.php?p=886345&postcount=4
+ */
+stock bool CheckAdminFlagsByString(int client, const char[] flagString)
+{
+    if (strlen(flagString) < 1)
+        return true;
+    AdminId admin = view_as<AdminId>(GetUserAdmin(client));
+    if (admin != INVALID_ADMIN_ID){
+        if(GetAdminFlag(admin, Admin_Root)) {
+            return true;
+        }
+        int count, found, flags = ReadFlagString(flagString);
+        for (int i = 0; i <= 20; i++){
+            if (flags & (1<<i))
+            {
+                count++;
+
+                if(GetAdminFlag(admin, view_as<AdminFlag>(i))){
+                    found++;
+                }
+            }
+        }
+
+        if (count == found){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+stock bool IsClientVip(int client)
+{
+    if (GetUserFlagBits(client) & ADMFLAG_RESERVATION || GetUserFlagBits(client) & ADMFLAG_ROOT) 
+        return true;
+    return false;
 }

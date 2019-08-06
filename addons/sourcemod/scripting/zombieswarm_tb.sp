@@ -60,6 +60,10 @@ int GetOppositeTeam(int client, int team = 0) {
 
 public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
+    CreateTimer(3.0, afterRoundEnded, _, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public Action afterRoundEnded(Handle timer, any data) {
     // Get amount of players (CT and T)
     int AmountOfPlayers = GetCountOfCustom(_, true);
     // Debug message
@@ -80,7 +84,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
         if(!IsBalanced()) {
             // Let's make team balance and switch teams.
             MakeTeamBalance();
-            return;
+            return Plugin_Continue;
         }
         // Check if our convar reached our wanted value
         if (rounds == cvarTBrounds.IntValue) {
@@ -94,6 +98,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             rounds++;
         }
     }
+    return Plugin_Continue;
 }
 
 // Custom team balancer function to get players to the teams.

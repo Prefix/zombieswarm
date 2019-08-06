@@ -1527,6 +1527,9 @@ stock void UTIL_LoadSounds() {
     }
     char sectionname[PLATFORM_MAX_PATH];
     char buffer[PLATFORM_MAX_PATH];
+    g_iTotalHumanWinSounds = 0;
+    g_iTotalZombieWinSounds = 0;
+    g_iTotalCountdownSounds = 0;
     do
     {
         Sounds.GetSectionName(sectionname, sizeof(sectionname));
