@@ -150,38 +150,29 @@ int GetCountOfCustom(bool findt = false, bool both = false) {
 }
 
 int GetRandomPlayer(bool getCT = false, bool anyTeam = false) {
-    int randomplayer;
-    if(anyTeam) {
-        randomplayer = GetCountOfCustom(_, true);
-    } else if (getCT) {
-        randomplayer = GetCountOfCustom();
-    } else {
-        randomplayer = GetCountOfCustom(true);
+    int[] iClients = new int[MaxClients];
+    int iClientsNum, i;
+    
+    for (i = 1; i <= MaxClients; i++) 
+    { 
+        if (IsValidClient(i))
+        {
+            int team = GetClientTeam(i);
+            if (!anyTeam && getCT && team != CS_TEAM_CT)
+                continue;
+            if (!anyTeam && !getCT && team != CS_TEAM_T)
+                continue;
+            if (anyTeam && ( team == CS_TEAM_SPECTATOR || team == CS_TEAM_NONE ) )
+                continue;
+            iClients[iClientsNum++] = i;
+        }
     }
-    randomplayer = GetRandomInt(1, randomplayer);
-    int playerid = 1;
-    for (int client = 1; client <= MaxClients; client++) 
+    if (iClientsNum > 0)
     {
-        if(!IsValidClient(client) || GetClientTeam(client) == CS_TEAM_SPECTATOR)
-            continue;
-        if (IsFakeClient(client) || IsClientSourceTV(client)) 
-            continue;
-        bool found = false;
-        ZMPlayer ZClient = ZMPlayer(client);
-        if(anyTeam && (ZClient.Team == CS_TEAM_CT || ZClient.Team == CS_TEAM_T)) {
-            if (randomplayer == playerid) found = true;
-        } else if (getCT && ZClient.Team == CS_TEAM_CT) {
-            if (randomplayer == playerid) found = true;
-        } else if (getCT && ZClient.Team == CS_TEAM_T) {
-            if (randomplayer == playerid) found = true;
-        }
-        if (found) {
-            playerid = client;
-            break;
-        }
-        playerid++;
+        return iClients[GetRandomInt(0, iClientsNum-1)]; 
     }
-    return (IsValidClient(playerid)) ? playerid:0;
+    
+    return 0;
 }
 
 bool IsBalanced() {
