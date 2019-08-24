@@ -32,7 +32,7 @@ public void OnPluginStart()
     // ConVars
     ZS_StartConfig("zombieswarm.teambalancer");
     // How many rounds players need to play in order to switch teams > 4 players
-    cvarTBrounds = CreateConVar("zm_tb_rounds", "1", "How much rounds you have to play for one side?");
+    cvarTBrounds = AutoExecConfig_CreateConVar("zm_tb_rounds", "1", "How much rounds you have to play for one side?");
     ZS_EndConfig();
     // Commands
     
