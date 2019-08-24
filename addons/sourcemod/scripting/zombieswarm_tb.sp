@@ -1,10 +1,12 @@
+
+#pragma semicolon 1
+#pragma newdecls required
 #include <sourcemod>
 #include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
 
-#pragma semicolon 1
-#pragma newdecls required
+#include <swarm/utils>
 
 // Checks if user connected, without any errors.
 #define IsValidClient(%1)  ( 1 <= %1 <= MaxClients && IsClientInGame(%1) )
@@ -27,14 +29,11 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-    // Register zombie mod team builder convars
-    CreateConVar("zombie_mod_tb", ZS_PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
-    
     // ConVars
-
+    ZS_StartConfig("zombieswarm.teambalancer");
     // How many rounds players need to play in order to switch teams > 4 players
     cvarTBrounds = CreateConVar("zm_tb_rounds", "1", "How much rounds you have to play for one side?");
-    
+    ZS_EndConfig();
     // Commands
     
     // Hooks
@@ -42,8 +41,7 @@ public void OnPluginStart()
     // Hook On Round end to switch teams.
     HookEvent("round_end", eventRoundEnd);
 
-    // Auto exec config (to keep changes convars)
-    AutoExecConfig();
+    CreateConVar("zombie_mod_tb", ZS_PLUGIN_VERSION, PLUGIN_NAME, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 }
 
 

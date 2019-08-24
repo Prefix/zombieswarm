@@ -2,6 +2,8 @@
   #endinput
 #endif
 #define _zombieswarm_utils_included
+#include <autoexecconfig>
+#include <sdktools>
 
 #define DISTANCE_BEFORE 3000.0
 
