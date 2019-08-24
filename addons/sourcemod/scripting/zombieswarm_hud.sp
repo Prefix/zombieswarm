@@ -46,28 +46,28 @@ public void OnPluginStart()
 {
     ZS_StartConfig("zombieswarm.hud");
     ConVar CVar;
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_enabled","1","Enables the HUD for all players by default.", FCVAR_NONE, true, 0.0, true, 1.0)), CVarChange_Enabled);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_enabled","1","Enables the HUD for all players by default.", FCVAR_NONE, true, 0.0, true, 1.0)), CVarChange_Enabled);
     g_bEnabled        = CVar.BoolValue;
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_color", "0 127 255 255","HUD color. Set by RGBA (0 - 255).")), CVarChange_Color);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_color", "0 127 255 255","HUD color. Set by RGBA (0 - 255).")), CVarChange_Color);
     char sBuffer[16];
     CVar.GetString(sBuffer, sizeof(sBuffer));
     String2Color(sBuffer);
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_x", "0.05","List position X (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_PosX);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_x", "0.05","List position X (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_PosX);
     g_fPosX            = CVar.FloatValue;
     if(g_fPosX < 0) g_fPosX = -1.0;
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_y", "0.05","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_PosY);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_y", "0.05","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_PosY);
     g_fPosY            = CVar.FloatValue;
     if(g_fPosY < 0) g_fPosX = -1.0;
     // Hud2
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_ability_enabled","1","Enables the Ability HUD for all players by default.", FCVAR_NONE, true, 0.0, true, 1.0)), CVarChange_Ability_Enabled);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_ability_enabled","1","Enables the Ability HUD for all players by default.", FCVAR_NONE, true, 0.0, true, 1.0)), CVarChange_Ability_Enabled);
     g_bEnabledAbility        = CVar.BoolValue;
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_ability_color", "100 127 255 255","HUD color. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_ability_color", "100 127 255 255","HUD color. Set by RGBA (0 - 255).")), CVarChange_Ability_Color);
     CVar.GetString(sBuffer, sizeof(sBuffer));
     String2Color(sBuffer, true);
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_ability_x", "0.05" ,"List position X (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosX);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_ability_x", "0.05" ,"List position X (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosX);
     g_fPosXAbility            = CVar.FloatValue;
     if(g_fPosXAbility < 0) g_fPosXAbility = -1.0;
-    HookConVarChange((CVar = AutoExecConfig_CreateConVar("sm_zombieswarm_csgohud_ability_y", "-1.0","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosY);
+    HookConVarChange((CVar = AutoExecConfig_CreateConVar("zs_hud_ability_y", "-1.0","List position Y (0.0 - 1.0 or -1 for center)", FCVAR_NONE, true, -1.0, true, 1.0)), CVarChange_Ability_PosY);
     g_fPosYAbility            = CVar.FloatValue;
     if(g_fPosYAbility < 0) g_fPosYAbility = -1.0;
     ZS_EndConfig();
