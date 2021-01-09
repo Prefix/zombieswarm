@@ -62,17 +62,137 @@ public void OnPluginStart()
     AddCommandListener( blockKill, "killvector");
     AddCommandListener( joinTeam, "jointeam");
 
-    g_aZombieClass = new ArrayList(view_as<int>(g_eZombieClass));
-    g_aZombieAbility = new ArrayList(view_as<int>(g_eZombieAbility));
-    g_aPlayerAbility = new ArrayList(view_as<int>(g_ePlayerAbility));
-    g_aZombieSounds = new ArrayList(sizeof(ZombieSounds));
+    g_aZombieClass = new ArrayList(sizeof(g_esZombieClass));
+    g_aZombieAbility = new ArrayList(sizeof(g_esZombieAbility));
+    g_aPlayerAbility = new ArrayList(sizeof(g_esPlayerAbility));
+    g_aZombieSounds = new ArrayList(sizeof(g_esZombieSounds));
     
     g_iCollisionOffset = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
     
     g_cAlpha = FindConVar("sv_disable_immunity_alpha");
     
     if(g_cAlpha != null) SetConVarInt(g_cAlpha, 1);   
-    
+    RegAdminCmd("sm_swarmtest", Command_SwarmTest, ADMFLAG_ROOT, "Some useful debug info");
+    RegAdminCmd("sm_swarmdebug_player", Command_SwarmDebugPlayer, ADMFLAG_ROOT, "Some useful debug info");
+
+}
+public Action Command_SwarmDebugPlayer(int client, int args)
+{
+    PrintToServer("PlayerClass");
+    PrintToServer("==============================================");
+    for (client = 1; client <= MaxClients; client++) 
+    {
+        if (UTIL_IsValidClient(client)) {
+            PrintToServer("client: %d", client);
+            PrintToServer("g_iTeam: %d", g_iTeam[client]);
+            PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
+            PrintToServer("g_bGhost: %s", g_bGhost[client] ? "true" : "false");
+            PrintToServer("g_bCooldown: %s", g_bCooldown[client] ? "true" : "false");
+            PrintToServer("g_bShouldCollide: %s", g_bShouldCollide[client] ? "true" : "false");
+            PrintToServer("g_bCanJoin: %s", g_bCanJoin[client] ? "true" : "false");
+            PrintToServer("g_bCanIgnore: %s", g_bCanIgnore[client] ? "true" : "false");
+            PrintToServer("g_bOverrideHint: %s", g_bOverrideHint[client] ? "true" : "false");
+            PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
+            PrintToServer("g_fHintSpeed: %f", g_fHintSpeed[client]);
+            PrintToServer("g_sOverrideHintText: %s", g_sOverrideHintText[client]);
+            PrintToServer("g_iZombieRespawnLeft: %d", g_iZombieRespawnLeft[client]);
+            for (int i = 0; i < g_aPlayerAbility.Length; i++)
+            {
+                g_esPlayerAbility temp_ability;
+                g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+                if (temp_ability.paClient != client)
+                    continue;
+                PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
+            }
+        }
+        PrintToServer("==============================================");
+    }
+}
+public Action Command_SwarmTest(int client, int args)
+{
+    PrintToServer("PlayerClass");
+    PrintToServer("==============================================");
+    for (client = 1; client <= MaxClients; client++) 
+    {
+        if (UTIL_IsValidClient(client)) {
+            PrintToServer("client: %d", client);
+            PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
+            PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
+            PrintToServer("g_bOverrideHint: %d", g_bOverrideHint[client]);
+            for (int i = 0; i < g_aPlayerAbility.Length; i++)
+            {
+                g_esPlayerAbility temp_ability;
+                g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+                if (temp_ability.paClient != client)
+                    continue;
+                PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
+            }
+        }
+        PrintToServer("==============================================");
+    }
+    PrintToServer("ZombieClasses");
+    PrintToServer("==============================================");
+    for (int i = 0; i < g_aZombieClass.Length; i++)
+    {
+        g_esZombieClass zombie;
+        g_aZombieClass.GetArray(i, zombie);
+        PrintToServer("ID: %d", zombie.dataID);
+        PrintToServer("dataID: %d", zombie.dataID);
+        PrintToServer("dataHP: %d", zombie.dataHP);
+        PrintToServer("dataAbilityButton: %d", zombie.dataAbilityButton);
+        PrintToServer("dataCooldown: %f", zombie.dataCooldown);
+        PrintToServer("dataSpeed: %f", zombie.dataSpeed);
+        PrintToServer("dataGravity: %f", zombie.dataGravity);
+        PrintToServer("dataDamage: %f", zombie.dataDamage);
+        PrintToServer("dataAttackSpeed: %df", zombie.dataAttackSpeed);
+        PrintToServer("dataName: %s", zombie.dataName);
+        PrintToServer("dataDescription: %s", zombie.dataDescription);
+        PrintToServer("dataModel: %s", zombie.dataModel);
+        PrintToServer("dataArms: %s", zombie.dataArms);
+        PrintToServer("dataExcluded: %d", zombie.dataExcluded ? "true" : "false");
+        PrintToServer("dataUniqueName: %s", zombie.dataUniqueName);
+        PrintToServer("==============================================");
+    }
+    PrintToServer("g_esZombieAbility");
+    PrintToServer("==============================================");
+    for (int i = 0; i < g_aZombieAbility.Length; i++)
+    {
+        g_esZombieAbility zombiey;
+        g_aZombieAbility.GetArray(i, zombiey);
+        PrintToServer("ID: %d", i);
+        PrintToServer("abilityID: %d", zombiey.abilityID);
+        PrintToServer("abilityZombieClass: %d", zombiey.abilityZombieClass);
+        PrintToServer("abilityDuration: %f", zombiey.abilityDuration);
+        PrintToServer("abilityButtons: %d", zombiey.abilityButtons);
+        PrintToServer("abilityCooldown: %f", zombiey.abilityCooldown);
+        PrintToServer("abilityName: %s", zombiey.abilityName);
+        PrintToServer("abilityDescription: %s", zombiey.abilityDescription);
+        PrintToServer("abilityExcluded: %d", zombiey.abilityExcluded ? "true" : "false");
+        PrintToServer("abilityUniqueName: %s", zombiey.abilityUniqueName);
+        PrintToServer("==============================================");
+    }
+    PrintToServer("g_esPlayerAbility");
+    PrintToServer("==============================================");
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        g_esPlayerAbility zombiex;
+        g_aPlayerAbility.GetArray(i, zombiex);
+        PrintToServer("paID: %d", i);
+        PrintToServer("paID: %d", zombiex.paID);
+        PrintToServer("paClient: %d", zombiex.paClient);
+        PrintToServer("paZombieClass: %d", zombiex.paZombieClass);
+        PrintToServer("paDuration: %f", zombiex.paDuration);
+        PrintToServer("paCooldown: %f", zombiex.paCooldown);
+        PrintToServer("paCurrentDuration: %f", zombiex.paCurrentDuration);
+        PrintToServer("paCurrentCooldown: %f", zombiex.paCurrentCooldown);
+        PrintToServer("paState: %d", zombiex.paState);
+        PrintToServer("paButtons: %d", zombiex.paButtons);
+        PrintToServer("paExcluded: %s", zombiex.paExcluded ? "true" : "false");
+        PrintToServer("paName: %s", zombiex.paName);
+        PrintToServer("paDescription: %s", zombiex.paDescription);
+        PrintToServer("paUniqueName: %s", zombiex.paUniqueName);
+        PrintToServer("==============================================");
+    }
 }
 
 public void OnConfigsExecuted() {
@@ -301,28 +421,29 @@ public void OnMapStart()
     //**********************************************
     //* Zombie class precache                          *
     //**********************************************
-    int temp_checker[g_eZombieClass];
     for (int i = 0; i < g_aZombieClass.Length; i++)
     {
-        g_aZombieClass.GetArray(i, temp_checker[0]);
+        g_esZombieClass temp_checker;
+        g_aZombieClass.GetArray(i, temp_checker, sizeof(temp_checker));
+
         //****************  Player ****************//
         // Path should be models/player/custom_player/cso2_zombi/zombie
         
-        Format(zBuffer, sizeof(zBuffer), "%s.mdl", temp_checker[dataModel]);
+        Format(zBuffer, sizeof(zBuffer), "%s.mdl", temp_checker.dataModel);
         PrecacheModel(zBuffer);
         AddFileToDownloadsTable(zBuffer);
 
-        Format(zBuffer, sizeof(zBuffer), "%s.dx90.vtx", temp_checker[dataModel]);
+        Format(zBuffer, sizeof(zBuffer), "%s.dx90.vtx", temp_checker.dataModel);
         AddFileToDownloadsTable(zBuffer);
         
-        Format(zBuffer, sizeof(zBuffer), "%s.phy", temp_checker[dataModel]);
+        Format(zBuffer, sizeof(zBuffer), "%s.phy", temp_checker.dataModel);
         AddFileToDownloadsTable(zBuffer);
         
-        Format(zBuffer, sizeof(zBuffer), "%s.vvd", temp_checker[dataModel]);
+        Format(zBuffer, sizeof(zBuffer), "%s.vvd", temp_checker.dataModel);
         AddFileToDownloadsTable(zBuffer);
         
-        if (strlen(temp_checker[dataArms])) {
-            Format(zBuffer,sizeof(zBuffer),"%s",temp_checker[dataArms]);
+        if (strlen(temp_checker.dataArms)) {
+            Format(zBuffer,sizeof(zBuffer),"%s",temp_checker.dataArms);
             AddFileToDownloadsTable(zBuffer);
         }
     }
@@ -531,7 +652,7 @@ public void OnClientPutInServer(int client)
 {
 	if(++gI_Players == 1)
 	{
-		CS_TerminateRound(3.0, CSRoundEnd_Draw);
+		CS_TerminateRound(0.1, CSRoundEnd_Draw);
 	}
 }
 
@@ -592,16 +713,18 @@ public void ClearPlayerAbilities(int client) {
     {
         if (i == g_aPlayerAbility.Length)
             break;
-        int temp_checker[g_ePlayerAbility];
-        g_aPlayerAbility.GetArray(i, temp_checker[0]);
-        if(temp_checker[paClient] == client) {
-            if (temp_checker[paTimerDuration] != null) {
-                delete temp_checker[paTimerDuration];
-                temp_checker[paTimerDuration] = null;
+
+        g_esPlayerAbility temp_checker;
+        g_aPlayerAbility.GetArray(i, temp_checker, sizeof(temp_checker));
+
+        if(temp_checker.paClient == client) {
+            if (temp_checker.paTimerDuration != null) {
+                delete temp_checker.paTimerDuration;
+                temp_checker.paTimerDuration = null;
             }
-            if (temp_checker[paTimerCooldown] != null) {
-                delete temp_checker[paTimerCooldown];
-                temp_checker[paTimerCooldown] = null;
+            if (temp_checker.paTimerCooldown != null) {
+                delete temp_checker.paTimerCooldown;
+                temp_checker.paTimerCooldown = null;
             }
             g_aPlayerAbility.Erase(i--);
         }
@@ -658,7 +781,10 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     // Apply custom zombie damage
     if (GetClientTeam(attacker) == CS_TEAM_T && GetClientTeam(victim) == CS_TEAM_CT) {
         g_bDidHit[attacker] = true;
-        float zmdamage = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[attacker]), view_as<int>(dataDamage)));
+        int zm_id = FindZombieIndex(g_iZombieClass[attacker]);
+        g_esZombieClass class;
+        g_aZombieClass.GetArray(zm_id, class, sizeof(class));
+        float zmdamage = class.dataDamage;
         damage = zmdamage;
         changed = true;
     }
@@ -879,12 +1005,12 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
             menu.SetTitle("%t","Select zombie class");
             
             char className[MAX_CLASS_NAME_SIZE], key[MAX_CLASS_ID];
-            int temp_checker[g_eZombieClass];
             for (int i = 0; i < g_aZombieClass.Length; i++)
             {
-                g_aZombieClass.GetArray(i, temp_checker[0]);
-                if(!temp_checker[dataExcluded]) {
-                    Format(className,sizeof(className),"%s",temp_checker[dataName]);
+                g_esZombieClass temp_checker;
+                g_aZombieClass.GetArray(i, temp_checker, sizeof(temp_checker));
+                if(!temp_checker.dataExcluded) {
+                    Format(className,sizeof(className),"%s",temp_checker.dataName);
                     IntToString(i,key,sizeof(key));
                     menu.AddItem(key, className);
                 }
@@ -892,17 +1018,17 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
             menu.ExitButton = true;
             menu.Display(client, 0);
         } else {
-            int temp_checker[g_eZombieClass];
             int random = getRandZombieClass();
-            g_aZombieClass.GetArray(random, temp_checker[0]);
-            g_iZombieClass[client] = temp_checker[dataID];
+            g_esZombieClass temp_checker;
+            g_aZombieClass.GetArray(random, temp_checker, sizeof(temp_checker));
+            g_iZombieClass[client] = temp_checker.dataID;
 
             g_bGhost[client] = false;
             setZombieClassParameters(client);
             AssignPlayerAbilities(client);
-            callZombieSelected(client, temp_checker[dataID]);
+            callZombieSelected(client, temp_checker.dataID);
             
-            CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
+            CPrintToChat(client,"%t","Random Zombie class",temp_checker.dataName);
             
             g_hTimerGhostHint[client] = CreateTimer( 1.0, ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
         }
@@ -916,33 +1042,33 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 }
 public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int param2) {
     if (UTIL_IsValidClient(client)) {
-        int temp_checker[g_eZombieClass];
+        g_esZombieClass temp_checker;
         if (action == MenuAction_Select && GetClientTeam(client) == CS_TEAM_T && g_bGhost[client]) {
             char key[MAX_CLASS_ID];
             menu.GetItem(param2, key, sizeof(key));
             int classInt = StringToInt(key);
-            g_aZombieClass.GetArray(classInt, temp_checker[0]);
+            g_aZombieClass.GetArray(classInt, temp_checker, sizeof(temp_checker));
 
-            g_iZombieClass[client] = temp_checker[dataID];
+            g_iZombieClass[client] = temp_checker.dataID;
             setZombieClassParameters(client);
-            callZombieSelected(client, temp_checker[dataID]);
+            callZombieSelected(client, temp_checker.dataID);
             
-            CPrintToChat(client,"%t","You selected",temp_checker[dataName]);
-            if (strlen(temp_checker[dataDescription])) {
-                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            CPrintToChat(client,"%t","You selected",temp_checker.dataName);
+            if (strlen(temp_checker.dataDescription)) {
+                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker.dataDescription);
             }
         }
         else if (action == MenuAction_Cancel) {
             int random = getRandZombieClass();
-            g_aZombieClass.GetArray(random, temp_checker[0]);
-            g_iZombieClass[client] = temp_checker[dataID];
+            g_aZombieClass.GetArray(random, temp_checker, sizeof(temp_checker));
+            g_iZombieClass[client] = temp_checker.dataID;
 
             setZombieClassParameters(client);
-            callZombieSelected(client, temp_checker[dataID]);
+            callZombieSelected(client, temp_checker.dataID);
             
-            CPrintToChat(client,"%t","Random Zombie class",temp_checker[dataName]);
-            if (strlen(temp_checker[dataDescription])) {
-                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker[dataDescription]);
+            CPrintToChat(client,"%t","Random Zombie class",temp_checker.dataName);
+            if (strlen(temp_checker.dataDescription)) {
+                CPrintToChat(client,"%t","Zombie Selected Description", temp_checker.dataDescription);
             }
         }
     }
@@ -1092,30 +1218,30 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     if (!g_bGhost[client] || !g_cGhostMode.BoolValue) {
         for (int i = 0; i < g_aPlayerAbility.Length; i++)
         {
-            int temp_checker[g_ePlayerAbility];
-            g_aPlayerAbility.GetArray(i, temp_checker[0]);
+            g_esPlayerAbility temp_checker;
+            g_aPlayerAbility.GetArray(i, temp_checker, sizeof(temp_checker));
             // Skip those undefined ones
-            if (temp_checker[paButtons] & IN_BULLRUSH) {
+            if (temp_checker.paButtons & IN_BULLRUSH) {
                 continue;
             }
-            if(temp_checker[paClient] != client) {
+            if(temp_checker.paClient != client) {
                 continue;
             }
             int pressed = GetEntProp(client, Prop_Data, "m_afButtonPressed");
             int released = GetEntProp(client, Prop_Data, "m_afButtonReleased");
-            if (pressed & temp_checker[paButtons]) {
-                if (temp_checker[paState] != stateIdle)
+            if (pressed & temp_checker.paButtons) {
+                if (temp_checker.paState != stateIdle)
                     continue;
                 Call_StartForward(g_hForwardAbilityButtonPressed);
                 Call_PushCell(client);
-                Call_PushCell(temp_checker[paID]);
+                Call_PushCell(temp_checker.paID);
                 Call_Finish();
-            } else if (released & temp_checker[paButtons]) {
-                if (temp_checker[paState] != stateRunning)
+            } else if (released & temp_checker.paButtons) {
+                if (temp_checker.paState != stateRunning)
                     continue;
                 Call_StartForward(g_hForwardAbilityButtonReleased);
                 Call_PushCell(client);
-                Call_PushCell(temp_checker[paID]);
+                Call_PushCell(temp_checker.paID);
                 Call_Finish();
             }
         }
@@ -1130,7 +1256,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 if (g_bGhostCanSpawn) {
                     setZombieGhostMode(client, false);
                     AssignPlayerAbilities(client);
-                    float tSpeed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataSpeed)));
+                    int zm_id = FindZombieIndex(client);
+                    g_esZombieClass class;
+                    g_aZombieClass.GetArray(zm_id, class, sizeof(class));
+                    float tSpeed = class.dataSpeed;
                     // Set zombie speed
                     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", tSpeed);
                     
@@ -1216,9 +1345,10 @@ public Action ghostHint(Handle timer, any client)
         UTIL_ShowHintMessage(client, hintText);
     } else {
         char sHintText[196];
-        int temp_checker[g_eZombieClass];
-        g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
-        Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker[dataName], temp_checker[dataDescription]);
+        int zm_id = FindZombieIndex(client);
+        g_esZombieClass temp_checker;
+        g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
+        Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker.dataName, temp_checker.dataDescription);
         
         UTIL_ShowHintMessage(client, sHintText);
         if (g_cSoundsIdle.BoolValue && GetTime() > g_fNextIdle[client]) {
@@ -1272,7 +1402,10 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
 
 stock int getZombieHealthRate(int client)
 {
-    int health = view_as<int>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataHP)));
+    int zm_id = FindZombieIndex(client);
+    g_esZombieClass temp_checker;
+    g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
+    int health = temp_checker.dataHP;
     int value = (RoundToCeil(SquareRoot(float(health)/(getZombies()+1)/2.0))+2)*health;
 
     if (getHumans() < getZombies()) {
@@ -1384,9 +1517,9 @@ public int getRandZombieClass()
     int classCount;
     for (int i = 0; i < g_aZombieClass.Length; i++)
     {
-        int temp_checker[g_eZombieClass];
-        g_aZombieClass.GetArray(i, temp_checker[0]);
-        bool excluded = temp_checker[dataExcluded];
+        g_esZombieClass temp_checker;
+        g_aZombieClass.GetArray(i, temp_checker, sizeof(temp_checker));
+        bool excluded = temp_checker.dataExcluded;
         if(!excluded) {
             tclasses[classCount++] = i;
         }
@@ -1400,20 +1533,21 @@ public void setZombieClassParameters(int client)
     if (!UTIL_IsValidAlive(client)) return;
     if (GetClientTeam(client) != CS_TEAM_T) return;
     // Set zombie class model
-    int temp_checker[g_eZombieClass];
-    g_aZombieClass.GetArray(FindZombieIndex(g_iZombieClass[client]), temp_checker[0]);
+    int zm_id = FindZombieIndex(client);
+    g_esZombieClass temp_checker;
+    g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
 
     char zBuffer[PLATFORM_MAX_PATH];
-    Format(zBuffer, sizeof(zBuffer), "%s.mdl", temp_checker[dataModel]);
+    Format(zBuffer, sizeof(zBuffer), "%s.mdl", temp_checker.dataModel);
     SetEntityModel(client, zBuffer);
     
     // Set zombie arms
-    if (strlen(temp_checker[dataArms]) > 0) {
+    if (strlen(temp_checker.dataArms) > 0) {
         int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
         if(ent != -1) {
             AcceptEntityInput(ent, "KillHierarchy");
         }
-        SetEntPropString(client, Prop_Send, "m_szArmsModel", temp_checker[dataArms]);
+        SetEntPropString(client, Prop_Send, "m_szArmsModel", temp_checker.dataArms);
     }
     else {
         int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
@@ -1430,10 +1564,10 @@ public void setZombieClassParameters(int client)
     if(g_bGhost[client] || g_cGhostMode.BoolValue)
         SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.4);
     else
-        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker[dataSpeed]);
+        SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", temp_checker.dataSpeed);
     
     // Set zombie gravity
-    SetEntityGravity(client, temp_checker[dataGravity]);
+    SetEntityGravity(client, temp_checker.dataGravity);
 }
 
 public void AssignPlayerAbilities(int client) {
@@ -1443,29 +1577,29 @@ public void AssignPlayerAbilities(int client) {
     // Give player abilities
     for (int i = 0; i < g_aZombieAbility.Length; i++)
     {
-        int temp_checkability[g_eZombieAbility];
-        g_aZombieAbility.GetArray(i, temp_checkability[0]);
-        if(g_iZombieClass[client] != temp_checkability[abilityZombieClass] || temp_checkability[abilityExcluded])
+        g_esZombieAbility temp_checkability;
+        g_aZombieAbility.GetArray(i, temp_checkability, sizeof(temp_checkability)); 
+        if(g_iZombieClass[client] != temp_checkability.abilityZombieClass || temp_checkability.abilityExcluded)
             continue;
-        int temp_ability[g_ePlayerAbility];
-        Format(temp_ability[paName], MAX_ABILITY_NAME_SIZE, "%s", temp_checkability[abilityName]);
-        Format(temp_ability[paDescription], MAX_ABILITY_DESC_SIZE, "%s", temp_checkability[abilityDescription]);
-        Format(temp_ability[paUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_ability[abilityUniqueName]);
+        g_esPlayerAbility temp_ability;
+        strcopy(temp_ability.paName, sizeof(g_esPlayerAbility::paName), temp_checkability.abilityName);
+        strcopy(temp_ability.paDescription, sizeof(g_esPlayerAbility::paDescription), temp_checkability.abilityDescription);
+        strcopy(temp_ability.paUniqueName, sizeof(g_esPlayerAbility::paUniqueName), temp_checkability.abilityUniqueName);
 
-        temp_ability[paButtons] = temp_checkability[abilityButtons];
-        temp_ability[paCooldown] = temp_checkability[abilityCooldown];
-        temp_ability[paDuration] = temp_checkability[abilityDuration];
-        temp_ability[paCurrentDuration] = 0.0;
-        temp_ability[paCurrentCooldown] = 0.0;
+        temp_ability.paButtons = temp_checkability.abilityButtons;
+        temp_ability.paCooldown = temp_checkability.abilityCooldown;
+        temp_ability.paDuration = temp_checkability.abilityDuration;
+        temp_ability.paCurrentDuration = 0.0;
+        temp_ability.paCurrentCooldown = 0.0;
         // todo forward ZS_PlayerAbilityStateChange
-        temp_ability[paState] = stateIdle; // from <zombieswarm.inc>
-        temp_ability[paExcluded] = false;
-        temp_ability[paZombieClass] = temp_checkability[abilityZombieClass];
-        temp_ability[paID] = g_iNumPlayerAbilities;
-        temp_ability[paClient] = client;
-        temp_ability[paTimerDuration] = null;
-        temp_ability[paTimerCooldown] = null;
-        g_aPlayerAbility.PushArray(temp_ability[0]);
+        temp_ability.paState = stateIdle; // from <zombieswarm.inc>
+        temp_ability.paExcluded = false;
+        temp_ability.paZombieClass = temp_checkability.abilityZombieClass;
+        temp_ability.paID = g_iNumPlayerAbilities;
+        temp_ability.paClient = client;
+        temp_ability.paTimerDuration = null;
+        temp_ability.paTimerCooldown = null;
+        g_aPlayerAbility.PushArray(temp_ability, sizeof(temp_ability));
         // TODO on player ability register
         g_iNumPlayerAbilities++;
     }
@@ -1493,23 +1627,52 @@ public Action CountDown(Handle timer) {
     
     return Plugin_Continue;
 }
-public ZombieClass FindZombieClassByID(int id) {
-    return view_as<ZombieClass>(g_aZombieClass.FindValue(id, view_as<int>(dataID)));
-}
+
 public int FindZombieIndex(int id) {
-    return view_as<int>(g_aZombieClass.FindValue(id, view_as<int>(dataID)));
+    int foundx = -1;
+    for (int i = 0; i < g_aZombieClass.Length; i++)
+    {
+        g_esZombieClass tempItemx;
+        g_aZombieClass.GetArray(i, tempItemx, sizeof(tempItemx)); 
+        if (id == tempItemx.dataID)
+        {
+            foundx = i;
+            break;
+        }
+    }
+    return view_as<int>(foundx);
 }
-public ZombieAbility FindZombieAbilityByID(int id) {
-    return view_as<ZombieAbility>(g_aZombieAbility.FindValue(id, view_as<int>(abilityID)));
-}
+
 public int FindZombieAbilityIndex(int id) {
-    return view_as<int>(g_aZombieAbility.FindValue(id, view_as<int>(abilityID)));
+    int founde = -1;
+    for (int i = 0; i < g_aZombieAbility.Length; i++)
+    {
+        g_esZombieAbility tempItem;
+        g_aZombieAbility.GetArray(i, tempItem, sizeof(tempItem)); 
+        if (id == tempItem.abilityID)
+        {
+            founde = i;
+            break;
+        }
+    }
+
+    return view_as<int>(founde);
 }
-public PlayerAbility FindPlayerAbilityByID(int id) {
-    return view_as<PlayerAbility>(g_aPlayerAbility.FindValue(id, view_as<int>(paID)));
-}
+
 public int FindPlayerAbilityIndex(int id) {
-    return view_as<int>(g_aPlayerAbility.FindValue(id, view_as<int>(paID)));
+    int foundq = -1;
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        g_esPlayerAbility tempItem;
+        g_aPlayerAbility.GetArray(i, tempItem, sizeof(tempItem)); 
+        if (id == tempItem.paID)
+        {
+            foundq = i;
+            break;
+        }
+    }
+
+    return view_as<int>(foundq);
 }
 stock void UTIL_LoadSounds() {
     char SoundPath[PLATFORM_MAX_PATH];
@@ -1597,8 +1760,8 @@ stock void UTIL_LoadZombieSounds() {
             }
             // Make new enum Struct
 
-            ZombieSounds newSound;
-            strcopy(newSound.Unique, sizeof(ZombieSounds::Unique), unique);
+            g_esZombieSounds newSound;
+            strcopy(newSound.Unique, sizeof(g_esZombieSounds::Unique), unique);
             newSound.DeathSounds = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
             newSound.Footsteps = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
             newSound.Hit = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
@@ -1686,7 +1849,10 @@ public void FirePostFrame(int userid)
     float curtime = GetGameTime();
     float nexttime = GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack");
     nexttime -= curtime;
-    float speed = view_as<float>(g_aZombieClass.Get(FindZombieIndex(g_iZombieClass[client]), view_as<int>(dataAttackSpeed)));
+    int zm_id = FindZombieIndex(client);
+    g_esZombieClass temp_checker;
+    g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
+    float speed = temp_checker.dataAttackSpeed;
     nexttime *= 1.0/speed; // 4.0 - multiplier
     nexttime += curtime;
     SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", nexttime);
@@ -1709,7 +1875,7 @@ public int FindZombieSoundsIndex(char[] unique) {
     int found = -1;
     for (int i = 0; i < g_aZombieSounds.Length; i++)
     {
-        ZombieSounds tempItem;
+        g_esZombieSounds tempItem;
         g_aZombieSounds.GetArray(i, tempItem, sizeof(tempItem)); 
         if (StrEqual(tempItem.Unique, unique, false))
         {
@@ -1728,15 +1894,15 @@ void PlayDeathZombieSound(int client)
         return;
     if (!g_cSoundsDeathEnable.BoolValue)
         return;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
@@ -1775,15 +1941,15 @@ public void PlayPainSound(int client) {
         return;
     if (!g_cSoundsPain.BoolValue)
         return;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
@@ -1825,15 +1991,15 @@ public void PlayFootstepSound(int client) {
         return;
     if (!g_cSoundsFootsteps.BoolValue)
         return;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
@@ -1876,15 +2042,15 @@ public void PlayHitSound(int client) {
     if (!g_cSoundsHit.BoolValue)
         return;
     g_bDidHit[client] = false;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
@@ -1924,15 +2090,15 @@ public void PlayMissSound(int client) {
         return;
     if (!g_cSoundsMiss.BoolValue)
         return;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));
@@ -1972,15 +2138,15 @@ public void PlayIdleSound(int client) {
         return;
     if (!g_cSoundsIdle.BoolValue)
         return;
-    ZombieSounds DefaultSoundPack;
+    g_esZombieSounds DefaultSoundPack;
     g_aZombieSounds.GetArray(defaultsoundindex, DefaultSoundPack, sizeof(DefaultSoundPack));
 
-    ZombieSounds ZMSoundPack;
-    int temp_class[g_eZombieClass];
+    g_esZombieSounds ZMSoundPack;
     int zombie_index = FindZombieIndex(g_iZombieClass[client]);
     if (zombie_index == -1) return;
-    g_aZombieClass.GetArray(zombie_index, temp_class[0]);
-    int zombieid = FindZombieSoundsIndex(temp_class[dataUniqueName]);
+    g_esZombieClass class;
+    g_aZombieClass.GetArray(zombie_index, class, sizeof(class));
+    int zombieid = FindZombieSoundsIndex(class.dataUniqueName);
     
     if (zombieid != -1) {
         g_aZombieSounds.GetArray(zombieid, ZMSoundPack, sizeof(ZMSoundPack));

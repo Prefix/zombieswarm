@@ -1,4 +1,4 @@
-enum struct ZombieSounds {
+enum struct g_esZombieSounds {
     char Unique[64]; // Zombie Unique name.
     ArrayList DeathSounds; // When Zombie Dies
     ArrayList Footsteps; // When Zombie Walks
@@ -7,49 +7,49 @@ enum struct ZombieSounds {
     ArrayList Pain; // When zombie gets hurt
     ArrayList Idle; // Sound every x seconds
 }
-enum g_eZombieClass {
-    dataID,
-    dataHP,
-    dataAbilityButton,
-    Float:dataCooldown,
-    Float:dataSpeed,
-    Float:dataGravity,
-    Float:dataDamage,
-    Float:dataAttackSpeed,
-    String:dataName[MAX_CLASS_NAME_SIZE],
-    String:dataDescription[MAX_CLASS_DESC_SIZE],
-    String:dataModel[MAX_CLASS_DESC_SIZE],
-    String:dataArms[MAX_CLASS_DESC_SIZE],
-    bool:dataExcluded,
-    String:dataUniqueName[MAX_CLASS_UNIQUE_NAME_SIZE]
+enum struct g_esZombieClass {
+    int dataID;
+    int dataHP;
+    int dataAbilityButton;
+    float dataCooldown;
+    float dataSpeed;
+    float dataGravity;
+    float dataDamage;
+    float dataAttackSpeed;
+    char dataName[MAX_CLASS_NAME_SIZE];
+    char dataDescription[MAX_CLASS_DESC_SIZE];
+    char dataModel[MAX_CLASS_DESC_SIZE];
+    char dataArms[MAX_CLASS_DESC_SIZE];
+    bool dataExcluded;
+    char dataUniqueName[MAX_CLASS_UNIQUE_NAME_SIZE];
 }
 
-enum g_eZombieAbility {
-    abilityID,
-    abilityZombieClass,
-    Float:abilityDuration,
-    Float:abilityCooldown,
-    abilityButtons,
-    bool:abilityExcluded,
-    String:abilityName[MAX_ABILITY_NAME_SIZE],
-    String:abilityDescription[MAX_ABILITY_DESC_SIZE],
-    String:abilityUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE]
+enum struct g_esZombieAbility {
+    int abilityID;
+    int abilityZombieClass;
+    float abilityDuration;
+    float abilityCooldown;
+    int abilityButtons;
+    bool abilityExcluded;
+    char abilityName[MAX_ABILITY_NAME_SIZE];
+    char abilityDescription[MAX_ABILITY_DESC_SIZE];
+    char abilityUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE];
 }
 
-enum g_ePlayerAbility {
-    paID,
-    paClient,
-    paZombieClass,
-    Float:paDuration,
-    Float:paCooldown,
-    Float:paCurrentDuration,
-    Float:paCurrentCooldown,
-    abilityState:paState,
-    paButtons,
-    bool:paExcluded,
-    String:paName[MAX_ABILITY_NAME_SIZE],
-    String:paDescription[MAX_ABILITY_DESC_SIZE],
-    String:paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE],
-    Handle:paTimerDuration,
-    Handle:paTimerCooldown
+enum struct g_esPlayerAbility {
+    int paID;
+    int paClient;
+    int paZombieClass;
+    float paDuration;
+    float paCooldown;
+    float paCurrentDuration;
+    float paCurrentCooldown;
+    int paState;
+    int paButtons;
+    bool paExcluded;
+    char paName[MAX_ABILITY_NAME_SIZE];
+    char paDescription[MAX_ABILITY_DESC_SIZE];
+    char paUniqueName[MAX_ABILITY_UNIQUE_NAME_SIZE];
+    Handle paTimerDuration;
+    Handle paTimerCooldown;
 }

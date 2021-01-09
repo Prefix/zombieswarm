@@ -165,12 +165,11 @@ methodmap ZombieAbility {
 }
 
 // to be used later
-enum abilityState {
-    stateIdle,
-    stateRunning,
-    stateCooldown,
-    stateDisabled
-}
+#define stateIdle 0
+#define stateRunning 1
+#define stateCooldown 2
+#define stateDisabled 3
+
 
 methodmap PlayerAbility  {
     // Constructor
@@ -201,9 +200,9 @@ methodmap PlayerAbility  {
     property int Client {
         public native get();
     }
-    property abilityState State {
+    property int State {
         public native get();
-        public native set(const abilityState val);
+        public native set(const int val);
     }
     property float CurrentCooldown {
         public native get();

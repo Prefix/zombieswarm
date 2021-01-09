@@ -305,7 +305,7 @@ public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
 
 public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)
 {
-    int found = -1;
+    int founded = -1;
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     char lookupfor[MAX_ABILITY_UNIQUE_NAME_SIZE];
@@ -315,21 +315,21 @@ public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)
     {
         if (i == g_aPlayerAbility.Length)
             break;
-        int temp_ability[g_ePlayerAbility];
-        g_aPlayerAbility.GetArray(i, temp_ability[0]);
-        if (temp_ability[paClient] != client)
+        g_esPlayerAbility temp_ability;
+        g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+        if (temp_ability.paClient != client)
             continue;
-        if (StrEqual(temp_ability[paUniqueName], lookupfor, false)) {
-            found = temp_ability[paID];
+        if (StrEqual(temp_ability.paUniqueName, lookupfor, false)) {
+            founded = temp_ability.paID;
             break;
         }
     }
-    return found;
+    return founded;
 }
 
 public int Native_ZMPlayer_GetPlayerAbilityID(Handle plugin, int numParams)
 {
-    int found = -1;
+    int founded = -1;
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     int uniqueid = GetNativeCell(2);
@@ -339,16 +339,16 @@ public int Native_ZMPlayer_GetPlayerAbilityID(Handle plugin, int numParams)
     {
         if (i == g_aPlayerAbility.Length)
             break;
-        int temp_ability[g_ePlayerAbility];
-        g_aPlayerAbility.GetArray(i, temp_ability[0]);
-        if (temp_ability[paClient] != client)
+        g_esPlayerAbility temp_ability;
+        g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+        if (temp_ability.paClient != client)
             continue;
-        if (temp_ability[paID] == uniqueid) {
-            found = i;
+        if (temp_ability.paID == uniqueid) {
+            founded = i;
             break;
         }
     }
-    return found;
+    return founded;
 }
 
 public int Native_ZMPlayer_GetPlayerAbilities(Handle plugin, int numParams)
@@ -363,11 +363,11 @@ public int Native_ZMPlayer_GetPlayerAbilities(Handle plugin, int numParams)
     int found_ab = 0;
     for (int i = 0; i < g_aPlayerAbility.Length; i++)
     {
-        int temp_ability[g_ePlayerAbility];
-        g_aPlayerAbility.GetArray(i, temp_ability[0]);
-        if (temp_ability[paClient] != client)
+        g_esPlayerAbility temp_ability;
+        g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+        if (temp_ability.paClient != client)
             continue;
-        abilities[found_ab] = temp_ability[paID];
+        abilities[found_ab] = temp_ability.paID;
         found_ab++;
     }
     SetNativeArray(2, abilities, API_MAX_PLAYER_ABILITIES);
@@ -381,16 +381,16 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
 {
     char temp_unique[MAX_CLASS_UNIQUE_NAME_SIZE];
     GetNativeString(1, temp_unique, sizeof(temp_unique));
-    int temp_checker[g_eZombieClass];
+    g_esZombieClass temp_checker;
     for (int i = 0; i < g_aZombieClass.Length; i++)
     {
-        g_aZombieClass.GetArray(i, temp_checker[0]);
-        if (StrEqual(temp_checker[dataUniqueName], temp_unique, false))
+        g_aZombieClass.GetArray(i, temp_checker, sizeof(temp_checker));
+        if (StrEqual(temp_checker.dataUniqueName, temp_unique, false))
         {
             return -1;
         }
     }
-    int temp_class[g_eZombieClass];
+    g_esZombieClass temp_class;
 
     // Load translations
     char translate_file[64];
@@ -398,27 +398,27 @@ public int Native_ZombieClass_Constructor(Handle plugin, int numParams)
     LoadTranslations(translate_file);
 
     Format(translate_file, sizeof(translate_file), TRANSLATION_CLASS_DISPLAY, temp_unique);
-    Format(temp_class[dataName], MAX_CLASS_NAME_SIZE, "%t", translate_file);
+    Format(temp_class.dataName, MAX_CLASS_NAME_SIZE, "%t", translate_file);
     Format(translate_file, sizeof(translate_file), TRANSLATION_CLASS_DESC, temp_unique);
-    Format(temp_class[dataDescription], MAX_CLASS_DESC_SIZE, "%t", translate_file);
-    Format(temp_class[dataModel], MAX_CLASS_MODEL_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
-    Format(temp_class[dataArms], MAX_CLASS_ARMS_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
-    Format(temp_class[dataUniqueName], MAX_CLASS_UNIQUE_NAME_SIZE, "%s", temp_unique);
+    Format(temp_class.dataDescription, MAX_CLASS_DESC_SIZE, "%t", translate_file);
+    Format(temp_class.dataModel, MAX_CLASS_MODEL_SIZE, "%s", DEFAULT_ZM_MODEL_PATH);
+    Format(temp_class.dataArms, MAX_CLASS_ARMS_SIZE, "%s", DEFAULT_ZM_ARMS_PATH);
+    Format(temp_class.dataUniqueName, MAX_CLASS_UNIQUE_NAME_SIZE, "%s", temp_unique);
 
-    temp_class[dataHP] = view_as<int>(DEFAULT_ZM_HEALTH);
-    temp_class[dataDamage] = view_as<float>(DEFAULT_ZM_DAMAGE);
-    temp_class[dataAttackSpeed] = view_as<float>(DEFAULT_ZM_ATTACKSPEED);
-    temp_class[dataSpeed] = view_as<float>(DEFAULT_ZM_SPEED);
-    temp_class[dataGravity] = view_as<float>(DEFAULT_ZM_GRAVITY);
-    temp_class[dataExcluded] = view_as<bool>(DEFAULT_ZM_EXCLUDED);
-    temp_class[dataAbilityButton] = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
-    temp_class[dataCooldown] = view_as<float>(DEFAULT_ZM_COOLDOWN);
-    temp_class[dataID] = g_iNumClasses;
-    g_aZombieClass.PushArray(temp_class[0]);
+    temp_class.dataHP = view_as<int>(DEFAULT_ZM_HEALTH);
+    temp_class.dataDamage = view_as<float>(DEFAULT_ZM_DAMAGE);
+    temp_class.dataAttackSpeed = view_as<float>(DEFAULT_ZM_ATTACKSPEED);
+    temp_class.dataSpeed = view_as<float>(DEFAULT_ZM_SPEED);
+    temp_class.dataGravity = view_as<float>(DEFAULT_ZM_GRAVITY);
+    temp_class.dataExcluded = view_as<bool>(DEFAULT_ZM_EXCLUDED);
+    temp_class.dataAbilityButton = view_as<int>(DEFAULT_ZM_ABILITY_BUTTON);
+    temp_class.dataCooldown = view_as<float>(DEFAULT_ZM_COOLDOWN);
+    temp_class.dataID = g_iNumClasses;
+    g_aZombieClass.PushArray(temp_class);
     // TODO on zombie class register
     
     g_iNumClasses++;
-    return temp_class[dataID];
+    return temp_class.dataID;
 }
 
 public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
@@ -430,201 +430,323 @@ public int Native_ZombieClass_IDGet(Handle plugin, int numParams)
 public int Native_ZombieClass_HealthGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataHP));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataHP);
 }
 
 public int Native_ZombieClass_HealthSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int health = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, health, dataHP);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataHP = value;
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_SpeedGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataSpeed));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataSpeed);
 }
 
 public int Native_ZombieClass_SpeedSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float speed = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, speed < 0.1 ? 0.1 : speed, dataSpeed);  
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_AttackSpeedGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataAttackSpeed));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataAttackSpeed);
 }
 
 public int Native_ZombieClass_AttackSpeedSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float speed = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, speed < 0.1 ? 0.1 : speed, dataAttackSpeed);  
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataAttackSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 
 public int Native_ZombieClass_GravityGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataGravity));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataGravity);
 }
 
 public int Native_ZombieClass_GravitySet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float gravity = GetNativeCell(2);
-    return view_as<int>(g_aZombieClass.Set(class_id, gravity, dataGravity));
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataGravity = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_ExcludedGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Set(class_id, dataExcluded));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataExcluded);
 }
 
 public int Native_ZombieClass_ExcludedSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    bool excluded = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, excluded, dataExcluded);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataAttackSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_ButtonGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataAbilityButton));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataAbilityButton);
 }
 
 public int Native_ZombieClass_ButtonSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int buttons = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, buttons, dataAbilityButton);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataAbilityButton = value;
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_CooldownGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieClass.Get(class_id, dataCooldown));
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataCooldown);
 }
 
 public int Native_ZombieClass_CooldownSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float cooldown = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, cooldown, dataCooldown);  
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataCooldown = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_DamageGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
-    return view_as<int>(temp_class[dataDamage]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
+
+    return view_as<int>(temp_class.dataDamage);
 }
 
 public int Native_ZombieClass_DamageSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    float damage = GetNativeCell(2);
-    g_aZombieClass.Set(class_id, damage, dataDamage); 
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    tempZombie.dataAttackSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
+    return 0;
 }
 
 public int Native_ZombieClass_NameGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_class[dataName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.dataName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieClass_NameSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_class[dataName], GetNativeCell(3), bytes);
-    g_aZombieClass.SetArray(class_id, temp_class[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    strcopy(tempZombie.dataName, sizeof(g_esZombieClass::dataName), tempname);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return bytes;
 }
 
 public int Native_ZombieClass_DescGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_class[dataDescription], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.dataDescription, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieClass_DescSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_class[dataDescription], GetNativeCell(3), bytes);
-    g_aZombieClass.SetArray(class_id, temp_class[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    strcopy(tempZombie.dataDescription, sizeof(g_esZombieClass::dataDescription), tempname);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return bytes;
 }
 
 public int Native_ZombieClass_ModelGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_class[dataModel], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.dataModel, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieClass_ModelSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_class[dataModel], GetNativeCell(3), bytes);
-    g_aZombieClass.SetArray(class_id, temp_class[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    strcopy(tempZombie.dataModel, sizeof(g_esZombieClass::dataModel), tempname);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return bytes;
 }
 
 public int Native_ZombieClass_ArmsGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_class[dataArms], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.dataArms, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieClass_ArmsSet(Handle plugin, int numParams)
 {
-    int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_class[dataArms], GetNativeCell(3), bytes);
-    g_aZombieClass.SetArray(class_id, temp_class[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieClass tempZombie;
+    g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
+    strcopy(tempZombie.dataArms, sizeof(g_esZombieClass::dataArms), tempname);
+    g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return bytes;
 }
 
 public int Native_ZombieClass_UniqueGet(Handle plugin, int numParams)
 {
     int class_id = FindZombieIndex(view_as<int>(GetNativeCell(1)));
-    int temp_class[g_eZombieClass];
-    g_aZombieClass.GetArray(class_id, temp_class[0]);
+    g_esZombieClass temp_class;
+    g_aZombieClass.GetArray(class_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_class[dataUniqueName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.dataUniqueName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -633,43 +755,43 @@ public int Native_ZombieAbility_Constructor(Handle plugin, int numParams)
 {
     int zombie_id = view_as<int>(GetNativeCell(1));
     // Check if valid zombie class exists
-    int zombie_index = view_as<int>(FindZombieClassByID(zombie_id));
+    int zombie_index = view_as<int>(FindZombieIndex(zombie_id));
     if (zombie_index == -1)
         return -1;
     char temp_unique[MAX_CLASS_UNIQUE_NAME_SIZE];
     GetNativeString(2, temp_unique, sizeof(temp_unique));
-    int temp_checker[g_eZombieAbility];
+    g_esZombieAbility temp_checker;
     for (int i = 0; i < g_aZombieAbility.Length; i++)
     {
-        g_aZombieAbility.GetArray(i, temp_checker[0]);
-        if (StrEqual(temp_checker[abilityUniqueName], temp_unique, false))
+        g_aZombieAbility.GetArray(i, temp_checker);
+        if (StrEqual(temp_checker.abilityUniqueName, temp_unique, false))
         {
             return -1;
         }
     }
-    int temp_ability[g_eZombieAbility];
+    g_esZombieAbility temp_ability;
     // Load translations
     char translate_file[64];
     Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_FILE, temp_unique);
     LoadTranslations(translate_file);
 
     Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_DISPLAY, temp_unique);
-    Format(temp_ability[abilityName], MAX_ABILITY_NAME_SIZE, "%t", translate_file);
+    Format(temp_ability.abilityName, MAX_ABILITY_NAME_SIZE, "%t", translate_file);
     Format(translate_file, sizeof(translate_file), TRANSLATION_ABILITY_DESC, temp_unique);
-    Format(temp_ability[abilityDescription], MAX_ABILITY_DESC_SIZE, "%t", translate_file);
-    Format(temp_ability[abilityUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
+    Format(temp_ability.abilityDescription, MAX_ABILITY_DESC_SIZE, "%t", translate_file);
+    Format(temp_ability.abilityUniqueName, MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
 
-    temp_ability[abilityButtons] = view_as<int>(DEFAULT_ABILITY_BUTTONS);
-    temp_ability[abilityCooldown] = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
-    temp_ability[abilityDuration] = view_as<float>(DEFAULT_ABILITY_DURATION);
-    temp_ability[abilityExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
-    temp_ability[abilityZombieClass] = zombie_id;
-    temp_ability[abilityID] = g_iNumAbilities;
-    g_aZombieAbility.PushArray(temp_ability[0]);
+    temp_ability.abilityButtons = view_as<int>(DEFAULT_ABILITY_BUTTONS);
+    temp_ability.abilityCooldown = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
+    temp_ability.abilityDuration = view_as<float>(DEFAULT_ABILITY_DURATION);
+    temp_ability.abilityExcluded = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
+    temp_ability.abilityZombieClass = zombie_id;
+    temp_ability.abilityID = g_iNumAbilities;
+    g_aZombieAbility.PushArray(temp_ability);
     // TODO on zombie ability register
     
     g_iNumAbilities++;
-    return temp_ability[abilityID];
+    return temp_ability.abilityID;
 }
 
 public int Native_ZombieAbility_IDGet(Handle plugin, int numParams)
@@ -680,109 +802,167 @@ public int Native_ZombieAbility_IDGet(Handle plugin, int numParams)
 
 public int Native_ZombieAbility_ButtonsGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityButtons));
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.abilityButtons);
 }
 
 public int Native_ZombieAbility_ButtonsSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int buttons = GetNativeCell(2);
-    g_aZombieAbility.Set(ability_id, buttons, abilityButtons);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.abilityButtons = value;
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_ZombieAbility_CooldownGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityCooldown));
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.abilityCooldown);
 }
 
 public int Native_ZombieAbility_CooldownSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float cooldown = GetNativeCell(2);
-    g_aZombieAbility.Set(ability_id, cooldown, abilityCooldown);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.abilityCooldown = view_as<float>(value);
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_ZombieAbility_DurationGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityDuration));
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.abilityDuration);
 }
 
 public int Native_ZombieAbility_DurationSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float duration = GetNativeCell(2);
-    g_aZombieAbility.Set(ability_id, duration, abilityDuration);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.abilityDuration = view_as<float>(value);
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_ZombieAbility_ExcludedGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aZombieAbility.Get(ability_id, abilityExcluded));
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.abilityExcluded);
 }
 
 public int Native_ZombieAbility_ExcludedSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    bool excluded = GetNativeCell(2);
-    g_aZombieAbility.Set(ability_id, excluded, abilityExcluded);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.abilityExcluded = view_as<bool>(value);
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_ZombieAbility_NameGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_eZombieAbility];
-    if (ability_id < 0)
-    {
-        return ThrowNativeError(SP_ERROR_NATIVE, "Bad ability index (%i)", ability_id);
-    }
-    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
     int bytes = 0;
-    SetNativeString(2, temp_ability[abilityName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_ability.abilityName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieAbility_NameSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_eZombieAbility];
-    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_ability[abilityName], GetNativeCell(3), bytes);
-    g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability)); 
+    strcopy(temp_ability.abilityName, sizeof(g_esZombieAbility::abilityName), tempname);
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
     return bytes;
 }
 
 public int Native_ZombieAbility_DescGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_eZombieAbility];
-    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
     int bytes = 0;
-    SetNativeString(2, temp_ability[abilityDescription], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_ability.abilityDescription, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_ZombieAbility_DescSet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_eZombieAbility];
-    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindZombieAbilityIndex(item_unique);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_ability[abilityDescription], GetNativeCell(3), bytes);
-    g_aZombieAbility.SetArray(ability_id, temp_ability[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(item_id, temp_ability, sizeof(temp_ability)); 
+    strcopy(temp_ability.abilityDescription, sizeof(g_esZombieAbility::abilityDescription), tempname);
+    g_aZombieAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
     return bytes;
 }
 
 public int Native_ZombieAbility_UniqueGet(Handle plugin, int numParams)
 {
-    int ability_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_eZombieAbility];
-    g_aZombieAbility.GetArray(ability_id, temp_ability[0]);
+    int class_id = FindZombieAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esZombieAbility temp_ability;
+    g_aZombieAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
     int bytes = 0;
-    SetNativeString(2, temp_ability[abilityUniqueName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_ability.abilityUniqueName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
@@ -795,39 +975,39 @@ public int Native_PlayerAbility_Constructor(Handle plugin, int numParams)
         return -1;
     char temp_unique[MAX_ABILITY_UNIQUE_NAME_SIZE];
     GetNativeString(2, temp_unique, sizeof(temp_unique));
-    int temp_checker[g_ePlayerAbility];
+    g_esPlayerAbility temp_checker;
     for (int i = 0; i < g_aPlayerAbility.Length; i++)
     {
-        g_aPlayerAbility.GetArray(i, temp_checker[0]);
-        if (StrEqual(temp_checker[abilityUniqueName], temp_unique, false) &&
-            temp_checker[paClient] == client)
+        g_aPlayerAbility.GetArray(i, temp_checker);
+        if (StrEqual(temp_checker.paUniqueName, temp_unique, false) &&
+            temp_checker.paClient == client)
         {
             return -1;
         }
     }
-    int temp_ability[g_ePlayerAbility];
-    Format(temp_ability[paName], MAX_ABILITY_NAME_SIZE, "%s", DEFAULT_ABILITY_NAME);
-    Format(temp_ability[paDescription], MAX_ABILITY_DESC_SIZE, "%s", DEFAULT_ABILITY_DESC);
-    Format(temp_ability[paUniqueName], MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
+    g_esPlayerAbility temp_ability;
+    Format(temp_ability.paName, MAX_ABILITY_NAME_SIZE, "%s", DEFAULT_ABILITY_NAME);
+    Format(temp_ability.paDescription, MAX_ABILITY_DESC_SIZE, "%s", DEFAULT_ABILITY_DESC);
+    Format(temp_ability.paUniqueName, MAX_ABILITY_UNIQUE_NAME_SIZE, "%s", temp_unique);
 
-    temp_ability[paButtons] = view_as<int>(DEFAULT_ABILITY_BUTTONS);
-    temp_ability[paCooldown] = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
-    temp_ability[paDuration] = view_as<float>(DEFAULT_ABILITY_DURATION);
-    temp_ability[paCurrentDuration] = 0.0;
-    temp_ability[paCurrentCooldown] = 0.0;
+    temp_ability.paButtons = view_as<int>(DEFAULT_ABILITY_BUTTONS);
+    temp_ability.paCooldown = view_as<float>(DEFAULT_ABILITY_COOLDOWN);
+    temp_ability.paDuration = view_as<float>(DEFAULT_ABILITY_DURATION);
+    temp_ability.paCurrentDuration = 0.0;
+    temp_ability.paCurrentCooldown = 0.0;
     // todo forward ZS_PlayerAbilityStateChange
-    temp_ability[paState] = stateIdle; // from <zombieswarm.inc>
-    temp_ability[paExcluded] = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
-    temp_ability[paZombieClass] = -1;
-    temp_ability[paClient] = client;
-    temp_ability[paID] = g_iNumPlayerAbilities;
-    temp_ability[paTimerDuration] = null;
-    temp_ability[paTimerCooldown] = null;
-    g_aPlayerAbility.PushArray(temp_ability[0]);
+    temp_ability.paState = stateIdle; // from <zombieswarm.inc>
+    temp_ability.paExcluded = view_as<bool>(DEFAULT_ABILITY_EXCLUDED);
+    temp_ability.paZombieClass = -1;
+    temp_ability.paClient = client;
+    temp_ability.paID = g_iNumPlayerAbilities;
+    temp_ability.paTimerDuration = null;
+    temp_ability.paTimerCooldown = null;
+    g_aPlayerAbility.PushArray(temp_ability);
     // TODO on zombie ability register
     
     g_iNumPlayerAbilities++;
-    return temp_ability[paID];
+    return temp_ability.paID;
 }
 
 public int Native_PlayerAbility_IDGet(Handle plugin, int numParams)
@@ -838,156 +1018,255 @@ public int Native_PlayerAbility_IDGet(Handle plugin, int numParams)
 
 public int Native_PlayerAbility_ButtonsGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paButtons));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paButtons);
 }
 
 public int Native_PlayerAbility_ButtonsSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int buttons = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, buttons, paButtons);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paButtons = value;
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_CooldownGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCooldown));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paCooldown);
 }
 
 public int Native_PlayerAbility_CooldownSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float cooldown = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, cooldown, paCooldown);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paCooldown = view_as<float>(value);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_DurationGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paDuration));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paDuration);
 }
 
 public int Native_PlayerAbility_DurationSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float duration = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, duration, paDuration);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paDuration = view_as<float>(value);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_ExcludedGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paExcluded));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paExcluded);
 }
 
 public int Native_PlayerAbility_ExcludedSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    bool excluded = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, excluded, paExcluded);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paExcluded = view_as<bool>(value);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_NameGet(Handle plugin, int numParams)
 {
     int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_ePlayerAbility];
-    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    g_esPlayerAbility temp_class;
+    g_aPlayerAbility.GetArray(ability_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_ability[paName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.paName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_PlayerAbility_NameSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_ePlayerAbility];
-    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int item_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_id);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_ability[paName], GetNativeCell(3), bytes);
-    g_aPlayerAbility.SetArray(ability_id, temp_ability[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability)); 
+    strcopy(temp_ability.paName, sizeof(g_esPlayerAbility::paName), tempname);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
     return bytes;
 }
 
 public int Native_PlayerAbility_DescGet(Handle plugin, int numParams)
 {
     int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_ePlayerAbility];
-    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    g_esPlayerAbility temp_class;
+    g_aPlayerAbility.GetArray(ability_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_ability[paDescription], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.paDescription, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_PlayerAbility_DescSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_ePlayerAbility];
-    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    int item_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_id);
+    }
     int bytes = 0;
-    GetNativeString(2, temp_ability[paDescription], GetNativeCell(3), bytes);
-    g_aPlayerAbility.SetArray(ability_id, temp_ability[0]);
+    char tempname[256];
+    GetNativeString(2, tempname, GetNativeCell(3), bytes);
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability)); 
+    strcopy(temp_ability.paDescription, sizeof(g_esPlayerAbility::paDescription), tempname);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
     return bytes;
 }
 
 public int Native_PlayerAbility_UniqueGet(Handle plugin, int numParams)
 {
     int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    int temp_ability[g_ePlayerAbility];
-    g_aPlayerAbility.GetArray(ability_id, temp_ability[0]);
+    g_esPlayerAbility temp_class;
+    g_aPlayerAbility.GetArray(ability_id, temp_class, sizeof(temp_class));
     int bytes = 0;
-    SetNativeString(2, temp_ability[paUniqueName], GetNativeCell(3), true, bytes);
+    SetNativeString(2, temp_class.paUniqueName, GetNativeCell(3), true, bytes);
     return bytes;
 }
 
 public int Native_PlayerAbility_CurrentCooldownGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCurrentCooldown));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paCurrentCooldown);
 }
 
 public int Native_PlayerAbility_CurrentCooldownSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float cooldown = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, cooldown, paCurrentCooldown);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paCurrentCooldown = view_as<float>(value);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_CurrentDurationGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paCurrentDuration));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paCurrentDuration);
 }
 
 public int Native_PlayerAbility_CurrentDurationSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float duration = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, duration, paCurrentDuration);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paCurrentDuration = view_as<float>(value);
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_StateGet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    return view_as<int>(g_aPlayerAbility.Get(ability_id, paState));
+    int class_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(class_id, temp_ability, sizeof(temp_ability));
+
+    return view_as<int>(temp_ability.paState);
 }
 
 public int Native_PlayerAbility_StateSet(Handle plugin, int numParams)
 {
-    int ability_id = FindPlayerAbilityIndex(view_as<int>(GetNativeCell(1)));
-    float state = GetNativeCell(2);
-    g_aPlayerAbility.Set(ability_id, state, paState);
+    int item_unique = view_as<int>(GetNativeCell(1));
+    int item_id = FindPlayerAbilityIndex(item_unique);
+    int value = GetNativeCell(2);
+    if (item_id == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", item_unique);
+    }
+    g_esPlayerAbility temp_ability;
+    g_aPlayerAbility.GetArray(item_id, temp_ability, sizeof(temp_ability));
+    temp_ability.paState = value;
+    g_aPlayerAbility.SetArray(item_id, temp_ability, sizeof(temp_ability));
+    return 0;
 }
 
 public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
-    int ability_index = FindPlayerAbilityIndex(ability_id);
-    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
-    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
+    int client = temp_checker.paClient;
+    float cooldown = temp_checker.paCooldown;
 
-    g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
-    g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
+    temp_checker.paState = stateCooldown;
+    temp_checker.paCurrentCooldown = cooldown;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
 
     DataPack pack;
     CreateDataTimer(0.1, Timer_SetOnIdle, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1004,18 +1283,24 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
-    int ability_index = FindPlayerAbilityIndex(ability_id);
-    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
-    float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paDuration));
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
+    int client = temp_checker.paClient;
+    float duration = temp_checker.paDuration;
 
-    g_aPlayerAbility.Set(ability_index, stateRunning, paState);
+    temp_checker.paState = stateRunning;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+
     if (duration != ABILITY_NO_DURATION) {
-        g_aPlayerAbility.Set(ability_index, duration, paCurrentDuration);
+        temp_checker.paCurrentDuration = duration;
+        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
         DataPack pack;
         CreateDataTimer(0.1, Timer_SetOnCooldown, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
         pack.WriteCell(client);
         pack.WriteCell(ability_id);
     }
+    
     Call_StartForward(g_hForwardOnAbilityStarted);
     Call_PushCell(client);
     Call_PushCell(ability_id);
@@ -1025,10 +1310,13 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
 public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
-    int ability_index = FindPlayerAbilityIndex(ability_id);
-    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
-    g_aPlayerAbility.Set(ability_index, stateRunning, paState);
-    g_aPlayerAbility.Set(ability_index, ABILITY_NO_DURATION, paCurrentDuration);
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
+    int client = temp_checker.paClient;
+    temp_checker.paState = stateRunning;
+    temp_checker.paCurrentDuration = ABILITY_NO_DURATION;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
 
     Call_StartForward(g_hForwardOnAbilityStarted);
     Call_PushCell(client);
@@ -1036,9 +1324,10 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
     Call_Finish();
     
 
-    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
-    g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
-    g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+    float cooldown = temp_checker.paCooldown;
+    temp_checker.paCurrentCooldown = cooldown;
+    temp_checker.paState = stateCooldown;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
 
     DataPack pack;
     
@@ -1060,28 +1349,33 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
-    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     if (!UTIL_IsValidAlive(client)) {
         return Plugin_Stop;
     }
-    if (ability_index < 0) {
+    if (view_as<int>(temp_checker.paID) < 0) {
         return Plugin_Stop;
     }
-    abilityState state = g_aPlayerAbility.Get(ability_index, paState);
+    int state = temp_checker.paState;
     if (state != stateCooldown) {
         return Plugin_Stop;
     }
-    float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentCooldown));
+    float cooldown = view_as<float>(temp_checker.paCurrentCooldown);
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
     if (cooldown <= 0.1) {
-        g_aPlayerAbility.Set(ability_index, stateIdle, paState);
-        g_aPlayerAbility.Set(ability_index, 0.0, paCurrentCooldown);
+        temp_checker.paState = stateIdle;
+        temp_checker.paCurrentCooldown = 0.0;
+        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
         Call_StartForward(g_hForwardOnAbilityCDEnded);
         Call_PushCell(client);
         Call_PushCell(ability_id);
         Call_Finish();
         return Plugin_Stop;
     }
-    g_aPlayerAbility.Set(ability_index, cooldown-0.1, paCurrentCooldown);
+    temp_checker.paCurrentCooldown = cooldown-0.1;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
     return Plugin_Continue;
     // TODO: set timer to null, delete timers on disconnect, deaths.
 }
@@ -1093,24 +1387,27 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
-    int ability_index = FindPlayerAbilityIndex(ability_id);
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     if (!UTIL_IsValidAlive(client)) {
         return Plugin_Stop;
     }
-    if (ability_index < 0) {
+    if (ability_id < 0) {
         return Plugin_Stop;
     }
-    abilityState state = g_aPlayerAbility.Get(ability_index, paState);
+    int state = temp_checker.paState;
     if (state != stateRunning) {
         return Plugin_Stop;
     }
-    float duration = view_as<float>(g_aPlayerAbility.Get(ability_index, paCurrentDuration));
+    float duration = view_as<float>(temp_checker.paCurrentDuration);
     
     if (duration <= 0.1) {
-        float cooldown = view_as<float>(g_aPlayerAbility.Get(ability_index, paCooldown));
-        g_aPlayerAbility.Set(ability_index, cooldown, paCurrentCooldown);
-        g_aPlayerAbility.Set(ability_index, 0.0, paCurrentDuration);
-        g_aPlayerAbility.Set(ability_index, stateCooldown, paState);
+        float cooldown = temp_checker.paCooldown;
+        temp_checker.paCurrentCooldown = cooldown;
+        temp_checker.paCurrentDuration = 0.0;
+        temp_checker.paState = stateCooldown;
+        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
 
         DataPack otherpack;
         CreateDataTimer(0.1, Timer_SetOnIdle, otherpack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1123,7 +1420,8 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
         Call_Finish();
         return Plugin_Stop;
     }
-    g_aPlayerAbility.Set(ability_index, duration-0.1, paCurrentDuration);
+    temp_checker.paCurrentDuration = duration-0.1;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
     return Plugin_Continue;
     // TODO: set timer to null, delete timers on disconnect, deaths.
 }
@@ -1131,10 +1429,12 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
 public int Native_PlayerAbility_ForceCooldownEnd(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
-    int ability_index = FindPlayerAbilityIndex(ability_id);
-    int client = view_as<int>(g_aPlayerAbility.Get(ability_index, paClient));
-
-    g_aPlayerAbility.Set(ability_index, stateIdle, paState);
+    int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    g_esPlayerAbility temp_checker;
+    g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
+    int client = temp_checker.paClient;
+    temp_checker.paState = stateIdle;
+    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
 
     Call_StartForward(g_hForwardOnAbilityCDEnded);
     Call_PushCell(client);

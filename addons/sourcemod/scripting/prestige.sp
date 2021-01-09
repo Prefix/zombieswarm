@@ -13,10 +13,9 @@
 
 Database conDatabase = null;
 
-enum g_eResetSystem {
-    resetThisTier,
-    resetPrevTier
-}
+#define resetThisTier 0
+#define resetPrevTier 1
+#define resetMax 2
 
 ArrayList g_aReborn;
 ArrayList g_aEvolution;
@@ -49,9 +48,9 @@ public void OnPluginStart()
     // Database
     databaseInit();
 
-    g_aReborn = new ArrayList(view_as<int>(g_eResetSystem));
-    g_aEvolution = new ArrayList(view_as<int>(g_eResetSystem));
-    g_aNirvana = new ArrayList(view_as<int>(g_eResetSystem));
+    g_aReborn = new ArrayList(view_as<int>(resetMax));
+    g_aEvolution = new ArrayList(view_as<int>(resetMax));
+    g_aNirvana = new ArrayList(view_as<int>(resetMax));
 
     LoadResetConfig();
 
@@ -258,7 +257,7 @@ stock void LoadResetConfig() {
                 if (minrb == -1 || reqlvl == -1) {
                     LogMessage("Misconfigurated field found in [reborn] prestige/reset_system.cfg");
                 } else {
-                    int temp_push[g_eResetSystem];
+                    int temp_push[view_as<int>(resetMax)];
                     temp_push[resetThisTier] = minrb;
                     temp_push[resetPrevTier] = reqlvl;
                     g_aReborn.PushArray(temp_push[0]);
@@ -270,7 +269,7 @@ stock void LoadResetConfig() {
                 if (reqrb == -1 || minevo == -1) {
                     LogMessage("Misconfigurated field found in [evolution] prestige/reset_system.cfg");
                 } else {
-                    int temp_push[g_eResetSystem];
+                    int temp_push[view_as<int>(resetMax)];
                     temp_push[resetThisTier] = minevo;
                     temp_push[resetPrevTier] = reqrb;
                     g_aEvolution.PushArray(temp_push[0]);
@@ -281,7 +280,7 @@ stock void LoadResetConfig() {
                 if (minnirvana == -1 || reqevo == -1) {
                     LogMessage("Misconfigurated field found in [nirvana] prestige/reset_system.cfg");
                 } else {
-                    int temp_push[g_eResetSystem];
+                    int temp_push[view_as<int>(resetMax)];
                     temp_push[resetThisTier] = minnirvana;
                     temp_push[resetPrevTier] = reqevo;
                     g_aNirvana.PushArray(temp_push[0]);
