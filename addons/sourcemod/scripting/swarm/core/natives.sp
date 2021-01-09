@@ -216,7 +216,8 @@ public int Native_ZMPlayer_GhostSet(Handle plugin, int numParams)
 public int Native_ZMPlayer_TeamGet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
-    return g_iTeam[player.Client];
+    //return g_iTeam[player.Client];
+    return GetClientTeam(player.Client);
 }
 
 public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)

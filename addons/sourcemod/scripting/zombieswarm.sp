@@ -82,28 +82,28 @@ public Action Command_SwarmDebugPlayer(int client, int args)
     PrintToServer("==============================================");
     for (client = 1; client <= MaxClients; client++) 
     {
-        if (UTIL_IsValidClient(client)) {
-            PrintToServer("client: %d", client);
-            PrintToServer("g_iTeam: %d", g_iTeam[client]);
-            PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
-            PrintToServer("g_bGhost: %s", g_bGhost[client] ? "true" : "false");
-            PrintToServer("g_bCooldown: %s", g_bCooldown[client] ? "true" : "false");
-            PrintToServer("g_bShouldCollide: %s", g_bShouldCollide[client] ? "true" : "false");
-            PrintToServer("g_bCanJoin: %s", g_bCanJoin[client] ? "true" : "false");
-            PrintToServer("g_bCanIgnore: %s", g_bCanIgnore[client] ? "true" : "false");
-            PrintToServer("g_bOverrideHint: %s", g_bOverrideHint[client] ? "true" : "false");
-            PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
-            PrintToServer("g_fHintSpeed: %f", g_fHintSpeed[client]);
-            PrintToServer("g_sOverrideHintText: %s", g_sOverrideHintText[client]);
-            PrintToServer("g_iZombieRespawnLeft: %d", g_iZombieRespawnLeft[client]);
-            for (int i = 0; i < g_aPlayerAbility.Length; i++)
-            {
-                g_esPlayerAbility temp_ability;
-                g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
-                if (temp_ability.paClient != client)
-                    continue;
-                PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
-            }
+        if (!UTIL_IsValidClient(client))
+            continue;
+        PrintToServer("client: %d", client);
+        PrintToServer("g_iTeam: %d", g_iTeam[client]);
+        PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
+        PrintToServer("g_bGhost: %s", g_bGhost[client] ? "true" : "false");
+        PrintToServer("g_bCooldown: %s", g_bCooldown[client] ? "true" : "false");
+        PrintToServer("g_bShouldCollide: %s", g_bShouldCollide[client] ? "true" : "false");
+        PrintToServer("g_bCanJoin: %s", g_bCanJoin[client] ? "true" : "false");
+        PrintToServer("g_bCanIgnore: %s", g_bCanIgnore[client] ? "true" : "false");
+        PrintToServer("g_bOverrideHint: %s", g_bOverrideHint[client] ? "true" : "false");
+        PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
+        PrintToServer("g_fHintSpeed: %f", g_fHintSpeed[client]);
+        PrintToServer("g_sOverrideHintText: %s", g_sOverrideHintText[client]);
+        PrintToServer("g_iZombieRespawnLeft: %d", g_iZombieRespawnLeft[client]);
+        for (int i = 0; i < g_aPlayerAbility.Length; i++)
+        {
+            g_esPlayerAbility temp_ability;
+            g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+            if (temp_ability.paClient != client)
+                continue;
+            PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
         }
         PrintToServer("==============================================");
     }
@@ -114,19 +114,28 @@ public Action Command_SwarmTest(int client, int args)
     PrintToServer("==============================================");
     for (client = 1; client <= MaxClients; client++) 
     {
-        if (UTIL_IsValidClient(client)) {
-            PrintToServer("client: %d", client);
-            PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
-            PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
-            PrintToServer("g_bOverrideHint: %d", g_bOverrideHint[client]);
-            for (int i = 0; i < g_aPlayerAbility.Length; i++)
-            {
-                g_esPlayerAbility temp_ability;
-                g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
-                if (temp_ability.paClient != client)
-                    continue;
-                PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
-            }
+        if (!UTIL_IsValidClient(client))
+            continue;
+        PrintToServer("client: %d", client);
+        PrintToServer("g_iTeam: %d", g_iTeam[client]);
+        PrintToServer("g_iZombieClass: %d", g_iZombieClass[client]);
+        PrintToServer("g_bGhost: %s", g_bGhost[client] ? "true" : "false");
+        PrintToServer("g_bCooldown: %s", g_bCooldown[client] ? "true" : "false");
+        PrintToServer("g_bShouldCollide: %s", g_bShouldCollide[client] ? "true" : "false");
+        PrintToServer("g_bCanJoin: %s", g_bCanJoin[client] ? "true" : "false");
+        PrintToServer("g_bCanIgnore: %s", g_bCanIgnore[client] ? "true" : "false");
+        PrintToServer("g_bOverrideHint: %s", g_bOverrideHint[client] ? "true" : "false");
+        PrintToServer("g_fLastButtons: %d", g_fLastButtons[client]);
+        PrintToServer("g_fHintSpeed: %f", g_fHintSpeed[client]);
+        PrintToServer("g_sOverrideHintText: %s", g_sOverrideHintText[client]);
+        PrintToServer("g_iZombieRespawnLeft: %d", g_iZombieRespawnLeft[client]);
+        for (int i = 0; i < g_aPlayerAbility.Length; i++)
+        {
+            g_esPlayerAbility temp_ability;
+            g_aPlayerAbility.GetArray(i, temp_ability, sizeof(temp_ability)); 
+            if (temp_ability.paClient != client)
+                continue;
+            PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
         }
         PrintToServer("==============================================");
     }
@@ -1214,21 +1223,26 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     
     if (GetClientTeam(client) != CS_TEAM_T) 
         return Plugin_Continue;
-    
+    //PrintToChatAll("check1");
     if (!g_bGhost[client] || !g_cGhostMode.BoolValue) {
+        //PrintToChatAll("check2");
         for (int i = 0; i < g_aPlayerAbility.Length; i++)
         {
+            //PrintToChatAll("loop%d start", i);
             g_esPlayerAbility temp_checker;
             g_aPlayerAbility.GetArray(i, temp_checker, sizeof(temp_checker));
             // Skip those undefined ones
             if (temp_checker.paButtons & IN_BULLRUSH) {
                 continue;
             }
+            //PrintToChatAll("loop%d start 1", i);
             if(temp_checker.paClient != client) {
                 continue;
             }
+            //PrintToChatAll("loop%d start 2", i);
             int pressed = GetEntProp(client, Prop_Data, "m_afButtonPressed");
             int released = GetEntProp(client, Prop_Data, "m_afButtonReleased");
+            if (pressed != 0 || released != 0)
             if (pressed & temp_checker.paButtons) {
                 if (temp_checker.paState != stateIdle)
                     continue;
@@ -1256,7 +1270,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
                 if (g_bGhostCanSpawn) {
                     setZombieGhostMode(client, false);
                     AssignPlayerAbilities(client);
-                    int zm_id = FindZombieIndex(client);
+                    int zm_id = FindZombieIndex(g_iZombieClass[client]);
                     g_esZombieClass class;
                     g_aZombieClass.GetArray(zm_id, class, sizeof(class));
                     float tSpeed = class.dataSpeed;
@@ -1345,11 +1359,10 @@ public Action ghostHint(Handle timer, any client)
         UTIL_ShowHintMessage(client, hintText);
     } else {
         char sHintText[196];
-        int zm_id = FindZombieIndex(client);
+        int zm_id = FindZombieIndex(g_iZombieClass[client]);
         g_esZombieClass temp_checker;
         g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
         Format(sHintText, sizeof(sHintText), "%t","Hint: Zombie Info Name and Description", temp_checker.dataName, temp_checker.dataDescription);
-        
         UTIL_ShowHintMessage(client, sHintText);
         if (g_cSoundsIdle.BoolValue && GetTime() > g_fNextIdle[client]) {
             PlayIdleSound(client);
@@ -1402,7 +1415,7 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
 
 stock int getZombieHealthRate(int client)
 {
-    int zm_id = FindZombieIndex(client);
+    int zm_id = FindZombieIndex(g_iZombieClass[client]);
     g_esZombieClass temp_checker;
     g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
     int health = temp_checker.dataHP;
@@ -1533,7 +1546,7 @@ public void setZombieClassParameters(int client)
     if (!UTIL_IsValidAlive(client)) return;
     if (GetClientTeam(client) != CS_TEAM_T) return;
     // Set zombie class model
-    int zm_id = FindZombieIndex(client);
+    int zm_id = FindZombieIndex(g_iZombieClass[client]);
     g_esZombieClass temp_checker;
     g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
 
@@ -1849,7 +1862,7 @@ public void FirePostFrame(int userid)
     float curtime = GetGameTime();
     float nexttime = GetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack");
     nexttime -= curtime;
-    int zm_id = FindZombieIndex(client);
+    int zm_id = FindZombieIndex(g_iZombieClass[client]);
     g_esZombieClass temp_checker;
     g_aZombieClass.GetArray(zm_id, temp_checker, sizeof(temp_checker));
     float speed = temp_checker.dataAttackSpeed;

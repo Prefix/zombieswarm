@@ -199,60 +199,45 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
 
     if ( !UTIL_IsValidAlive(client) )
         return;
-
     ZMPlayer player = ZMPlayer(client);
     
     if ( player.Ghost )
         return;
-        
     if ( player.Team != CS_TEAM_T)
         return;
-        
     if ( player.ZombieClass != registeredClass.ID )
         return;
-
     if ( ability_id < 0)
         return;
-        
     int ability_index = player.GetAbilityByID(ability_id);
 
     if (ability_index < 0)
         return;
-
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateIdle)
         return;
-
     ability.AbilityStarted();  
 }
 
  public void ZS_OnAbilityStarted(int client, int ability_id) {
     if ( !UTIL_IsValidAlive(client) )
         return;
-
     ZMPlayer player = ZMPlayer(client);
-    
     if ( player.Ghost )
         return;
-        
     if ( player.Team != CS_TEAM_T)
         return;
-        
     if ( player.ZombieClass != registeredClass.ID )
         return;
-
     if ( ability_id < 0)
         return;
-        
     int ability_index = player.GetAbilityByID(ability_id);
 
     if (ability_index < 0)
         return;
-
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
         return;     
-    
     float location[3];
     GetClientAbsOrigin(client, location);
     
