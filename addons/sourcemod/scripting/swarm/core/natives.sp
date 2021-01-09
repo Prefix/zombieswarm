@@ -1260,6 +1260,10 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    if (temp_checkerx == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", ability_id);
+    }
     g_esPlayerAbility temp_checker;
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     int client = temp_checker.paClient;
@@ -1267,7 +1271,7 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
 
     temp_checker.paState = stateCooldown;
     temp_checker.paCurrentCooldown = cooldown;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
     DataPack pack;
     CreateDataTimer(0.1, Timer_SetOnIdle, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1278,7 +1282,7 @@ public int Native_PlayerAbility_AbilityFinished(Handle plugin, int numParams)
     Call_PushCell(client);
     Call_PushCell(ability_id);
     Call_Finish();
-
+    return 0;
 }
 
 public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
@@ -1286,16 +1290,20 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
     int ability_id = view_as<int>(GetNativeCell(1));
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
     g_esPlayerAbility temp_checker;
+    if (temp_checkerx == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", ability_id);
+    }
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     int client = temp_checker.paClient;
     float duration = temp_checker.paDuration;
 
     temp_checker.paState = stateRunning;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
     if (duration != ABILITY_NO_DURATION) {
         temp_checker.paCurrentDuration = duration;
-        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+        g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
         DataPack pack;
         CreateDataTimer(0.1, Timer_SetOnCooldown, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
         pack.WriteCell(client);
@@ -1306,18 +1314,23 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
     Call_PushCell(client);
     Call_PushCell(ability_id);
     Call_Finish();
+    return 0;
 }
 
 public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    if (temp_checkerx == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", ability_id);
+    }
     g_esPlayerAbility temp_checker;
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     int client = temp_checker.paClient;
     temp_checker.paState = stateRunning;
     temp_checker.paCurrentDuration = ABILITY_NO_DURATION;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
     Call_StartForward(g_hForwardOnAbilityStarted);
     Call_PushCell(client);
@@ -1328,7 +1341,7 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
     float cooldown = temp_checker.paCooldown;
     temp_checker.paCurrentCooldown = cooldown;
     temp_checker.paState = stateCooldown;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
     DataPack pack;
     
@@ -1340,6 +1353,7 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
     Call_PushCell(client);
     Call_PushCell(ability_id);
     Call_Finish();
+    return 0;
 }
 
 public Action Timer_SetOnIdle(Handle timer, DataPack pack)
@@ -1351,6 +1365,10 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    if (temp_checkerx == -1)
+    {
+        return Plugin_Stop;
+    }
     g_esPlayerAbility temp_checker;
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     if (!UTIL_IsValidAlive(client)) {
@@ -1364,11 +1382,11 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
         return Plugin_Stop;
     }
     float cooldown = view_as<float>(temp_checker.paCurrentCooldown);
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     if (cooldown <= 0.1) {
         temp_checker.paState = stateIdle;
         temp_checker.paCurrentCooldown = 0.0;
-        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+        g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
         Call_StartForward(g_hForwardOnAbilityCDEnded);
         Call_PushCell(client);
         Call_PushCell(ability_id);
@@ -1376,7 +1394,7 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
         return Plugin_Stop;
     }
     temp_checker.paCurrentCooldown = cooldown-0.1;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     return Plugin_Continue;
     // TODO: set timer to null, delete timers on disconnect, deaths.
 }
@@ -1389,6 +1407,10 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    if (temp_checkerx == -1)
+    {
+        return Plugin_Stop;
+    }
     g_esPlayerAbility temp_checker;
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     if (!UTIL_IsValidAlive(client)) {
@@ -1408,7 +1430,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
         temp_checker.paCurrentCooldown = cooldown;
         temp_checker.paCurrentDuration = 0.0;
         temp_checker.paState = stateCooldown;
-        g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+        g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
         DataPack otherpack;
         CreateDataTimer(0.1, Timer_SetOnIdle, otherpack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1422,7 +1444,7 @@ public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
         return Plugin_Stop;
     }
     temp_checker.paCurrentDuration = duration-0.1;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     return Plugin_Continue;
     // TODO: set timer to null, delete timers on disconnect, deaths.
 }
@@ -1431,14 +1453,19 @@ public int Native_PlayerAbility_ForceCooldownEnd(Handle plugin, int numParams)
 {
     int ability_id = view_as<int>(GetNativeCell(1));
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
+    if (temp_checkerx == -1)
+    {
+        return ThrowNativeError(SP_ERROR_NATIVE, "Invalid Unique ID (%i)", ability_id);
+    }
     g_esPlayerAbility temp_checker;
     g_aPlayerAbility.GetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
     int client = temp_checker.paClient;
     temp_checker.paState = stateIdle;
-    g_aPlayerAbility.SetArray(ability_id, temp_checker, sizeof(temp_checker));
+    g_aPlayerAbility.SetArray(temp_checkerx, temp_checker, sizeof(temp_checker));
 
     Call_StartForward(g_hForwardOnAbilityCDEnded);
     Call_PushCell(client);
     Call_PushCell(ability_id);
     Call_Finish();
+    return 0;
 }

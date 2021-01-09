@@ -46,7 +46,7 @@ public void OnPluginStart()
 
 
 // Private helper function to get opposite team
-int GetOppositeTeam(int client, int team = 0) {
+/*int GetOppositeTeam(int client, int team = 0) {
     // If team is CT or T let's get opposite team, otherwise zombie.
     if (team > 0 && team != CS_TEAM_SPECTATOR) 
         return (team == CS_TEAM_CT) ? CS_TEAM_T:CS_TEAM_CT;
@@ -54,11 +54,11 @@ int GetOppositeTeam(int client, int team = 0) {
         return CS_TEAM_T;
     // In case if none of these happens
     return (GetClientTeam(client) == CS_TEAM_T) ? CS_TEAM_CT:CS_TEAM_T;
-}
+}*/
 
 public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-    CreateTimer(3.0, afterRoundEnded, _, TIMER_FLAG_NO_MAPCHANGE);
+    CreateTimer(0.1, afterRoundEnded, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action afterRoundEnded(Handle timer, any data) {
@@ -67,7 +67,8 @@ public Action afterRoundEnded(Handle timer, any data) {
     // Debug message
     //PrintToChatAll("Amount of players: %i ", AmountOfPlayers);
     // If less than 3 people
-    if (AmountOfPlayers < 3) {
+    SwapTeam();
+    /*if (AmountOfPlayers < 3) {
         //PrintToChatAll("Amount of players: %i < 3 : SwapTeams ", AmountOfPlayers);
         // Swap team if there are 1 or 2 players
         SwapTeam();
@@ -91,11 +92,11 @@ public Action afterRoundEnded(Handle timer, any data) {
             rounds = 1;
         } else {
             // Let's return everyone to their teams (maybe it's infection mode in some other plugin part)
-            ReturnEveryone();
+            SwapTeam();
             // Add +1 to rounds
             rounds++;
         }
-    }
+    }*/
     return Plugin_Continue;
 }
 
@@ -245,7 +246,38 @@ void MakeTeamBalance()
 
 void SwapTeam()
 {
-    for (int client = 1; client <= MaxClients; client++) 
+	for(int i = 1; i < MAXPLAYERS; i++)
+	{
+		if(!IsValidClient(i) )
+		{
+            continue;
+        }
+        int team = GetClientTeam(i);
+        if(team >= 2)
+        {
+            /*if(team == CS_TEAM_T)
+            {
+                SetEntProp(i, Prop_Data, "m_iPendingTeamNum", CS_TEAM_CT);
+            }
+            else
+            {
+                SetEntProp(i, Prop_Data, "m_iPendingTeamNum", CS_TEAM_T);
+            }*/
+            if(team == CS_TEAM_T)
+            {
+                CS_SwitchTeam(i, CS_TEAM_CT);
+            }
+            else
+            {
+                CS_SwitchTeam(i, CS_TEAM_T);
+            }
+            /*if(IsPlayerAlive(i))
+            {
+                CS_RespawnPlayer(i);
+            }*/
+        }
+	}
+    /*for (int client = 1; client <= MaxClients; client++) 
     {
         if(!IsValidClient(client) || GetClientTeam(client) == CS_TEAM_SPECTATOR)
             continue;
@@ -262,10 +294,10 @@ void SwapTeam()
                 ZClient.Team =  CS_TEAM_CT;
             }
         }
-    }
+    }*/
 }
 
-void ReturnEveryone()
+/*void ReturnEveryone()
 {
     for (int client = 1; client <= MaxClients; client++) 
     {
@@ -276,4 +308,4 @@ void ReturnEveryone()
         int team = ZClient.Team;
         ZClient.Team = team;
     }
-}
+}*/

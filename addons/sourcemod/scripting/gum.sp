@@ -576,7 +576,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 public Action mainMenu(Handle timer, any client)
 {
     menuTimer[client] = null;
-
+    
     if ( !UTIL_IsValidAlive(client) ) {
         return Plugin_Stop;
     }
@@ -681,7 +681,7 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
 {
     if( action == MenuAction_Select )
     {
-        if (PlayerIsZombie(client))
+        if (!PlayerIsZombie(client))
         {
             weaponSelected[client] = true;
             
