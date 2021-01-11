@@ -1096,7 +1096,6 @@ void ClearSurviveTimers(int client = -1)
 
         if (tempConfig.timer != null) {
             delete tempConfig.timer;
-            tempConfig.timer = null;
         }
         g_aPlayerSurviveTimers.Erase(i--);
     }

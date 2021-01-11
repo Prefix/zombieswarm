@@ -35,9 +35,12 @@ bool tankAlive;
 bool tankReady = true;
 Handle timerNextTank;
 
-#define SPAWNTIME 90.0
+#define SPAWNTIME 10.0
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zAttackSpeed, zCooldown, zDuration;
+bool round_end;
+
+int currentank = -1;
 
 public void OnPluginStart()
 {                  
@@ -77,14 +80,30 @@ public void ZS_OnLoaded() {
     //abilityRage.SetName("Fury", MAX_ABILITY_NAME_SIZE);
     //abilityRage.SetDesc("Can rage with Iron skin.", MAX_ABILITY_DESC_SIZE);
 }
-public void onZCSelected(int client, int classId)
+public Action ZS_ClassPreSelect(int client, int &classId)
 {
-    if(!tankAlive && tankReady && GetAliveCount() >= 4) {
-        ZMPlayer player = ZMPlayer(client);
-        player.ZombieClass = registeredClass.ID;
+    bool alivelrdy = false;
+    for (int i = 1; i <= MaxClients; i++) {
+        if (IsClientInGame(i) && (!IsFakeClient(i)) && IsPlayerAlive(i) && GetClientTeam(i) == CS_TEAM_T)
+        {
+            ZMPlayer player = ZMPlayer(i);
+
+            if ( player.ZombieClass != registeredClass.ID )
+                continue;
+            alivelrdy = true;
+            break;
+        }
+    }
+    if (alivelrdy) 
+        return Plugin_Continue;
+    if(!tankAlive && tankReady && GetAliveCount() >= 4 && !round_end && currentank == -1) {
+        classId = registeredClass.ID;
         tankAlive = true;
         tankReady = false;
+        currentank = client;
+        return Plugin_Changed;
     }
+    return Plugin_Continue;
 }
 
 public int GetAliveCount() {
@@ -147,38 +166,49 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
 
     if ( !UTIL_IsValidClient(victim) )
         return;
-        
+
     timerFury[victim] = false;
     
     if (timerFuryEffect[victim] != null) {
         delete timerFuryEffect[victim];
     }
-
-    ZMPlayer victimplayer = ZMPlayer(victim);
     
-    if (victimplayer.ZombieClass == registeredClass.ID && victimplayer.Team == CS_TEAM_T)
+    if (victim == currentank)
     {
         tankAlive = false;
         timerNextTank = CreateTimer(SPAWNTIME, TimerNextTank);
+        currentank = -1;
     }
 }
 
 public Action eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    round_end = true;
+}
+public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+    if(timerNextTank != null)
+        delete timerNextTank;
+    tankAlive = false;
+    tankReady = false;
+    RequestFrame(postSpawn);
+        
+    return Plugin_Continue;
+}
+
+public void postSpawn()
+{
+    RequestFrame(postSpawn2);
+}
+public void postSpawn2()
 {
     if(timerNextTank != null)
         delete timerNextTank;
         
     tankAlive = false;
     tankReady = true;
-        
-    return Plugin_Continue;
-}
-
-public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
-{
-    tankAlive = false;
-    tankReady = true;
-    return Plugin_Continue;
+    round_end = false;
+    currentank = -1;
 }
 
 public void OnClientPutInServer(int client)
@@ -189,26 +219,21 @@ public void OnClientPutInServer(int client)
 
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-    PrintToChatAll("pass 1");
     if (!UTIL_IsValidAlive(attacker))
         return Plugin_Continue;
-    PrintToChatAll("pass 2");
     if (!UTIL_IsValidClient(victim))
         return Plugin_Continue;
-    PrintToChatAll("pass 3");
     if (victim == attacker)
         return Plugin_Continue;
-    PrintToChatAll("pass 4");
+
     ZMPlayer victimplayer = ZMPlayer(victim);
 
     if ( victimplayer.ZombieClass != registeredClass.ID )
         return Plugin_Continue;
-    PrintToChatAll("pass 5");
     if ( victimplayer.Team != CS_TEAM_T)
         return Plugin_Continue;
-    PrintToChatAll("pass 6");
     if (!timerFury[victim])
-        return Plugin_Handled;
+        return Plugin_Continue;
     
     damage *= 0.1;
         
@@ -219,21 +244,20 @@ public void OnClientDisconnect(int client)
 {
     if ( !IsClientInGame(client) )
         return;
-
+    
     timerFury[client] = false;
+    currentank = -1;
     
     if (timerFuryEffect[client] != null) 
         delete timerFuryEffect[client];
-
-    ZMPlayer player = ZMPlayer(client);
-    
-    if ( player.ZombieClass == registeredClass.ID )
-    {
+    if (currentank == client) {
+        
         if(timerNextTank != null)
             delete timerNextTank;
 
         tankAlive = false;
         tankReady = true;
+        currentank = -1;
     }
 }
 
@@ -294,10 +318,10 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
 
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
-        return;     
+        return;
     timerFury[client] = true;
     
-    UTIL_Fade(client, 1, 1, {204, 0, 0, 150});
+    UTIL_Fade(client, 1, 1, {204, 0, 0, 50});
     
     // Make invisible zombie
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
@@ -375,13 +399,10 @@ public Action furyEffectCallback(Handle timer, any client)
     if ( !UTIL_IsValidAlive(client) || !ZS_IsClientZombie(client) ) {
         return Plugin_Continue;
     }
-
-    ZMPlayer player = ZMPlayer(client);
-
-    if (player.Ghost) {
+    if (!timerFury[client])
+    {
         return Plugin_Continue;
     }
-    
     float position[3];
     GetClientAbsOrigin(client, position);
     

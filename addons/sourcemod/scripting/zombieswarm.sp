@@ -1030,14 +1030,30 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
             int random = getRandZombieClass();
             g_esZombieClass temp_checker;
             g_aZombieClass.GetArray(random, temp_checker, sizeof(temp_checker));
-            g_iZombieClass[client] = temp_checker.dataID;
+            /// PRE SELECT
+            int classz = 1;
+            Action result = Plugin_Continue;
+            Call_StartForward(g_hForwardOnClassPreSelect);
+            Call_PushCell(client);
+            Call_PushCellRef(classz);
+            Call_Finish(result);
+            // 
+            if (result == Plugin_Changed)
+            {
+                g_iZombieClass[client] = classz;
+            } else {
+                g_iZombieClass[client] = temp_checker.dataID;
+            }
+            int zm_id = FindZombieIndex(g_iZombieClass[client]);
+            g_esZombieClass classy;
+            g_aZombieClass.GetArray(zm_id, classy, sizeof(classy));
 
             g_bGhost[client] = false;
             setZombieClassParameters(client);
             AssignPlayerAbilities(client);
-            callZombieSelected(client, temp_checker.dataID);
+            callZombieSelected(client, g_iZombieClass[client]);
             
-            CPrintToChat(client,"%t","Random Zombie class",temp_checker.dataName);
+            CPrintToChat(client,"%t","Random Zombie class",classy.dataName);
             
             g_hTimerGhostHint[client] = CreateTimer( 1.0, ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
         }

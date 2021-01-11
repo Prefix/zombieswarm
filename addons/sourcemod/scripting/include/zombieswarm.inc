@@ -37,6 +37,10 @@ forward void ZS_OnAbilityButtonReleased(int client, int playerability_id);
 forward void ZS_OnAbilityStarted(int client, int playerability_id);
 forward void ZS_OnCooldownStarted(int client, int playerability_id);
 forward void ZS_OnCooldownEnded(int client, int playerability_id);
+forward Action ZS_ClassPreSelect(int client, int &classid);
+
+native int ZS_GetRandomZombieClass();
+native bool ZS_IsClientZombie(int client);
 
 methodmap ZMPlayer {
     // Constructor
@@ -224,5 +228,3 @@ methodmap PlayerAbility  {
     public native void ForceCooldownEnd();
 }
 
-native int ZS_GetRandomZombieClass();
-native bool ZS_IsClientZombie(int client);

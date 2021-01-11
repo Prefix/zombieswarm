@@ -125,6 +125,7 @@ public int InitForwards() {
     //g_hForwardOnAbilityFinished = CreateGlobalForward("ZS_OnAbilityFinished", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardOnAbilityCDStarted = CreateGlobalForward("ZS_OnCooldownStarted", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardOnAbilityCDEnded = CreateGlobalForward("ZS_OnCooldownEnded", ET_Ignore, Param_Cell, Param_Cell);
+    g_hForwardOnClassPreSelect = CreateGlobalForward("ZS_ClassPreSelect", ET_Event, Param_Cell, Param_CellByRef);
 }
 
 public int nativeIsClientZombie(Handle plugin, int numParams)

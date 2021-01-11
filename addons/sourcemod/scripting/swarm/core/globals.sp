@@ -36,6 +36,7 @@ Handle g_hForwardZombieRightClick = null;
 Handle g_hForwardZSOnLoaded = null;
 Handle g_hForwardAbilityButtonPressed = null;
 Handle g_hForwardAbilityButtonReleased = null;
+Handle g_hForwardOnClassPreSelect = null;
 // TODO: When we start implenting abilities
 Handle g_hForwardOnAbilityStarted = null;
 //Handle g_hForwardOnAbilityFinished = null;
