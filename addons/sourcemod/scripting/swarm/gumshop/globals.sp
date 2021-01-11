@@ -105,6 +105,7 @@ int g_iRegisteredPlayerRebuy = 0;
 Handle g_hForwardOnPreBuyItem;
 Handle g_hForwardOnBuyItem;
 Handle g_hForwardOnShopLoaded;
+Handle g_hForwardOnRemovePlayerItem;
 
 #define DEFAULT_XP_COST 0
 #define DEFAULT_RB_P_COST 0

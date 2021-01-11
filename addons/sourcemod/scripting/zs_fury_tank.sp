@@ -26,7 +26,7 @@ public Plugin myinfo =
 ZombieClass registeredClass;
 ZombieAbility abilityRage;
 
-Handle timerFury[MAXPLAYERS + 1];
+bool timerFury[MAXPLAYERS + 1];
 Handle timerFuryEffect[MAXPLAYERS + 1];
 
 int fireSprite, haloSprite;
@@ -130,9 +130,7 @@ public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcas
     if ( !UTIL_IsValidAlive(client) )
         return;
         
-    if (timerFury[client] != null) {
-        delete timerFury[client];
-    }
+    timerFury[client] = false;
     
     if (timerFuryEffect[client] != null) {
         delete timerFuryEffect[client];
@@ -150,9 +148,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     if ( !UTIL_IsValidClient(victim) )
         return;
         
-    if (timerFury[victim] != null) {
-        delete timerFury[victim];
-    }
+    timerFury[victim] = false;
     
     if (timerFuryEffect[victim] != null) {
         delete timerFuryEffect[victim];
@@ -185,61 +181,38 @@ public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast
     return Plugin_Continue;
 }
 
-public void OnClientPostAdminCheck(int client)
+public void OnClientPutInServer(int client)
 {
-    
-    SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
-    SDKHook(client, SDKHook_TraceAttack, onTraceAttack);
+    if ( UTIL_IsValidClient(client) )
+        SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
 }
 
 public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-    if ( !UTIL_IsValidClient(victim) )
+    PrintToChatAll("pass 1");
+    if (!UTIL_IsValidAlive(attacker))
         return Plugin_Continue;
-        
-    if ( !UTIL_IsValidClient(attacker) )
+    PrintToChatAll("pass 2");
+    if (!UTIL_IsValidClient(victim))
         return Plugin_Continue;
-        
+    PrintToChatAll("pass 3");
     if (victim == attacker)
         return Plugin_Continue;
+    PrintToChatAll("pass 4");
+    ZMPlayer victimplayer = ZMPlayer(victim);
+
+    if ( victimplayer.ZombieClass != registeredClass.ID )
+        return Plugin_Continue;
+    PrintToChatAll("pass 5");
+    if ( victimplayer.Team != CS_TEAM_T)
+        return Plugin_Continue;
+    PrintToChatAll("pass 6");
+    if (!timerFury[victim])
+        return Plugin_Handled;
     
-    ZMPlayer victimplayer = ZMPlayer(victim);
-
-    if ( victimplayer.ZombieClass != registeredClass.ID )
-        return Plugin_Continue;
+    damage *= 0.1;
         
-    if ( victimplayer.Team != CS_TEAM_T)
-        return Plugin_Continue;
-        
-    if (timerFury[victim] != null)
-        return Plugin_Handled;
-        
-    return Plugin_Continue;
-}
-
-public Action onTraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
-{
-    if ( !UTIL_IsValidClient(victim) )
-        return Plugin_Continue;
-        
-    if ( !UTIL_IsValidClient(attacker) )
-        return Plugin_Continue;
-        
-    if (victim == attacker)
-        return Plugin_Continue;
-        
-    ZMPlayer victimplayer = ZMPlayer(victim);
-
-    if ( victimplayer.ZombieClass != registeredClass.ID )
-        return Plugin_Continue;
-        
-    if ( victimplayer.Team != CS_TEAM_T)
-        return Plugin_Continue;
-        
-    if (timerFury[victim] != null)
-        return Plugin_Handled;
-        
-    return Plugin_Continue;
+    return Plugin_Changed;
 }
 
 public void OnClientDisconnect(int client)
@@ -247,8 +220,7 @@ public void OnClientDisconnect(int client)
     if ( !IsClientInGame(client) )
         return;
 
-    if (timerFury[client] != null)
-        delete timerFury[client];
+    timerFury[client] = false;
     
     if (timerFuryEffect[client] != null) 
         delete timerFuryEffect[client];
@@ -323,8 +295,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     PlayerAbility ability = view_as<PlayerAbility>(ability_id);
     if (ability.State != stateRunning)
         return;     
-    if (timerFury[client] != null)
-        delete timerFury[client];
+    timerFury[client] = true;
     
     UTIL_Fade(client, 1, 1, {204, 0, 0, 150});
     
@@ -391,7 +362,7 @@ public void ZS_OnCooldownStarted(int client, int ability_id) {
     SetEntityRenderColor(client, 255, 255, 255, 255);
     
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zSpeed.FloatValue);
-    
+    timerFury[client] = false;
     if (timerFuryEffect[client] != null) {
         delete timerFuryEffect[client];
     }

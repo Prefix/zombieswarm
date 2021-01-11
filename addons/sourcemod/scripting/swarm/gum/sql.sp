@@ -47,7 +47,7 @@ public void SaveClientData(int client) {
 void ExecuteTopTen(int client)
 {
     char sQuery[ 256 ]; 
-    Format( sQuery, sizeof( sQuery ), "SELECT `player_name`, `player_level`, `player_unlocks` FROM `gum` ORDER BY `player_unlocks` DESC LIMIT 10;" );
+    Format( sQuery, sizeof( sQuery ), "SELECT `player_name`,`player_total_reborns` FROM `prestige_players` ORDER BY `player_total_reborns` DESC LIMIT 10;" );
     conDatabase.Query( queryShowTopTableCallback, sQuery, client);
 }
 
@@ -208,21 +208,21 @@ public void queryShowTopTableCallback(Database db, DBResultSet results, const ch
             return;
         
         char name[64], szInfo[128];
-        int level, unlocks;
+        int level;
+        //unlocks;
 
         Menu panel = new Menu(top10PanelHandler);
         panel.SetTitle( "%t", "Menu title: Top 10 players" );
 
         while ( results.FetchRow() )
         {
-            int fieldName, fieldLevel, fieldUnlocks;
+            int fieldName, fieldLevel;
+            //, fieldUnlocks;
             results.FieldNameToNum("player_name", fieldName);
-            results.FieldNameToNum("player_level", fieldLevel);
-            results.FieldNameToNum("player_unlocks", fieldUnlocks);
+            results.FieldNameToNum("player_total_reborns", fieldLevel);
             
             results.FetchString( fieldName, name, sizeof(name) );
             level = results.FetchInt(fieldLevel);
-            unlocks = results.FetchInt(fieldUnlocks);
             
             ReplaceString(name, sizeof(name), "&lt;", "<");
             ReplaceString(name, sizeof(name), "&gt;", ">");
@@ -230,7 +230,7 @@ public void queryShowTopTableCallback(Database db, DBResultSet results, const ch
             ReplaceString(name, sizeof(name), "&#61;", "=");
             ReplaceString(name, sizeof(name), "&#42;", "*");
             
-            Format( szInfo, sizeof( szInfo ), "%t", "Menu option: Player format", name, level, unlocks, getMaxPlayerUnlocksByLevel(level) );
+            Format( szInfo, sizeof( szInfo ), "%t", "Menu option: Player format", name, level);
 
             panel.AddItem("panel_info", szInfo);
         }

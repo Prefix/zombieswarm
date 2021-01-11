@@ -207,7 +207,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     if (ability.State != stateRunning)
         return;
     
-    UTIL_Fade(client, 1, 1, {255, 255, 255, 150});
+    UTIL_Fade(client, 1, 1, {255, 255, 255, 50});
     
     // Make invisible zombie
     hasInvisibility[client] = true;  

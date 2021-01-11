@@ -31,6 +31,8 @@ forward Action GUMShop_OnPreBuyItem(int client, int item);
 // Return Plugin_Stop on 3rd party plugins when buying to enable buying.
 forward Action GUMShop_OnBuyItem(int client, int item);
 
+forward void GUMShop_OnPlayerRemoveItem(int client, int item);
+
 enum g_eItemBuy {
     itemBuyOnce,
     itemBuyOnceMap,
@@ -118,3 +120,4 @@ methodmap GumItem {
     public native void GetUnique(char[] text, int size);
     public native void GetUniqueCategory(char[] text, int size);
 }
+native int GumPlayerShopItem_GetByUnique(int client, const char[] unique);

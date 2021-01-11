@@ -1308,6 +1308,7 @@ public int Native_PlayerAbility_AbilityStarted(Handle plugin, int numParams)
         CreateDataTimer(0.1, Timer_SetOnCooldown, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
         pack.WriteCell(client);
         pack.WriteCell(ability_id);
+        
     }
     
     Call_StartForward(g_hForwardOnAbilityStarted);
@@ -1348,6 +1349,7 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
     CreateDataTimer(0.1, Timer_SetOnIdle, pack, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
     pack.WriteCell(client);
     pack.WriteCell(ability_id);
+ 
 
     Call_StartForward(g_hForwardOnAbilityCDStarted);
     Call_PushCell(client);
@@ -1358,12 +1360,13 @@ public int Native_PlayerAbility_AbilityStartedNoDuration(Handle plugin, int numP
 
 public Action Timer_SetOnIdle(Handle timer, DataPack pack)
 {
-    if (g_bRoundEnded) {
-        return Plugin_Stop;
-    }
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
+    
+    if (g_bRoundEnded) {
+        return Plugin_Stop;
+    }
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
     if (temp_checkerx == -1)
     {
@@ -1400,12 +1403,13 @@ public Action Timer_SetOnIdle(Handle timer, DataPack pack)
 }
 public Action Timer_SetOnCooldown(Handle timer, DataPack pack)
 {
-    if (g_bRoundEnded) {
-        return Plugin_Stop;
-    }
     pack.Reset();
     int client = pack.ReadCell();
     int ability_id = pack.ReadCell();
+    if (g_bRoundEnded) {
+        return Plugin_Stop;
+    }
+
     int temp_checkerx = FindPlayerAbilityIndex(ability_id);
     if (temp_checkerx == -1)
     {

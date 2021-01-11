@@ -400,7 +400,7 @@ public Action sayCommand(int client, int args)
         
         return Plugin_Handled;
     }
-    else if (( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
+    else if (( StrEqual(sArg1, "!top10") || StrEqual(sArg1, "/top10") || StrEqual(sArg1, "/top") || StrEqual(sArg1, "/top") || StrEqual(sArg1, "!top") || StrEqual(sArg1, "top10")) && GetConVarInt(cvarEnableTop10) )
     {
         ExecuteTopTen(client);
         
@@ -776,16 +776,16 @@ public void giveWeaponSelection(int client, int selection, int strip)
         data.WriteCell(GetClientSerial(client)); 
         data.WriteCell(weapon); 
         data.WriteCell(AmmoAmount); 
-        data.Reset(); 
 
         RequestFrame(SetWeaponAmmo, data); 
     }
 }
 public void SetWeaponAmmo(DataPack data) {  
+    data.Reset();
     int client = GetClientFromSerial(data.ReadCell()); 
     int weapon = data.ReadCell(); 
     int ammo = data.ReadCell(); 
-    data.Close(); 
+    delete data;
     if (!UTIL_IsValidAlive(client)) return;
     if (weapon < 1) return;
 

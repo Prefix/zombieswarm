@@ -1051,7 +1051,7 @@ void GiveHappyHourBonus(int client, typesBonus type, any data = -1)
                         while (tempReward.Damage >= tempBonus.Damage) {
                             tempReward.Damage -= tempBonus.Damage;
                             setPlayerUnlocks(client, pUnlocks[client] + tempBonus.XP );    
-                            //CPrintToChat(client, "[Happy hour#1 %s] Gained %i for making damage", tempBonus.Unique, tempBonus.XP);            }
+                            CPrintToChat(client, "[Happy hour#1 %s] Gained %i for making damage", tempBonus.Unique, tempBonus.XP);
                         }
                         g_aPlayerRewardDamage.SetArray(z, tempReward, sizeof(tempReward));
                         break;
@@ -1067,11 +1067,11 @@ void GiveHappyHourBonus(int client, typesBonus type, any data = -1)
                 while (reward.Damage >= tempBonus.Damage) {
                     reward.Damage -= tempBonus.Damage;
                     setPlayerUnlocks(client, pUnlocks[client] + tempBonus.XP );
-                    //CPrintToChat(client, "[Happy hour#2 %s] Gained %i for making damage", tempBonus.Unique, tempBonus.XP);
+                    CPrintToChat(client, "[Happy hour#2 %s] Gained %i for making damage", tempBonus.Unique, tempBonus.XP);
                 }
                 g_aPlayerRewardDamage.PushArray(reward, sizeof(reward)); 
             } else {
-                //CPrintToChat(client, "[Happyhour %s] Gained %i for %s", tempBonus.Unique, tempBonus.XP, type == configKills ? "killing" : "win round");
+                CPrintToChat(client, "[Happyhour %s] Gained %i for %s", tempBonus.Unique, tempBonus.XP, type == configKills ? "killing" : "win round");
                 setPlayerUnlocks(client, pUnlocks[client] + tempBonus.XP );
             }
         }
@@ -1273,7 +1273,7 @@ void XPonHurt(int attacker, int victim, int damage)
                 while (tempReward.Damage >= tempConfig.Damage) {
                     tempReward.Damage -= tempConfig.Damage;
                     setPlayerUnlocks(attacker, pUnlocks[attacker] + tempConfig.XP );    
-                    //CPrintToChat(attacker, "[Damage#1 %s] Gained %i for making damage", tempConfig.Unique, tempConfig.XP);
+                    CPrintToChat(attacker, "[Damage#1 %s] Gained %i for making damage", tempConfig.Unique, tempConfig.XP);
                 }
                 g_aPlayerRewardDamage.SetArray(y, tempReward, sizeof(tempReward));
                 break;
@@ -1289,7 +1289,7 @@ void XPonHurt(int attacker, int victim, int damage)
         while (reward.Damage >= tempConfig.Damage) {
             reward.Damage -= tempConfig.Damage;
             setPlayerUnlocks(attacker, pUnlocks[attacker] + tempConfig.XP );
-            //CPrintToChat(attacker, "[Damage#2 %s] Gained %i for making damage", tempConfig.Unique, tempConfig.XP);
+            CPrintToChat(attacker, "[Damage#2 %s] Gained %i for making damage", tempConfig.Unique, tempConfig.XP);
         }
         g_aPlayerRewardDamage.PushArray(reward, sizeof(reward)); 
     }
@@ -1323,7 +1323,7 @@ void RoundWinnerBonus(int winner)
                     continue;
                 if (tempConfig.Alive && IsPlayerAlive(client))
                     continue;
-                //CPrintToChat(client, "[Round end %s] Gained %i for winning round", tempConfig.Unique, tempConfig.XP);
+                CPrintToChat(client, "[Round end %s] Gained %i for winning round", tempConfig.Unique, tempConfig.XP);
                 setPlayerUnlocks(client, pUnlocks[client] + tempConfig.XP );
             }
         }
@@ -1360,7 +1360,7 @@ void MostDamageBonus(int winner)
                 }
             }
             if (UTIL_IsValidClient(mvp)) {
-                //CPrintToChatAll("[Most damage %s] %N gained %i for most damage", tempConfig.Unique, mvp, tempConfig.XP);
+                CPrintToChatAll("[Most damage %s] %N gained %i for most damage", tempConfig.Unique, mvp, tempConfig.XP);
                 setPlayerUnlocks(mvp, pUnlocks[mvp] + tempConfig.XP );
             }
         }
@@ -1411,7 +1411,7 @@ void XPonKills(int attacker)
                 continue;
             if (g_iPlayersOnline > tempConfig.MaxPlayers)
                 continue;
-            //CPrintToChat(attacker, "[Kill %s] Gained %i for killing", tempConfig.Unique, tempConfig.XP);
+            CPrintToChat(attacker, "[Kill %s] Gained %i for killing", tempConfig.Unique, tempConfig.XP);
             setPlayerUnlocks(attacker, pUnlocks[attacker] + tempConfig.XP );
         }
     }

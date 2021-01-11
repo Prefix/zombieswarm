@@ -43,12 +43,35 @@ void InitMethodMaps() {
     CreateNative("GumItem.GetUnique", Native_GumItem_GetUnique);
     CreateNative("GumItem.GetUniqueCategory", Native_GumItem_GetUniqueCategory);
 }
+
+void InitNatives() {
+    CreateNative("GumPlayerShopItem_GetByUnique", Native_GumItem_FetchByUnique);
+}
 void InitForwards() {
     g_hForwardOnShopLoaded = CreateGlobalForward("GUMShop_OnLoaded", ET_Ignore);
     g_hForwardOnPreBuyItem = CreateGlobalForward("GUMShop_OnPreBuyItem", ET_Event, Param_Cell, Param_Cell);
     g_hForwardOnBuyItem = CreateGlobalForward("GUMShop_OnBuyItem", ET_Event, Param_Cell, Param_Cell);
+    g_hForwardOnRemovePlayerItem = CreateGlobalForward("GUMShop_OnPlayerRemoveItem", ET_Ignore, Param_Cell, Param_Cell);
 }
+public int Native_GumItem_FetchByUnique(Handle plugin, int numParams)
+{
+    int client = view_as<int>(GetNativeCell(1));
+    char uniquename[GUM_MAX_CATEGORY_UNIQUE];
+    GetNativeString(2, uniquename, sizeof(uniquename));
 
+    int found = -1;
+    for (int i = 0; i < g_aPlayerItems.Length; i++)
+    {
+        ShopPlayerItem tempItem;
+        g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem)); 
+        if (StrEqual(tempItem.ItemUnique, uniquename, false) && tempItem.Client == client)
+        {
+            found = tempItem.ID;
+            break;
+        }
+    }
+    return found;
+}
 // Natives for MethodMap GumItem
 public int Native_GumItem_Constructor(Handle plugin, int numParams)
 {
