@@ -83,9 +83,10 @@ ArrayList g_aPlayerItemsRebuy;
     for (int i = 0; i < g_aCategories.Length; i++)
     {
         g_aCategories.GetArray(i, categories);
-        PrintToServer("Unique: %s", categories.dataID);
-        PrintToServer("Name: %s", categories.dataID);
-        PrintToServer("MotherCategory: %s", categories.dataID);
+        PrintToServer("Unique: %s", categories.Unique);
+        PrintToServer("Name: %s", categories.Name);
+        PrintToServer("MotherCategory: %s", categories.MotherCategory);
+        PrintToServer("SubCategories.Length: %d", categories.SubCategories.Length);
         /*
         Subdirectoryloop
         ShopCategory subcat;
@@ -106,19 +107,43 @@ ArrayList g_aPlayerItemsRebuy;
     {
         g_aItems.GetArray(i, item);
         PrintToServer("index: %d", i);
-        PrintToServer("ID: %d", i);
-        PrintToServer("\: %d", i);
+        PrintToServer("ID: %d", item.ID);
+        PrintToServer("Unique: %s", item.Unique);
+        PrintToServer("UniqueCategory: %s", item.UniqueCategory);
+        PrintToServer("Name: %s", item.Name);
+        PrintToServer("Description: %s", item.Description);
+        PrintToServer("XPCost: %d", item.XPCost);
+        PrintToServer("RBPointsCost: %d", item.RBPointsCost);
+        PrintToServer("EvoPointsCost: %d", item.EvoPointsCost);
+        PrintToServer("NirvanaPointsCost: %d", item.NirvanaPointsCost);
+        PrintToServer("LevelRequired: %d", item.LevelRequired);
+        PrintToServer("RebornRequired: %d", item.RebornRequired);
+        PrintToServer("EvolutionRequired: %d", item.EvolutionRequired);
+        PrintToServer("NirvanaRequired: %d", item.NirvanaRequired);
+        PrintToServer("Keep: %d", item.Keep);
+        PrintToServer("Rebuy: %d", item.Rebuy);
+        PrintToServer("AdminFlagOnly: %s", item.AdminFlagOnly ? "true" : "false");
+        PrintToServer("AdminFlags: %s", item.AdminFlags);
+        PrintToServer("AdminFlagDesc: %d", item.AdminFlagDesc);
+        PrintToServer("RebuyTimes: %d", item.RebuyTimes);
+        PrintToServer("Upgradeable: %d", item.Upgradeable);
+        PrintToServer("Upgrades.Length: %d", item.Upgrades.Length);
 
         PrintToServer("==============================================");
     }
-    PrintToServer("g_esPlayerAbility");
+    PrintToServer("g_aPlayerItemsRebuy");
     PrintToServer("==============================================");
-    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    for (int i = 0; i < g_aPlayerItemsRebuy.Length; i++)
     {
-        g_esPlayerAbility zombiex;
-        g_aPlayerAbility.GetArray(i, zombiex);
-        PrintToServer("paID: %d", i);
-        PrintToServer("paID: %d", zombiex.paID);
+        ShopPlayerRebuy rebuy;
+        g_aPlayerItemsRebuy.GetArray(i, rebuy);
+        PrintToServer("index: %d", i);
+        PrintToServer("ID: %d", rebuy.ID);
+        PrintToServer("SteamID: %s", rebuy.SteamID);
+        PrintToServer("ItemID: %d", rebuy.ItemID);
+        PrintToServer("ItemUnique: %s", rebuy.ItemUnique);
+        PrintToServer("RebuyTimes: %d", rebuy.RebuyTimes);
+        PrintToServer("RebuyType: %d", rebuy.RebuyType);
         PrintToServer("==============================================");
     }
 }

@@ -147,6 +147,7 @@ public void querySelectSavedDataCallback(Database db, DBResultSet results, const
         int unlocks = pack.ReadCell();
         pack.ReadString(sKey, sizeof(sKey));
         pack.ReadString(pName, sizeof(pName));
+        delete pack;
 
         if (resultRows > 0) {
             int dbPurchased = 0;
