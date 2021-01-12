@@ -34,10 +34,93 @@ public void OnPluginStart()
     RegConsoleCmd("sm_shop", Command_Shop);
     RegConsoleCmd("sm_ul", Command_Shop);
     RegConsoleCmd("sm_unlocks", Command_Shop);
+    RegAdminCmd("sm_shopdebug", Command_ShopDebug, ADMFLAG_ROOT, "Some useful debug info");
     LoadShopConfig();
     // Database
     databaseInit();
     HookEvent("round_end", Event_OnRoundEnd);
+}
+
+public Action Command_ShopDebug(int client, int args)
+{
+/*
+ArrayList g_aCategories;
+ArrayList g_aItems;
+ArrayList g_aPlayerItems;
+ArrayList g_aPlayerItemsRebuy;
+
+    g_aItems = new ArrayList(sizeof(ShopItem));
+    g_aCategories = new ArrayList(sizeof(ShopCategory));
+    g_aPlayerItems = new ArrayList(sizeof(ShopPlayerItem));
+    g_aPlayerItemsRebuy = new ArrayList(sizeof(ShopPlayerRebuy));
+
+ // we do not remove these after disconnect*/
+    PrintToServer("ShopPlayerItem");
+    PrintToServer("==============================================");
+    ShopPlayerItem pitem;
+    
+    for (int i = 0; i < g_aPlayerItems.Length; i++)
+    {
+        g_aPlayerItems.GetArray(i, pitem);
+        bool invalid = false;
+        if (!UTIL_IsValidClient(pitem.Client))
+            invalid = true;
+        PrintToServer("index: %d", i);
+        if (invalid)
+            PrintToServer("item.Client: %d [INVALID PLAYER]", pitem.Client);
+        else
+            PrintToServer("item.Client: %d [%N]", pitem.Client, pitem.Client);
+        PrintToServer("ItemID: %d", pitem.ItemID);
+        PrintToServer("ItemUnique: %s", pitem.ItemUnique);
+        PrintToServer("RebuyID: %d", pitem.RebuyID);
+        PrintToServer("Keep: %d", pitem.Keep);
+        PrintToServer("Upgrades: %d", pitem.Upgrades);
+        PrintToServer("==============================================");
+    }
+    PrintToServer("g_aCategories");
+    PrintToServer("==============================================");
+    ShopCategory categories;
+    for (int i = 0; i < g_aCategories.Length; i++)
+    {
+        g_aCategories.GetArray(i, categories);
+        PrintToServer("Unique: %s", categories.dataID);
+        PrintToServer("Name: %s", categories.dataID);
+        PrintToServer("MotherCategory: %s", categories.dataID);
+        /*
+        Subdirectoryloop
+        ShopCategory subcat;
+        for (int i = 0; i < categories.SubCategories.Length; i++)
+        {
+            categories.SubCategories.GetArray(i, temp_ability, sizeof(temp_ability)); 
+            PrintToServer("abilityID[%d]: %d",i, temp_ability.paID);
+            PrintToServer("Unique: %s", item.ItemUnique);
+            PrintToServer("Name: %s", item.ItemUnique);
+            PrintToServer("MotherCategory: %s", item.ItemUnique);
+        }*/
+        PrintToServer("==============================================");
+    }
+    PrintToServer("g_aItems");
+    PrintToServer("==============================================");
+    ShopItem item;
+    for (int i = 0; i < g_aItems.Length; i++)
+    {
+        g_aItems.GetArray(i, item);
+        PrintToServer("index: %d", i);
+        PrintToServer("ID: %d", i);
+        PrintToServer("\: %d", i);
+
+        PrintToServer("==============================================");
+    }
+    PrintToServer("g_esPlayerAbility");
+    PrintToServer("==============================================");
+    for (int i = 0; i < g_aPlayerAbility.Length; i++)
+    {
+        g_esPlayerAbility zombiex;
+        g_aPlayerAbility.GetArray(i, zombiex);
+        PrintToServer("paID: %d", i);
+        PrintToServer("paID: %d", zombiex.paID);
+        PrintToServer("==============================================");
+    }
 }
 
 

@@ -87,6 +87,7 @@ public void OnMapStart()
     Format(sPath, sizeof(sPath), "sound/%s", SOUND_INVISIBILITY);
     
     AddFileToDownloadsTable( sPath );
+    PrecacheModel("models/player/custom_player/caleon1/mummy/mummy.mdl");
 }
 
 public void OnClientPostAdminCheck(int client)

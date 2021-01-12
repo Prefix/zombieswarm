@@ -69,6 +69,7 @@ public void OnMapStart() {
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_1.mp3" );
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_2.mp3" );
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_3.mp3" );
+    PrecacheModel("models/player/custom/hunter/hunter.mdl");
 }
 
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 

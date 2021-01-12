@@ -158,7 +158,7 @@ public Action Command_SwarmTest(int client, int args)
         PrintToServer("dataDescription: %s", zombie.dataDescription);
         PrintToServer("dataModel: %s", zombie.dataModel);
         PrintToServer("dataArms: %s", zombie.dataArms);
-        PrintToServer("dataExcluded: %d", zombie.dataExcluded ? "true" : "false");
+        PrintToServer("dataExcluded: %s", zombie.dataExcluded ? "true" : "false");
         PrintToServer("dataUniqueName: %s", zombie.dataUniqueName);
         PrintToServer("==============================================");
     }
@@ -1415,6 +1415,10 @@ public Action timerZombieRespawnCallback( Handle timer, any client )
         return Plugin_Continue;
     }
     char sHintText[196];
+    /*int spawntime = (IsClientVip(client)) ? GetConVarInt(g_cRespawnTimeZVip) : GetConVarInt(g_cRespawnTimeZ);
+    if (GetClientTeam(client) == CS_TEAM_T && (spawntime+1) > g_iZombieRespawnLeft[client])
+        g_iZombieRespawnLeft[client] = spawntime-1;
+*/
     if (g_iZombieRespawnLeft[client] == 0) {
         CS_RespawnPlayer( client );
         Format(sHintText,sizeof(sHintText),"%t","Hint: Go Go Go");

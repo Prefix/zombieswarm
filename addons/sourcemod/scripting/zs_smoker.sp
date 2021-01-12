@@ -317,6 +317,7 @@ public void OnMapStart()
     Format(sPath, sizeof(sPath), "sound/%s", SOUND_TONGUE);
     
     AddFileToDownloadsTable( sPath );
+    PrecacheModel("models/player/custom_player/borodatm.ru/l4d2/smoker.mdl");
     
 }
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 

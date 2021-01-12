@@ -119,6 +119,7 @@ public void OnMapStart()
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_1.mp3" );
     PrecacheSoundAny( "swarm/skills/boomer_death_ability_2.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_2.mp3" );
+    PrecacheModel("models/player/custom_player/borodatm.ru/l4d2/boomer.mdl");
 }
 
 public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)

@@ -550,7 +550,7 @@ public int Native_ZombieClass_ExcludedSet(Handle plugin, int numParams)
     }
     g_esZombieClass tempZombie;
     g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
-    tempZombie.dataAttackSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    tempZombie.dataExcluded = view_as<bool>(value);
     g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return 0;
 }
@@ -625,7 +625,7 @@ public int Native_ZombieClass_DamageSet(Handle plugin, int numParams)
     }
     g_esZombieClass tempZombie;
     g_aZombieClass.GetArray(item_id, tempZombie, sizeof(tempZombie)); 
-    tempZombie.dataAttackSpeed = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
+    tempZombie.dataDamage = view_as<float>(value) < 0.1 ? 0.1 : view_as<float>(value);
     g_aZombieClass.SetArray(item_id, tempZombie, sizeof(tempZombie));
     return 0;
 }

@@ -135,6 +135,7 @@ public Action onTakeDamage(int victim, int &attacker, int &inflictor, float &dam
     }*/
     if (changed) 
     {
+        //PrintToChatAll("[DEBUG] '%N' daro dviguba UL DMG", attacker);
         damage = damage*DamageBoost;
         return Plugin_Changed;
     }

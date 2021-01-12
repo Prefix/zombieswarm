@@ -35,7 +35,7 @@ bool tankAlive;
 bool tankReady = true;
 Handle timerNextTank;
 
-#define SPAWNTIME 10.0
+#define SPAWNTIME 37.0
 
 ConVar zHP, zDamage, zSpeed, zGravity, zExcluded, zAttackSpeed, zCooldown, zDuration;
 bool round_end;
@@ -60,6 +60,7 @@ public void OnPluginStart()
     zDuration = AutoExecConfig_CreateConVar("zs_tank_duration","4.0","How long in second Tank using his ability");
     ZS_EndConfig();
 }
+
 public void ZS_OnLoaded() {
     // We are registering zombie
     registeredClass = ZombieClass("tank");
@@ -101,6 +102,7 @@ public Action ZS_ClassPreSelect(int client, int &classId)
         tankAlive = true;
         tankReady = false;
         currentank = client;
+        PrintToChatAll("Player '%N' is now a TANK.", client);
         return Plugin_Changed;
     }
     return Plugin_Continue;
@@ -140,6 +142,7 @@ public void OnMapStart()
     
     UTIL_PrecacheParticle("firework_crate_ground_low_03");
     UTIL_PrecacheParticle("slime_splash_01");
+    PrecacheModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank.mdl");
 }
 
 public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
