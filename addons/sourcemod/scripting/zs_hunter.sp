@@ -3,7 +3,6 @@
 #include <sdktools>
 #include <zombieswarm>
 #include <autoexecconfig>
-#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -63,9 +62,9 @@ public void ZS_OnLoaded() {
 }
 
 public void OnMapStart() {
-    PrecacheSoundAny( "swarm/skills/hunter_ability_1.mp3" ,true);
-    PrecacheSoundAny( "swarm/skills/hunter_ability_2.mp3" ,true);
-    PrecacheSoundAny( "swarm/skills/hunter_ability_3.mp3" ,true);
+    PrecacheSound( "swarm/skills/hunter_ability_1.mp3" ,true);
+    PrecacheSound( "swarm/skills/hunter_ability_2.mp3" ,true);
+    PrecacheSound( "swarm/skills/hunter_ability_3.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_1.mp3" );
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_2.mp3" );
     AddFileToDownloadsTable( "sound/swarm/skills/hunter_ability_3.mp3" );
@@ -157,7 +156,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
     int randomnumber = GetRandomInt(1, MAX_ABILITY_SOUNDS);
     char randomsound[PLATFORM_MAX_PATH];
     Format(randomsound, sizeof(randomsound), "swarm/skills/hunter_ability_%i.mp3", randomnumber);
-    EmitSoundToAllAny(randomsound, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(randomsound, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 
 }
 

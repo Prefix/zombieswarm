@@ -3,7 +3,6 @@
 #include <sdktools>
 #include <zombieswarm>
 #include <autoexecconfig>
-#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -95,10 +94,12 @@ public void OnClientDisconnect(int client)
 
 public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast) {
     KillBeamTimer();
+    return Plugin_Continue;
 }
 
 public Action eventRoundEnd(Event event, const char[] name, bool dontBroadcast) {
     KillBeamTimer();
+    return Plugin_Continue;
 }
 
 public void KillBeamTimer() {
@@ -296,7 +297,7 @@ public Action BeamTimer(Handle timer, any client)
     
     int chance = zPullRopeChance.IntValue;
     if (chance < 2) chance = 2;
-    if (GetRandomInt(1, chance) == 1) EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    if (GetRandomInt(1, chance) == 1) EmitSoundToAll(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 
     TE_SetupBeamPoints( Origin2, targetorigin2, LaserCache, 0, 0, 0, 0.11, zPullRopeWidth.FloatValue, zPullRopeWidth.FloatValue, 0, 0.0, BeamColor, 0);
     TE_SendToAll();
@@ -309,7 +310,7 @@ public Action BeamTimer(Handle timer, any client)
 
 public void OnMapStart()
 {
-    PrecacheSoundAny( SOUND_TONGUE, true);
+    PrecacheSound( SOUND_TONGUE, true);
     LaserCache = PrecacheModel("materials/sprites/laserbeam.vmt");
     
     // Format sound
@@ -414,7 +415,7 @@ public void ZS_OnAbilityStarted(int client, int ability_id) {
         
     SmokerTimer[client] = CreateTimer( 0.1, BeamTimer, client);
 
-    EmitSoundToAllAny(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(SOUND_TONGUE, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
         
     pullTarget[client] = target; 
 }

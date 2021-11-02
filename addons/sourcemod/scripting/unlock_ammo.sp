@@ -6,7 +6,6 @@
 #include <gum_shop>
 #include <zombieswarm>
 #include <swarm/utils>
-#include <colorvariables>
 
 GumItem small_ammopack;
 GumItem medium_ammopack;

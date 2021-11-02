@@ -4,7 +4,6 @@
 #include <sdkhooks>
 #include <zombieswarm>
 #include <autoexecconfig>
-#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -124,7 +123,7 @@ public void OnMapStart()
     tankAlive = false;
     tankReady = true;
 
-    PrecacheSoundAny( SOUND_FURY , true);
+    PrecacheSound( SOUND_FURY , true);
     
     // Format sound
     char sPath[PLATFORM_MAX_PATH];
@@ -145,7 +144,7 @@ public void OnMapStart()
     PrecacheModel("models/player/custom_player/caleon1/l4d2_tank/l4d2_tank.mdl");
 }
 
-public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
@@ -168,7 +167,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 
     if ( !UTIL_IsValidClient(victim) )
-        return;
+        return Plugin_Continue;
 
     timerFury[victim] = false;
     
@@ -182,11 +181,13 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
         timerNextTank = CreateTimer(SPAWNTIME, TimerNextTank);
         currentank = -1;
     }
+    return Plugin_Continue;
 }
 
 public Action eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     round_end = true;
+    return Plugin_Continue;
 }
 public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
@@ -349,7 +350,7 @@ public void ZS_OnAbilityButtonPressed(int client, int ability_id) {
     TE_SetupBeamRingPoint(position, 10.0, 100.0, fireSprite, haloSprite, 0, 10, 0.2, 30.0, 0.7, view_as<int>({204,0,0,200}), 25, 0);
     TE_SendToAll();
     
-    EmitSoundToAllAny(SOUND_FURY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+    EmitSoundToAll(SOUND_FURY, client, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
     
     timerFuryEffect[client] = CreateTimer(0.5, furyEffectCallback, client, TIMER_FLAG_NO_MAPCHANGE);
     
@@ -429,4 +430,5 @@ public Action TimerNextTank(Handle timer)
     timerNextTank = null;
     
     tankReady = true;
+    return Plugin_Continue;
 }

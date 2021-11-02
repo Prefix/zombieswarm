@@ -26,10 +26,10 @@ float g_fSpawns[5][MAXPLAYERS + 1][3];
 // Files
 char g_sDownloadFilesPath[PLATFORM_MAX_PATH];
 // Timers
-Handle g_hTimerGhostHint[MAXPLAYERS + 1] = null;
+Handle g_hTimerGhostHint[MAXPLAYERS + 1] = { null, ... };
 Handle g_hTimerZombieRespawn[MAXPLAYERS + 1];
 Handle g_hTimerCountDown = null;
-Handle g_hTimerCooldown[MAXPLAYERS + 1] = null;
+Handle g_hTimerCooldown[MAXPLAYERS + 1] = { null, ... };
 // Forwards
 Handle g_hForwardZombieSelected = null;
 Handle g_hForwardZombieRightClick = null;
@@ -98,7 +98,7 @@ int g_iTotalCountdownSounds = 0;
 int gI_Players = 0;
 int defaultsoundindex = -1;
 
-float g_fNextFootstep[MAXPLAYERS + 1] = 0.0;
-float g_fNextIdle[MAXPLAYERS + 1] = 0.0;
-float g_fNextPain[MAXPLAYERS + 1] = 0.0;
-bool g_bDidHit[MAXPLAYERS + 1] = false;
+float g_fNextFootstep[MAXPLAYERS + 1] = {0.0, ...};
+float g_fNextIdle[MAXPLAYERS + 1] = {0.0, ...};
+float g_fNextPain[MAXPLAYERS + 1] = {0.0, ...};
+bool g_bDidHit[MAXPLAYERS + 1] = {false, ...};

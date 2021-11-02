@@ -72,6 +72,7 @@ public Action Event_Death(Event event, const char[] name, bool dontBroadcast) {
 	if(IsClientInGame(client)) {
 		RemoveAttachEnt(client);
 	}
+	return Plugin_Continue;
 }
 
 public bool GetAttachmentPosition(client, char[] attachment, float epos[3]) {

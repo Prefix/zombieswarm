@@ -95,11 +95,12 @@ public void OnClientDisconnect(client)
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon, int &subtype, int &cmdNum, int &tickCount, int &seed, int mouse[2])
 {
 	if (!UTIL_IsValidAlive(client) )
-		return;
+		return Plugin_Continue;
 	if (!itemEnabled[client])
-		return;
+		return Plugin_Continue;
 
 	CheckParachute(client, buttons, weapon);
+	return Plugin_Continue;
 }
 
 public Action Timer_GiveParachute(Handle timer, any client)

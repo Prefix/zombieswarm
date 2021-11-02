@@ -113,7 +113,7 @@ public void InitMethodMaps() {
     CreateNative("PlayerAbility.ForceCooldownEnd", Native_PlayerAbility_ForceCooldownEnd);
 }
 
-public int InitForwards() {
+public void InitForwards() {
     // Forwards
     g_hForwardZombieSelected = CreateGlobalForward("onZCSelected", ET_Ignore, Param_Cell, Param_Cell);
     g_hForwardZombieRightClick = CreateGlobalForward("onZRightClick", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
@@ -198,6 +198,7 @@ public int Native_ZMPlayer_XPSet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
     GUM_SetPlayerUnlocks( player.Client, GetNativeCell(2));
+    return 0;
 }
 
 public int Native_ZMPlayer_GhostGet(Handle plugin, int numParams)
@@ -212,6 +213,7 @@ public int Native_ZMPlayer_GhostSet(Handle plugin, int numParams)
 {
     ZMPlayer player = GetNativeCell(1);
     setZombieGhostMode(player.Client, GetNativeCell(2));
+    return 0;
 }
 
 public int Native_ZMPlayer_TeamGet(Handle plugin, int numParams)
@@ -229,14 +231,15 @@ public int Native_ZMPlayer_TeamSet(Handle plugin, int numParams)
 
     g_iTeam[client] = team;
     if (!UTIL_IsValidClient(client))
-        return;
+        return 0;
     if (GetClientTeam(client) == team)
-        return;
+        return 0;
 
     if (!IsPlayerAlive(client)) 
         ChangeClientTeam(client, team);
     else 
         CS_SwitchTeam(client, team);
+    return team;
 }
 
 public int Native_ZMPlayer_ZMClassGet(Handle plugin, int numParams)
@@ -254,6 +257,7 @@ public int Native_ZMPlayer_ZMClassSet(Handle plugin, int numParams)
     g_iZombieClass[client] = GetNativeCell(2);
     setZombieClassParameters(client);
     callZombieSelected(client, g_iZombieClass[client]);
+    return 0;
 }
 
 public int Native_ZMPlayer_LastButtonsGet(Handle plugin, int numParams)
@@ -268,6 +272,7 @@ public int Native_ZMPlayer_LastButtonsSet(Handle plugin, int numParams)
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     g_fLastButtons[client] = GetNativeCell(2);
+    return 0;
 }
 
 public int Native_ZMPlayer_OverrideHintGet(Handle plugin, int numParams)
@@ -282,7 +287,7 @@ public int Native_ZMPlayer_OverrideHintSet(Handle plugin, int numParams)
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     bool hint = GetNativeCell(2);
-    if (g_bOverrideHint[client] == hint) return;
+    if (g_bOverrideHint[client] == hint) return 0;
 
     if (!hint) {
         g_fHintSpeed[client] = TIMER_SPEED;
@@ -296,6 +301,7 @@ public int Native_ZMPlayer_OverrideHintSet(Handle plugin, int numParams)
     }
 
     g_bOverrideHint[client] = hint;
+    return 0;
 }
 
 public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
@@ -303,6 +309,7 @@ public int Native_ZMPlayer_OverrideHintText(Handle plugin, int numParams)
     ZMPlayer player = GetNativeCell(1);
     int client = player.Client;
     GetNativeString(2, g_sOverrideHintText[client], MAX_HINT_SIZE);
+    return 0;
 }
 
 public int Native_ZMPlayer_GetPlayerAbilityUnique(Handle plugin, int numParams)
@@ -360,7 +367,7 @@ public int Native_ZMPlayer_GetPlayerAbilities(Handle plugin, int numParams)
     /*if (!UTIL_IsValidClient(client)) {
         return false;
     }*/
-    int abilities[API_MAX_PLAYER_ABILITIES] = -1;
+    int abilities[API_MAX_PLAYER_ABILITIES] = {-1, ...};
     GetNativeArray(2, abilities, sizeof(abilities));
     int found_ab = 0;
     for (int i = 0; i < g_aPlayerAbility.Length; i++)

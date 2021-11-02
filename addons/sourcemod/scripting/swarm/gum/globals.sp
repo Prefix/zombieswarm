@@ -24,7 +24,7 @@ cvarWeaponRestriction, cvarMenuAutoReOpenTime, cvarMaxSecondary, ClientPrimaryCo
 ClientSecondaryCookie = INVALID_HANDLE;
 
 Database conDatabase = null;
-Handle menuTimer[MAXPLAYERS + 1] = null;
+Handle menuTimer[MAXPLAYERS + 1] = {null, ...};
 Handle g_hForwardOnLevelUp;
 
 int playerLevel[MAXPLAYERS + 1], pUnlocks[MAXPLAYERS + 1];

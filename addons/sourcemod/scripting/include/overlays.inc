@@ -72,7 +72,8 @@ stock Action DeleteOverlay(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client) || IsClientSourceTV(client) || IsClientReplay(client))
-		return;
+		return Plugin_Continue;
 
 	ClientCommand(client, "r_screenoverlay \"\"");
+	return Plugin_Continue;
 }

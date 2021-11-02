@@ -4,10 +4,9 @@
 #include <zombieswarm>
 #include <gum>
 #include <cstrike>
-#include <colorvariables>
+#include <multicolors>
 #include <overlays>
 #include <autoexecconfig>
-#include <emitsoundany>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -107,6 +106,7 @@ public Action Command_SwarmDebugPlayer(int client, int args)
         }
         PrintToServer("==============================================");
     }
+    return Plugin_Handled;
 }
 public Action Command_SwarmTest(int client, int args)
 {
@@ -153,7 +153,7 @@ public Action Command_SwarmTest(int client, int args)
         PrintToServer("dataSpeed: %f", zombie.dataSpeed);
         PrintToServer("dataGravity: %f", zombie.dataGravity);
         PrintToServer("dataDamage: %f", zombie.dataDamage);
-        PrintToServer("dataAttackSpeed: %df", zombie.dataAttackSpeed);
+        PrintToServer("dataAttackSpeed: %f", zombie.dataAttackSpeed);
         PrintToServer("dataName: %s", zombie.dataName);
         PrintToServer("dataDescription: %s", zombie.dataDescription);
         PrintToServer("dataModel: %s", zombie.dataModel);
@@ -202,6 +202,8 @@ public Action Command_SwarmTest(int client, int args)
         PrintToServer("paUniqueName: %s", zombiex.paUniqueName);
         PrintToServer("==============================================");
     }
+
+    return Plugin_Handled;
 }
 
 public void OnConfigsExecuted() {
@@ -375,8 +377,8 @@ public void OnMapStart()
     
     PrecacheModel(DEFAULT_ARMS);
     
-    PrecacheSoundAny("radio/terwin.wav", true);
-    PrecacheSoundAny("radio/ctwin.wav", true);
+    PrecacheSound("radio/terwin.wav", true);
+    PrecacheSound("radio/ctwin.wav", true);
     
     char overlay_ct[125], overlay_t[125];
     g_cOverlayTWin.GetString(overlay_t,sizeof(overlay_t));
@@ -517,7 +519,7 @@ public void OnMapStart()
         AcceptEntityInput(tempEnt,"kill");
     }
 }
-public Action Event_SoundPlayed(int clients[MAXPLAYERS-1], int &numClients, char[] sample, int &entity, int &iChannel, float &flVolume, int &iLevel, int &iPitch, int &iFlags) {
+public Action Event_SoundPlayed(int clients[MAXPLAYERS], int& numClients, char sample[PLATFORM_MAX_PATH], int& entity, int& channel, float& volume, int& level, int& pitch, int& flags, char soundEntry[PLATFORM_MAX_PATH], int& seed) {
     if (IsValidWeapon(entity)) {
         int owner = GetEntPropEnt(entity, Prop_Data, "m_hOwnerEntity");
         if (!UTIL_IsValidAlive(owner))
@@ -1097,8 +1099,9 @@ public int ZombieClassMenuHandler(Menu menu, MenuAction action, int client, int 
             }
         }
     }
+    return 0;
 }
-public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundFreezeEnd(Event event, const char[] name, bool dontBroadcast)
 {
     if(g_cGhostMode.BoolValue) {
         g_bGhostCanSpawn = false;
@@ -1112,7 +1115,7 @@ public Action eventRoundFreezeEnd(Event event, const char[] name, bool dontBroad
     }
 }
 
-public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
+public void eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
     
     g_iRoundKillCounter = 0;
@@ -1852,7 +1855,7 @@ stock void UTIL_LoadSound(char[] sound) {
     char soundsPath[PLATFORM_MAX_PATH];
     Format(soundsPath, PLATFORM_MAX_PATH, "sound/%s", sound);
     if (FileExists(soundsPath)) {
-        PrecacheSoundAny(sound, true);
+        PrecacheSound(sound, true);
         AddFileToDownloadsTable(soundsPath);
     }
     else {
@@ -1962,7 +1965,7 @@ void PlayDeathZombieSound(int client)
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client, SNDCHAN_VOICE);
+        EmitSoundToAll(playsound, client, SNDCHAN_VOICE);
     }
 }
 
@@ -2012,7 +2015,7 @@ public void PlayPainSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client, SNDCHAN_ITEM);
+        EmitSoundToAll(playsound, client, SNDCHAN_ITEM);
         g_fNextPain[client] = GetGameTime() + g_cPainFrequency.FloatValue;
     }
 }
@@ -2062,7 +2065,7 @@ public void PlayFootstepSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client);
+        EmitSoundToAll(playsound, client);
         g_fNextFootstep[client] = GetGameTime() + g_cFootstepFrequency.FloatValue;
     }
 }
@@ -2112,7 +2115,7 @@ public void PlayHitSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client);
+        EmitSoundToAll(playsound, client);
     }
 }
 
@@ -2160,7 +2163,7 @@ public void PlayMissSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client);
+        EmitSoundToAll(playsound, client);
     }
 }
 
@@ -2209,7 +2212,7 @@ public void PlayIdleSound(int client) {
         gotsound = true;
     }
     if (gotsound) {
-        EmitSoundToAllAny(playsound, client);
+        EmitSoundToAll(playsound, client);
         float nextidle = GetRandomFloat(g_cIdleMinFrequency.FloatValue, g_cIdleMaxFrequency.FloatValue);
         g_fNextIdle[client] = GetGameTime() + nextidle;
     }

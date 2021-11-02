@@ -4,7 +4,6 @@
 #include <sdkhooks>
 #include <zombieswarm>
 #include <autoexecconfig>
-#include <emitsoundany>
 #include <swarm/utils>
 
 #pragma semicolon 1
@@ -106,18 +105,18 @@ public void OnMapStart()
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vtf" );
     AddFileToDownloadsTable( "materials/sprites/sprite_fire01.vmt" );
 
-    PrecacheSoundAny( "swarm/skills/boomer_ability_1.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_ability_1.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_1.mp3" );
-    PrecacheSoundAny( "swarm/skills/boomer_ability_2.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_ability_2.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_2.mp3" );
-    PrecacheSoundAny( "swarm/skills/boomer_ability_3.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_ability_3.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_3.mp3" );
-    PrecacheSoundAny( "swarm/skills/boomer_ability_4.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_ability_4.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_ability_4.mp3" );
 
-    PrecacheSoundAny( "swarm/skills/boomer_death_ability_1.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_death_ability_1.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_1.mp3" );
-    PrecacheSoundAny( "swarm/skills/boomer_death_ability_2.mp3" ,true);
+    PrecacheSound( "swarm/skills/boomer_death_ability_2.mp3" ,true);
     AddFileToDownloadsTable( "sound/swarm/skills/boomer_death_ability_2.mp3" );
     PrecacheModel("models/player/custom_player/borodatm.ru/l4d2/boomer.mdl");
 }
@@ -193,7 +192,7 @@ public void explode2(float vec[3])
 
 public void boomSound(const char[] sound, const float origin[3])
 {
-    EmitSoundToAllAny(sound, SOUND_FROM_WORLD,SNDCHAN_AUTO,SNDLEVEL_NORMAL,SND_NOFLAGS,SNDVOL_NORMAL,SNDPITCH_NORMAL,-1,origin,NULL_VECTOR,true,0.0);
+    EmitSoundToAll(sound, SOUND_FROM_WORLD,SNDCHAN_AUTO,SNDLEVEL_NORMAL,SND_NOFLAGS,SNDVOL_NORMAL,SNDPITCH_NORMAL,-1,origin,NULL_VECTOR,true,0.0);
 }
 
 public void ZS_OnAbilityButtonPressed(int client, int ability_id) { 

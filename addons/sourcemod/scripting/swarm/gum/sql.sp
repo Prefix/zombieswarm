@@ -252,4 +252,5 @@ public int top10PanelHandler(Menu menu, MenuAction action, int client, int item)
     {
         delete menu;
     }
+    return 0;
 }

@@ -388,6 +388,7 @@ public Action Unfreeze(Handle timer, any client)
 		SetEntityMoveType(client, MOVETYPE_WALK);
 		h_freeze_timer[client] = INVALID_HANDLE;
 	}
+	return Plugin_Stop;
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
@@ -460,15 +461,16 @@ public Action Timer_OnGrenadeCreated(Handle timer, any ref)
     {
             SetEntProp(entity, Prop_Data, "m_nNextThinkTick", -1);
     }
+    return Plugin_Stop;
 }
 
 public Action CreateEvent_SmokeDetonate(Handle timer, any entity)
-{
+	{
 	if (!IsValidEdict(entity))
 	{
 		return Plugin_Stop;
 	}
-	
+
 	char g_szClassname[64];
 	GetEdictClassname(entity, g_szClassname, sizeof(g_szClassname));
 	if (!strcmp(g_szClassname, "smokegrenade_projectile", false) || !strcmp(g_szClassname, "decoy_projectile", false))
@@ -479,7 +481,7 @@ public Action CreateEvent_SmokeDetonate(Handle timer, any entity)
 		GranadaCongela(client, origin);
 		AcceptEntityInput(entity, "kill");
 	}
-	
+
 	return Plugin_Stop;
 }
 
@@ -531,6 +533,7 @@ public Action Delete(Handle timer, any entity)
 	{
 		AcceptEntityInput(entity, "kill");
 	}
+	return Plugin_Handled;
 }
 
 public Action DisableSmokeSound ( int clients[64],

@@ -22,4 +22,5 @@ public Action deleteWeapon(Handle timer, any weapon)
         if (client == -1)
             RemoveEdict(weapon);
     }
+    return Plugin_Continue;
 } 

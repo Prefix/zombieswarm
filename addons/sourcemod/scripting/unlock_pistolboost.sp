@@ -7,7 +7,6 @@
 #include <gum_shop>
 #include <zombieswarm>
 #include <swarm/utils>
-#include <colorvariables>
 
 //GumItem usp_boost;
 GumItem glock_boost;

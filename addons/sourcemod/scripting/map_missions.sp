@@ -4,7 +4,7 @@
 #include <sdktools>
 #include <cstrike>
 #include <zombieswarm>
-#include <colorvariables>
+#include <multicolors>
 #include <gum>
 #include <swarm/utils>
 
@@ -37,7 +37,7 @@ public Plugin myinfo =
 
 int fireSprite, haloSprite;
 
-int takingFlag[MAXPLAYERS + 1] = -1;
+int takingFlag[MAXPLAYERS + 1] = {-1, ...};
 
 bool roundTerminated;
 
@@ -393,6 +393,7 @@ public int objectsMenuCallback(Handle menu, MenuAction action, int client, int i
 	{
 		delete menu;
 	}
+	return 0;
 }
 
 public void deleteFlagsMenu(int client)
@@ -460,6 +461,7 @@ public int deleteFlagsMenuCallback(Handle menu, MenuAction action, int client, i
 	{
 		delete menu;
 	}
+	return 0;
 }
 
 public void createFlag(float position[3], int index)

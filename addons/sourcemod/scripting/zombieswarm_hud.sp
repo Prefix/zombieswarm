@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <gum>
+#include <cstrike>
 #include <sdktools>
 #include <zombieswarm>
 #include <swarm/utils>
@@ -28,8 +29,8 @@ int g_iColorAbility[4];
 float g_fPosXAbility,
     g_fPosYAbility;
 
-Handle g_hHudSync[MAXPLAYERS+1] = null;
-Handle g_hHudSyncAbility[MAXPLAYERS+1] = null;
+Handle g_hHudSync[MAXPLAYERS+1] = {null, ...};
+Handle g_hHudSyncAbility[MAXPLAYERS+1] = {null, ...};
 
 #define PLUGIN_NAME ZS_PLUGIN_NAME ... " - HUD"
 

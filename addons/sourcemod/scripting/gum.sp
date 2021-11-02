@@ -5,9 +5,8 @@
 #include <sdkhooks>
 #include <cstrike>
 #include <clientprefs>
-#include <colorvariables>
+#include <multicolors>
 #include <autoexecconfig>
-#include <emitsoundany>
 
 #undef REQUIRE_PLUGIN
 #tryinclude <zombieplague>
@@ -646,6 +645,7 @@ public int WeaponMenuHandler(Menu menu, MenuAction action, int client, int item)
     {
         delete menu;
     }
+    return 0;
 }
 public void secondaryWeaponMenu(int client)
 {
@@ -703,6 +703,7 @@ public int secondaryWeaponMenuHandler(Menu menu, MenuAction action, int client, 
     {
         delete menu;
     }
+    return 0;
 }
 public void primaryWeaponMenu(int client)
 {
@@ -753,6 +754,7 @@ public int primaryWeaponMenuHandler(Menu menu, MenuAction action, int client, in
     {
         delete menu;
     }
+    return 0;
 }
 public void giveWeaponSelection(int client, int selection, int strip)
 {
@@ -877,9 +879,10 @@ public int nativeSetPlayerUnlocks(Handle plugin, int numParams)
     int value = GetNativeCell( 2 );
 
     if ( !UTIL_IsValidClient(client) )
-        return;
+        return 0;
 
     setPlayerUnlocksLogics(client, value);
+    return 0;
 }
 
 public int nativeSetPlayerLevel(Handle plugin, int numParams)
@@ -888,12 +891,13 @@ public int nativeSetPlayerLevel(Handle plugin, int numParams)
     int value = GetNativeCell( 2 );
 
     if ( !UTIL_IsValidClient(client) )
-        return;
+        return 0;
 
     if (value+1 >= weaponUnlocks.Length)
-        return;
+        return 0;
 
     setPlayerUnlocksLogics(client, weaponUnlocks.Get(value));
+    return 0;
 }
 
 public int nativeGetMaxLevel(Handle plugin, int numParams)

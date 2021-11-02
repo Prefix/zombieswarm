@@ -6,7 +6,8 @@
 #include <gum_shop>
 #include <prestige>
 #include <zombieswarm>
-#include <colorvariables>
+#include <cstrike>
+#include <multicolors>
 #include <swarm/utils>
 // Includes
 #include "swarm/gumshop/globals.sp"
@@ -146,6 +147,7 @@ ArrayList g_aPlayerItemsRebuy;
         PrintToServer("RebuyType: %d", rebuy.RebuyType);
         PrintToServer("==============================================");
     }
+    return Plugin_Handled;
 }
 
 
@@ -1020,14 +1022,12 @@ stock bool CheckAdminFlagsByString(int client, const char[] flagString)
     return false;
 } 
 
-bool PlayerHasItem(int client, char[] info) {
-    ShopPlayerItem item;
+public bool PlayerHasItem(int client, char[] info) {
     bool found = false;
     for (int i = 0; i < g_aPlayerItems.Length; i++) {
         ShopPlayerItem tempItem;
         g_aPlayerItems.GetArray(i, tempItem, sizeof(tempItem));
         if (StrEqual(tempItem.ItemUnique, info) && client == tempItem.Client) {
-            item = tempItem;
             found = true;
             break;
         }
