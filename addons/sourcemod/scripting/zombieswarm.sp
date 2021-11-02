@@ -502,11 +502,8 @@ public void OnMapStart()
         }
     }
     
-    if(iDocument != null)
-    {
-        // We're done with this file now, so we can close it
-        delete iDocument;
-    }
+    delete iDocument;
+    
 
     int tempEnt = -1;
     while((tempEnt = FindEntityByClassname(tempEnt, "func_bomb_target")) != -1)
@@ -699,18 +696,12 @@ public void OnClientDisconnect(int client)
 
     g_bOverrideHint[client] = false;
     
-    if (g_hTimerGhostHint[client] != null) {
-        delete g_hTimerGhostHint[client];
-    }
+    delete g_hTimerGhostHint[client];
     
-    if (g_hTimerZombieRespawn[client] != null) {
-        delete g_hTimerZombieRespawn[client];
-    }
+    delete g_hTimerZombieRespawn[client];
     
-    if (g_hTimerCooldown[client] != null) {
-        delete g_hTimerCooldown[client];
-        g_hTimerCooldown[client] = null;
-    }
+    delete g_hTimerCooldown[client];
+
     ClearPlayerAbilities(client);
     g_iZombieRespawnLeft[client] = 0;
     g_fLastButtons[client] = 0;
@@ -729,16 +720,10 @@ public void ClearPlayerAbilities(int client) {
         g_aPlayerAbility.GetArray(i, temp_checker, sizeof(temp_checker));
 
         if(temp_checker.paClient == client) {
-            if (temp_checker.paTimerDuration != null) {
                 delete temp_checker.paTimerDuration;
-                temp_checker.paTimerDuration = null;
-            }
-            if (temp_checker.paTimerCooldown != null) {
                 delete temp_checker.paTimerCooldown;
-                temp_checker.paTimerCooldown = null;
-            }
-            g_aPlayerAbility.Erase(i--);
         }
+        g_aPlayerAbility.Erase(i--);
     }
 }
 
@@ -961,9 +946,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     if (IsClientSourceTV(victim)) 
         return;
 
-    if (g_hTimerGhostHint[victim] != null) {
-        delete g_hTimerGhostHint[victim];
-    }
+    delete g_hTimerGhostHint[victim];
     ClearPlayerAbilities(victim);
     if (GetClientTeam(victim) == CS_TEAM_CT && getHumans() > 1) {
         g_bCanIgnore[victim] = true;
@@ -974,10 +957,7 @@ public void eventPlayerDeath(Event event, const char[] name, bool dontBroadcast)
         if (g_cSoundsDeathEnable.BoolValue) PlayDeathZombieSound(victim);
         g_iZombieRespawnLeft[victim] = (IsClientVip(victim)) ? GetConVarInt(g_cRespawnTimeZVip) : GetConVarInt(g_cRespawnTimeZ);
         g_hTimerZombieRespawn[victim] = CreateTimer( 1.0, timerZombieRespawnCallback, victim, TIMER_FLAG_NO_MAPCHANGE);
-        
-        if (g_hTimerCooldown[victim] != null) {
-            delete g_hTimerCooldown[victim];
-        }
+        delete g_hTimerCooldown[victim];
     }
 }
 
@@ -995,9 +975,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     if ( !UTIL_IsValidAlive(client) )
         return;
     
-    if (g_hTimerZombieRespawn[client] != null) {
-        delete g_hTimerZombieRespawn[client];
-    }
+    delete g_hTimerZombieRespawn[client];
     
     g_fHintSpeed[client] = TIMER_SPEED;
     g_bOverrideHint[client] = false;
@@ -1169,9 +1147,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
     { 
         if (UTIL_IsValidClient(client) )
         {    
-            if (g_hTimerZombieRespawn[client] != null) {
-                delete g_hTimerZombieRespawn[client];
-            }
+            delete g_hTimerZombieRespawn[client];
 
             g_iZombieRespawnLeft[client] = 0;
             
@@ -1200,9 +1176,7 @@ public void eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
             }
             
             g_bCooldown[client] = false;
-            if (g_hTimerCooldown[client] != null) {
-                delete g_hTimerCooldown[client];
-            }
+            delete g_hTimerCooldown[client];
             ClearPlayerAbilities(client);
         }
     }

@@ -295,10 +295,8 @@ public int Native_ZMPlayer_OverrideHintSet(Handle plugin, int numParams)
         g_fHintSpeed[client] = 0.1;
     }
 
-    if (g_hTimerGhostHint[client] != null) {
-        delete g_hTimerGhostHint[client];
-        g_hTimerGhostHint[client] = CreateTimer( g_fHintSpeed[client], ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
-    }
+    delete g_hTimerGhostHint[client];
+    g_hTimerGhostHint[client] = CreateTimer( g_fHintSpeed[client], ghostHint, client, TIMER_FLAG_NO_MAPCHANGE);
 
     g_bOverrideHint[client] = hint;
     return 0;
