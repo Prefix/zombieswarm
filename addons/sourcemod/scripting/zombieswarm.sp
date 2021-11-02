@@ -686,31 +686,20 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
-    if ( !IsClientInGame(client) )
-        return;
-    
     g_bCanJoin[client] = false;
     g_bCanIgnore[client] = false;
-    
     g_iTeam[client] = CS_TEAM_NONE;
-
     g_bOverrideHint[client] = false;
-    
     delete g_hTimerGhostHint[client];
-    
     delete g_hTimerZombieRespawn[client];
-    
     delete g_hTimerCooldown[client];
-
-    ClearPlayerAbilities(client);
     g_iZombieRespawnLeft[client] = 0;
     g_fLastButtons[client] = 0;
     g_bCooldown[client] = false;
+    ClearPlayerAbilities(client);
 }
 
 public void ClearPlayerAbilities(int client) {
-    if (!UTIL_IsValidClient(client))
-        return;
     for (int i = 0; i < g_aPlayerAbility.Length; i++)
     {
         if (i == g_aPlayerAbility.Length)
