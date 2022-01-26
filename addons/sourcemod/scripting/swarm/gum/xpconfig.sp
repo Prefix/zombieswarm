@@ -1094,9 +1094,7 @@ void ClearSurviveTimers(int client = -1)
         if (client != tempConfig.client && client != -1)
             continue;
 
-        if (tempConfig.timer != null) {
-            delete tempConfig.timer;
-        }
+        delete tempConfig.timer;
         g_aPlayerSurviveTimers.Erase(i--);
     }
 
@@ -1174,15 +1172,9 @@ public Action Timer_SurviveTime(Handle timer, DataPack pack)
         if (bonus.survive_id != config_id)
             continue;
 
-        if (bonus.timer != null) {
-            bonus.timer = null;
-        }
+        bonus.timer = null;
         g_aPlayerSurviveTimers.SetArray(i, bonus, sizeof(bonus));
     }
-    /*if (tempBonus.timer != null) {
-        delete tempBonus.timer;
-        tempBonus.timer = null;
-    }*/
 
     bool cangetbonus = true;
     int team = GetClientTeam(client);
@@ -1224,10 +1216,7 @@ void RemoveSurviveTimer(int client = -1, int config_id = -1)
         if (tempBonus.survive_id != config_id && client != -1)
             continue;
 
-        if (tempBonus.timer != null) {
-            delete tempBonus.timer;
-            tempBonus.timer = null;
-        }
+        delete tempBonus.timer;
         g_aPlayerSurviveTimers.Erase(i--);
 
     }
@@ -1541,11 +1530,7 @@ void XPonKills(int attacker)
                         }
                     }
                     // todo check tempPMulti.expires is expired
-                    if (tempPMulti.expiration != null) 
-                    {
-                        delete tempPMulti.expiration;
-                        tempPMulti.expiration = null;
-                    }
+                    delete tempPMulti.expiration;
                     DataPack dp_expire;
                     tempPMulti.expiration = CreateDataTimer(WAIT_AFTER_KILL, Timer_MultiExpire, dp_expire, TIMER_FLAG_NO_MAPCHANGE);
                     dp_expire.WriteCell(GetClientSerial(attacker));
@@ -1644,14 +1629,8 @@ void RemoveMultiKill(int client = -1, int config_id = -1)
         if (tempMK.unique != config_id && config_id != -1)
             continue;
 
-        if (tempMK.sound != null) {
-            delete tempMK.sound;
-            tempMK.sound = null;
-        }
-        if (tempMK.expiration != null) {
-            delete tempMK.expiration;
-            tempMK.expiration = null;
-        }
+        delete tempMK.sound;
+        delete tempMK.expiration;
         g_aPlayerMultiKillTimers.Erase(i--);
 
     }

@@ -147,15 +147,11 @@ public void OnMapStart()
 public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
-
+    delete timerFuryEffect[client];
     if ( !UTIL_IsValidAlive(client) )
         return;
         
     timerFury[client] = false;
-    
-    if (timerFuryEffect[client] != null) {
-        delete timerFuryEffect[client];
-    }
         
     // Back to first state
     SetEntityRenderMode(client, RENDER_TRANSCOLOR);  
@@ -171,9 +167,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
 
     timerFury[victim] = false;
     
-    if (timerFuryEffect[victim] != null) {
-        delete timerFuryEffect[victim];
-    }
+    delete timerFuryEffect[victim];
     
     if (victim == currentank)
     {
@@ -191,8 +185,7 @@ public Action eventRoundEnd(Event event, const char[] name, bool dontBroadcast)
 }
 public Action eventRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-    if(timerNextTank != null)
-        delete timerNextTank;
+    delete timerNextTank;
     tankAlive = false;
     tankReady = false;
     RequestFrame(postSpawn);
@@ -206,8 +199,7 @@ public void postSpawn()
 }
 public void postSpawn2()
 {
-    if(timerNextTank != null)
-        delete timerNextTank;
+    delete timerNextTank;
         
     tankAlive = false;
     tankReady = true;
@@ -252,12 +244,10 @@ public void OnClientDisconnect(int client)
     timerFury[client] = false;
     currentank = -1;
     
-    if (timerFuryEffect[client] != null) 
-        delete timerFuryEffect[client];
+    delete timerFuryEffect[client];
     if (currentank == client) {
         
-        if(timerNextTank != null)
-            delete timerNextTank;
+        delete timerNextTank;
 
         tankAlive = false;
         tankReady = true;
@@ -391,9 +381,7 @@ public void ZS_OnCooldownStarted(int client, int ability_id) {
     
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", zSpeed.FloatValue);
     timerFury[client] = false;
-    if (timerFuryEffect[client] != null) {
-        delete timerFuryEffect[client];
-    }
+    delete timerFuryEffect[client];
 }
 
 public Action furyEffectCallback(Handle timer, any client)

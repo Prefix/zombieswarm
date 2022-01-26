@@ -274,9 +274,7 @@ public void OnClientDisconnect(int client)
             SaveClientData(client);
         }
         
-        if (menuTimer[client] != null) {
-            delete menuTimer[client];
-        }
+        delete menuTimer[client];
         //RemoveMultiKill(client);
         RemoveSurviveTimer(client);
     }
@@ -551,9 +549,7 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     if ( IsClientSourceTV(client) )
         return;
     
-    if (menuTimer[client] != null) {
-        delete menuTimer[client];
-    }
+    delete menuTimer[client];
 
     pDamageDone[client] = 0;
     pKillDone[client] = 0;
@@ -566,8 +562,9 @@ public void eventPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
         giveWeaponSelection( client, GetRandomInt( GetConVarInt(cvarMaxSecondary), weaponEntities.Length - 1 ), 0);
     } else {
         menuTimer[client] = CreateTimer( GetConVarFloat(cvarMenuDelay), mainMenu, client, TIMER_FLAG_NO_MAPCHANGE);
+        StartSurviveTimers(client);
     }
-    StartSurviveTimers(client);
+        
 }
 
 

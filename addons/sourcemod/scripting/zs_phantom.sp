@@ -96,19 +96,6 @@ public void OnClientPostAdminCheck(int client)
     SDKHook(client, SDKHook_OnTakeDamage, onTakeDamage);
 }
 
-/*public void OnClientDisconnect(int client)
-{
-    if ( IsClientInGame(client) )
-    {
-        if (timerInvisibility[client] != null) {
-            delete timerInvisibility[client];
-        }
-        if (timerCountdown[client] != null) {
-            delete timerCountdown[client];
-        }
-    }
-}*/
-
 public Action onSetTransmit(int entity, int client) 
 {
     if ( !UTIL_IsValidAlive(entity) || !UTIL_IsValidAlive(client) ) return Plugin_Continue;

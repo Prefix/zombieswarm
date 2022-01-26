@@ -333,21 +333,9 @@ void CreateHudHintTimer(int client)
 
 void KillHudHintTimer(int client)
 {
-    if(HudHintTimers[client] != null)
-    {
-        delete HudHintTimers[client];
-        HudHintTimers[client] = null;
-    }
-    if(g_hHudSync[client] != null)
-    {
-        delete g_hHudSync[client];
-        g_hHudSync[client] = null;
-    }
-    if(g_hHudSyncAbility[client] != null)
-    {
-        delete g_hHudSyncAbility[client];
-        g_hHudSyncAbility[client] = null;
-    }
+    delete HudHintTimers[client];
+    delete g_hHudSync[client];
+    delete g_hHudSyncAbility[client];
 }
 
 stock void UTIL_DEBUG_PrintButtons(int buttons, char[] message) {

@@ -108,10 +108,7 @@ public void KillBeamTimer() {
     {
         if (UTIL_IsValidClient(i))
         {
-            if (SmokerTimer[i] != null)
-            {
-                delete SmokerTimer[i];
-            }
+            delete SmokerTimer[i];
             pullTarget[i] = 0;
         }
     }
@@ -166,9 +163,7 @@ public Action eventPlayerSpawn(Event event, const char[] name, bool dontBroadcas
     if ( !UTIL_IsValidAlive(client) )
         return Plugin_Continue;
         
-    if (SmokerTimer[client] != null) {
-        delete SmokerTimer[client];
-    }
+    delete SmokerTimer[client];
     pullTarget[client] = 0;
     return Plugin_Continue;
 }
@@ -195,10 +190,7 @@ public Action eventPlayerDeath(Event event, const char[] name, bool dontBroadcas
     if ( VictimPlayer.ZombieClass != registeredClass.ID )
         return Plugin_Continue;
     
-    if (SmokerTimer[victim] != null) {
-        delete SmokerTimer[victim];
-        SmokerTimer[victim] = null;
-    }
+    delete SmokerTimer[victim];
     
     pullTarget[victim] = 0;
     
@@ -448,10 +440,7 @@ public void ZS_OnAbilityButtonReleased(int client, int ability_id) {
         return;
     ability.AbilityFinished();
     
-    if (SmokerTimer[client] != null) {
-        delete SmokerTimer[client];
-        SmokerTimer[client] = null;
-    }
+    delete SmokerTimer[client];
     pullTarget[client] = 0;
 }
 
@@ -482,10 +471,7 @@ public void ZS_OnCooldownStarted(int client, int ability_id) {
     if (ability.State != stateCooldown)
         return;
         
-    if (SmokerTimer[client] != null) {
-        delete SmokerTimer[client];
-        SmokerTimer[client] = null;
-    }
+    delete SmokerTimer[client];
     pullTarget[client] = 0;
 }
 
